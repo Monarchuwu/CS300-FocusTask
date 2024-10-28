@@ -6,7 +6,7 @@
 
 Create conda environment
 ```bash
-conda create -n focus-task
+conda create -n focus-task python=3.10
 conda activate focus-task
 ```
 
