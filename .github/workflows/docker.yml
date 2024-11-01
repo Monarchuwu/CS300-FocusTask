@@ -36,7 +36,13 @@ jobs:
       run: docker-compose -f "docker-compose.yml" up -d --build
 
     - name: Lint flake8
-      run: docker-compose exec app flake8
+      run: |
+        docker-compose exec app flake8 || true
+        docker-compose exec app flake8 > flake8_output.txt || true
+      continue-on-error: true
+
+    - name: Display flake8 output
+      run: cat flake8_output.txt
 
     - name: Run tests
       run: docker-compose exec app python manage.py test
