@@ -1,7 +1,7 @@
 services:
-  my-postgres:
+  db:
     image: postgres:17
-    container_name: db
+    container_name: focus_task_db
     environment:
      - POSTGRES_DB=${DATABASE_NAME}
      - POSTGRES_USER=${DATABASE_USER}
@@ -11,9 +11,9 @@ services:
     volumes:
     - pg_data:/var/lib/postgresql/data
 
-  web:
+  app:
     build: .
-    container_name: django
+    container_name: focus_task_app
     ports:
       - '8000:8000'
     volumes:
@@ -26,7 +26,7 @@ services:
       - DATABASE_HOST=${DATABASE_HOST}
       - DATABASE_PORT=${DATABASE_PORT}
     depends_on:
-      - my-postgres
+      - db
 
 volumes:
   pg_data:
