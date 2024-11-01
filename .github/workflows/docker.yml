@@ -15,11 +15,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v1
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    - name: Start containers
-      run: docker-compose -f "docker-compose.yml" up -d --build
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
 
     - name: Check folder
       run: pwd
@@ -27,14 +32,11 @@ jobs:
     - name: Check files
       run: ls -ltr
 
+    - name: Build and run Docker Compose
+      run: docker-compose -f "docker-compose.yml" up -d --build
+
     - name: Lint flake8
-      run: |
-        docker-compose exec app flake8
+      run: docker-compose exec app flake8
 
     - name: Run tests
-      run: |
-        docker-compose exec app python manage.py test
-
-    - name: Stop containers
-      if: always()
-      run: docker-compose -f "docker-compose.yml" down
+      run: docker-compose exec app python manage.py test
