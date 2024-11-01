@@ -4,21 +4,20 @@
 
 ## Installation
 
-Create conda environment
+Update package list
 ```bash
-conda create -n focus-task python=3.10
-conda activate focus-task
+sudo apt update
 ```
 
-Install the required packages
+Install docker-compose
 ```bash
-pip install -r requirements.txt
+sudo apt install docker-compose
 ```
 
-## Usage
-Run server
+## Build and run
 ```bash
-python manage.py runserver
+docker-compose build
+docker-compose up
 ```
 
 Before commiting, run the following command to check for any errors
