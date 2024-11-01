@@ -1,4 +1,4 @@
-name: Build and share Docker Image to Docker Hub
+name: Docker CI
 
 on:
   push:
@@ -34,7 +34,7 @@ jobs:
     - name: Run tests
       run: |
         docker-compose exec app python manage.py test
-        
+
     - name: Stop containers
       if: always()
       run: docker-compose -f "docker-compose.yml" down
