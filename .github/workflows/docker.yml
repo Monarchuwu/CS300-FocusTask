@@ -1,0 +1,40 @@
+name: Build and share Docker Image to Docker Hub
+
+on:
+  push:
+    branches:
+      - main
+      - set-up-docker
+      - docker/**
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  docker:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Start containers
+      run: docker-compose -f "docker-compose.yml" up -d --build
+
+    - name: Check folder
+      run: pwd
+
+    - name: Check files
+      run: ls -ltr
+
+    - name: Lint flake8
+      run: |
+        docker-compose exec app flake8
+
+    - name: Run tests
+      run: |
+        docker-compose exec app python manage.py test
+        
+    - name: Stop containers
+      if: always()
+      run: docker-compose -f "docker-compose.yml" down
