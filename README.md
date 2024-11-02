@@ -3,24 +3,33 @@
 ## Description
 
 ## Installation
-
-Update package list
-```bash
-sudo apt update
+### 1. Clone the repository
+```bash 
+git clone https://github.com/Monarchuwu/CS300-FocusTask.git
 ```
+### 2. Install Docker
+Install [here](https://docs.docker.com/get-docker/)
 
-Install docker-compose
+### 3. Create a .env file
+Create a .env file in the root directory of the project and add the following:
 ```bash
-sudo apt install docker-compose
+DATABASE_NAME=focus_task_db
+DATABASE_USER=focus_task_admin
+DATABASE_PASSWORD=<password>
+DATABASE_PORT=5432  
+DATABASE_HOST=focus-task-postgres
+DJANGO_ENV=development
 ```
+Set the DATABASE_PASSWORD to a password of your choice.
 
-## Build and run
+### 4. Build and run
+Go to the root directory of the project and run the following commands:
 ```bash
 docker-compose build
-docker-compose up
+docker-compose up -d
 ```
 
-Before commiting, run the following command to check for any errors
+To lint the code:
 ```bash
 flake8
 ```
