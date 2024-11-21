@@ -1,6 +1,0 @@
-DATABASE_NAME=focus_task_db
-DATABASE_USER=focus_task_admin
-DATABASE_PASSWORD=123
-DATABASE_PORT=5432  
-DATABASE_HOST=focus-task-postgres
-DJANGO_ENV=development
