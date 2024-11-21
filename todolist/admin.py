@@ -1,5 +1,4 @@
 from django.contrib import admin
-from .models import Task, Archive, TaskContainer
+from .models import Task
 # Register your models here.
 admin.site.register(Task)
-admin.site.register(TaskContainer)
