@@ -2,11 +2,14 @@ FROM python:3.11
 
 WORKDIR /app
 
-COPY requirements.txt .
+# Install system packages
+RUN apt-get update && apt-get upgrade -y
+
+COPY /backend/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY ./backend .
 
 EXPOSE 8000
 
