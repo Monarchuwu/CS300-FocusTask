@@ -30,6 +30,11 @@ docker-compose build
 docker-compose up -d
 ```
 
+Migrate the database:
+```bash
+docker-compose exec app python manage.py migrate
+```
+
 To lint the code:
 ```bash
 flake8
