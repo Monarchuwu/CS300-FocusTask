@@ -11,7 +11,7 @@ git clone https://github.com/Monarchuwu/CS300-FocusTask.git
 Install [here](https://docs.docker.com/get-docker/)
 
 ### 3. Create a .env file
-Create a .env file in the root directory of the project and add the following:
+Create a `.env` file in the root directory of the project and add the following:
 ```bash
 DATABASE_NAME=focus_task_db
 DATABASE_USER=focus_task_admin
