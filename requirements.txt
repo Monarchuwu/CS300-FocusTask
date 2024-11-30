@@ -1,2 +1,4 @@
 Django==5.1
 flake8
+pytest
+pytest-django
