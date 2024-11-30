@@ -1,4 +1,10 @@
+from asyncio import Task
 from datetime import datetime, timedelta
+from enum import Enum
+from tracemalloc import start
+
+from pytz import timezone
+from yaml import StreamStartToken
 from . import databases, objects
 from django.db import IntegrityError
 
@@ -190,29 +196,82 @@ class WebsiteBlockingManager:
         pass
 
 class PreferencesManager:
-    def setLanguage(self, language: str):
-        pass
+    def setLanguage(self, userID: int, language: databases.PreferencesDB.Language):
+        try:
+            preference = databases.PreferencesDB.objects.get(userID = userID)
+            preference.language = language
+            preference.save()
+        except databases.PreferencesDB.DoesNotExist:
+            raise ValueError(f"Preference for user ID {userID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while changing the preferred language of userID: {userID}") 
+        
 
-    def setTimezone(self, timezone: str):
-        pass
+    def setTimezone(self, userID: int, timezone: databases.PreferencesDB.Timezone):
+        try:
+            preference = databases.PreferencesDB.objects.get(userID = userID)
+            preference.timezone = timezone
+            preference.save()
+        except databases.PreferencesDB.DoesNotExist:
+            raise ValueError(f"Preference for user ID {userID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while changing the preferred timezone of userID: {userID}") 
 
-    def setNotification(self, status: bool):
-        pass
+    def setNotification(self, userID: int, status: bool):
+        try:
+            preference = databases.PreferencesDB.objects.get(userID = userID)
+            preference.notification = status
+            preference.save()
+        except databases.PreferencesDB.DoesNotExist:
+            raise ValueError(f"Preference for user ID {userID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while changing the preferred notification of userID: {userID}") 
 
-    def setAutoBlock(self, status: bool):
-        pass
+    def setAutoBlock(self, userID: int, status: bool):
+        try:
+            preference = databases.PreferencesDB.objects.get(userID = userID)
+            preference.autoBlock = status
+            preference.save()
+        except databases.PreferencesDB.DoesNotExist:
+            raise ValueError(f"Preference for user ID {userID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while changing the preferred auto block of userID: {userID}") 
 
-    def getLanguage(self):
-        pass
+    def getLanguage(self, userID: int):
+        try:
+            preference = databases.PreferencesDB.objects.get(userID = userID)
+            return preference.language
+        except databases.PreferencesDB.DoesNotExist:
+            raise ValueError(f"Preference for user ID {userID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while getting the preferred language of userID: {userID}") 
 
-    def getTimezone(self):
-        pass
+    def getTimezone(self, userID: int):
+        try:
+            preference = databases.PreferencesDB.objects.get(userID = userID)
+            return preference.timezone
+        except databases.PreferencesDB.DoesNotExist:
+            raise ValueError(f"Preference for user ID {userID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while getting the preferred timezone of userID: {userID}") 
 
-    def getNotification(self):
-        pass
+    def getNotification(self, userID: int):
+        try:
+            preference = databases.PreferencesDB.objects.get(userID = userID)
+            return preference.notification
+        except databases.PreferencesDB.DoesNotExist:
+            raise ValueError(f"Preference for user ID {userID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while getting the preferred notification of userID: {userID}") 
 
-    def getAutoBlock(self):
-        pass
+    def getAutoBlock(self, userID: int):
+        try:
+            preference = databases.PreferencesDB.objects.get(userID = userID)
+            return preference.autoBlock
+        except databases.PreferencesDB.DoesNotExist:
+            raise ValueError(f"Preference for user ID {userID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while getting the preferred auto block of userID: {userID}") 
 
 # start, pause, end should be run asynchronously
 class PomodoroManager:
@@ -227,19 +286,36 @@ class PomodoroManager:
     taskID = None
 
     def setTaskID(self, taskID: int):
-        pass
+        try:
+            task = databases.TodoItemDB.objects.get(taskID = taskID)
+            if (task):
+                self.taskID = taskID
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"Preference for task ID {taskID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while checking the taskID: {taskID}") 
 
     def setTime(self, length: timedelta):
-        pass
+        self.length = length
 
     def start(self):
-        pass
+        self.startTimestamp = datetime.now()
+        self.status = PomodoroManager.Status.RUNNING
 
     def pause(self):
-        pass
+        self.status = PomodoroManager.Status.PAUSED
 
     def end(self):
-        pass
+        self.status = PomodoroManager.Status.ENDED
+        databases.PomodoroHistoryDB.objects.create(
+            pomodoroID = int(datetime.now()),
+            taskID = self.taskID,
+            startTime = self.startTimestamp,
+            duration = self.length,
+            endTime = datetime.now(),
+            status = databases.PomodoroHistoryDB.Status.COMPLETED,
+            createdAt = datetime.now()
+        )
 
     def getStatus(self):
-        pass
+        return self.status
