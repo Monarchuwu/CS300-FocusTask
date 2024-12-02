@@ -1,4 +1,5 @@
 from asyncio import Task
+import bcrypt
 from datetime import datetime, timedelta
 from enum import Enum
 from tracemalloc import start
@@ -7,21 +8,39 @@ from pytz import timezone
 from yaml import StreamStartToken
 from . import databases, objects
 from django.db import IntegrityError
+from django.core.exceptions import ObjectDoesNotExist
 
 class UserManager:
-    currentUserID = None
+    _currentUserID = None
 
     def getCurrentUserID(self):
-        return self.currentUserID
+        return self._currentUserID
     
     def registerUser(self, username: str, email: str, password: str, avatarURL: str | None):
-        pass
+        passwordHash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        try:
+            user = databases.UserDB(username=username, email=email, passwordHash=passwordHash, avatarURL=avatarURL)
+            user.save()
+            return "User registered successfully"
+        except IntegrityError:
+            raise ValueError("Error: Email already exists")
 
     def signIn(self, email: str, password: str):
-        pass
+        try:
+            user = databases.UserDB.objects.get(email=email)
+            if bcrypt.checkpw(password.encode('utf-8'), user.passwordHash.encode('utf-8')):
+                self._currentUserID = user.userID
+                return "Sign-in successful"
+            else:
+                raise ValueError("Error: Incorrect password")
+        except ObjectDoesNotExist:
+            raise ValueError("Error: User not found")
 
     def signOut(self):
-        pass
+        if self._currentUserID is None:
+            raise ValueError("Error: No user signed in")
+        self._currentUserID = None
+        return "Sign-out successful"
 
 class TaskManager:
     def getTaskList(self, projectID: int):
@@ -180,20 +199,57 @@ class TaskManager:
 
 class WebsiteBlockingManager:
     def getBlockList(self):
-        pass
+        try:
+            current_user = UserManager.getCurrentUserID()
+            records = databases.WebsiteBlockingDB.objects.filter(UserID=current_user)
+            return [record.get_data_object() for record in records]
+        except Exception as e:
+            print(f"Error fetching block list: {e}")
+            return []
 
     def addToBlockList(self, URL: str):
-        pass
+        try:
+            current_user = UserManager.getCurrentUserID()
+            new_block = databases.WebsiteBlockingDB(URL=URL, UserID=current_user)
+            new_block.save()
+            return f"Website '{URL}' added to block list."
+        except IntegrityError:
+            raise ValueError(f"Website {URL} already in block list")
+        except Exception as e:
+            raise ValueError(f"Error adding to block list: {e}")
 
     def deleteFromBlockList(self, blockID: int):
-        pass
+        try:
+            current_user = UserManager.getCurrentUserID()
+            databases.WebsiteBlockingDB.objects.filter(blockID=blockID, UserID=current_user).delete()
+            return f"BlockID {blockID} removed from block list."
+        except Exception as e:
+            raise ValueError(f"Error deleting from block list: {e}")
 
     # toggle website blocking status
     def toggleBlock(self, blockID: int):
-        pass
+        try:
+            current_user = UserManager.getCurrentUserID()
+            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=current_user)
+            block_entry.isBlocking = not block_entry.isBlocking
+            block_entry.save()
+            return f"BlockID {blockID} toggled to {'blocking' if block_entry.isBlocking else 'not blocking'}."
+        except databases.WebsiteBlockingDB.DoesNotExist:
+            raise ValueError(f"BlockID {blockID} does not exist.")
+        except Exception as e:
+            raise ValueError(f"Error toggling block status: {e}")
 
     def setBlock(self, blockID: int, status: bool):
-        pass
+        try:
+            current_user = UserManager.getCurrentUserID()
+            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=current_user)
+            block_entry.isBlocking = status
+            block_entry.save()
+            return f"BlockID {blockID} set to {'blocking' if status else 'not blocking'}."
+        except databases.WebsiteBlockingDB.DoesNotExist:
+            raise ValueError(f"BlockID {blockID} does not exist.")
+        except Exception as e:
+            raise ValueError(f"Error setting block status: {e}")
 
 class PreferencesManager:
     def setLanguage(self, userID: int, language: databases.PreferencesDB.Language):
