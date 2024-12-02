@@ -324,49 +324,107 @@ class PreferencesManager:
         except Exception as e:
             raise ValueError(f"An error occurred while getting the preferred auto block of userID: {userID}") 
 
-# start, pause, end should be run asynchronously
 class PomodoroManager:
     class Status:
         RUNNING = "Running"
         PAUSED = "Paused"
         ENDED = "Ended"
 
-    startTimestamp = None # should be datetime
-    status = Status.ENDED
-    length = None # should be timedelta
-    taskID = None
-
     def setTaskID(self, taskID: int):
         try:
             task = databases.TodoItemDB.objects.get(taskID = taskID)
             if (task):
-                self.taskID = taskID
+                databases.PomodoroHistoryDB.objects.create(
+                    taskID = taskID,
+                    startTime = None,
+                    duration = None,
+                    endTime = None,
+                    status = databases.PomodoroHistoryDB.Status.CANCELED,
+                    createdAt = datetime.now()
+                )
+            
         except databases.TodoItemDB.DoesNotExist:
-            raise ValueError(f"Preference for task ID {taskID} do not exist.")
+            raise ValueError(f"Task ID {taskID} do not exist.")
         except Exception as e:
-            raise ValueError(f"An error occurred while checking the taskID: {taskID}") 
+            raise ValueError(f"An error occurred while checking the taskID for pomodoro: {taskID}") 
 
-    def setTime(self, length: timedelta):
-        self.length = length
+    def setTime(self, pomodoroID: int, length: timedelta):
+        try:
+            pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
+            pomodoro.duration = length
+            pomodoro.currentDuration = length
+            pomodoro.save()
+        except databases.PomodoroHistoryDB.DoesNotExist:
+            raise ValueError(f"PomodoroHistory with ID {pomodoroID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while setting duration for pomodoro with ID: {pomodoroID}") 
 
-    def start(self):
-        self.startTimestamp = datetime.now()
-        self.status = PomodoroManager.Status.RUNNING
+    def start(self, pomodoroID: int):
+        try:
+            pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
+            if pomodoro.status == databases.PomodoroHistoryDB.Status.CANCELED:
+                pomodoro.startTime = datetime.now()
+                pomodoro.endTime = pomodoro.startTime
+                pomodoro.status = databases.PomodoroHistoryDB.Status.RUNNING
+                pomodoro.save()
+        except databases.PomodoroHistoryDB.DoesNotExist:
+            raise ValueError(f"PomodoroHistory with ID {pomodoroID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while starting timer for pomodoro with ID: {pomodoroID}")
 
-    def pause(self):
-        self.status = PomodoroManager.Status.PAUSED
+    def unpause(self, pomodoroID: int):
+        try:
+            pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
+            if pomodoro.status == databases.PomodoroHistoryDB.Status.PAUSED:
+                pomodoro.endTime = datetime.now()
+                pomodoro.status = databases.PomodoroHistoryDB.Status.RUNNING
+                pomodoro.save()
+        except databases.PomodoroHistoryDB.DoesNotExist:
+            raise ValueError(f"PomodoroHistory with ID {pomodoroID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while continuing timer for pomodoro with ID: {pomodoroID}")
+        
 
-    def end(self):
-        self.status = PomodoroManager.Status.ENDED
-        databases.PomodoroHistoryDB.objects.create(
-            pomodoroID = int(datetime.now()),
-            taskID = self.taskID,
-            startTime = self.startTimestamp,
-            duration = self.length,
-            endTime = datetime.now(),
-            status = databases.PomodoroHistoryDB.Status.COMPLETED,
-            createdAt = datetime.now()
-        )
+    def pause(self, pomodoroID: int):
+        try:
+            pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
+            if pomodoro.status == databases.PomodoroHistoryDB.Status.RUNNING:
+                pomodoro.status = databases.PomodoroHistoryDB.Status.PAUSED
+                elapsed = datetime.now() - pomodoro.endTime
+                pomodoro.currentDuration -= elapsed
+                pomodoro.endTime = None
+                pomodoro.save()
+                if (pomodoro.currentDuration <= timedelta()):
+                    self.end(pomodoroID)
+        except databases.PomodoroHistoryDB.DoesNotExist:
+            raise ValueError(f"PomodoroHistory with ID {pomodoroID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while pausing timer for pomodoro with ID {pomodoroID}: {e}")
 
-    def getStatus(self):
+    def getTime(self, pomodoroID: int):
+        try:
+            pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
+            elapsed = (now:=datetime.now()) - pomodoro.endTime
+            pomodoro.currentDuration -= elapsed
+            pomodoro.endTime = now
+            pomodoro.save()
+            if (pomodoro.currentDuration <= timedelta()):
+                self.end(pomodoroID)
+            return max(pomodoro.currentDuration, timedelta())
+        except databases.PomodoroHistoryDB.DoesNotExist:
+            raise ValueError(f"PomodoroHistory with ID {pomodoroID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while getting timer for pomodoro with ID {pomodoroID}: {e}")
+
+    def end(self, pomodoroID: int):
+        try:
+            pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
+            pomodoro.status = databases.PomodoroHistoryDB.Status.COMPLETED
+            pomodoro.save()
+        except databases.PomodoroHistoryDB.DoesNotExist:
+            raise ValueError(f"PomodoroHistory with ID {pomodoroID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while ending timer for pomodoro with ID: {pomodoroID}")
+
+    def getStatus(self, pomodoroID: int):
         return self.status

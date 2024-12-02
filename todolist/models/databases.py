@@ -214,12 +214,15 @@ class ReminderDB(MyDB):
 class PomodoroHistoryDB(MyDB):
     class Status(models.TextChoices):
         COMPLETED = "Completed"
+        RUNNING = "Running"
+        PAUSED = "Paused"
         CANCELED = "Canceled"
 
     pomodoroID = models.IntegerField(primary_key = True)
     taskID = models.ForeignKey(TodoItemDB, on_delete = models.CASCADE)
     startTime = models.DateTimeField("Start time")
     duration = models.DurationField()
+    currentDuration = models.DurationField(null=True)
     endTime = models.DateTimeField("End time")
     status = models.CharField(max_length = 10, choices = Status.choices, default = Status.COMPLETED)
     createdAt = models.DateTimeField("Created date", default = timezone.now)
