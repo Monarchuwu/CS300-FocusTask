@@ -26,13 +26,25 @@ If you're in our team, you can get the file from this [link](https://drive.googl
 ### 4. Build and run
 Go to the root directory of the project and run the following commands:
 ```bash
-docker-compose build
-docker-compose up -d
+docker-compose up --build
 ```
 
 Migrate the database:
 ```bash
-docker-compose exec app python manage.py migrate
+docker-compose exec backend python manage.py migrate
+```
+
+## Development
+
+To execute commands in the backend container:
+```bash
+docker-compose exec backend <command>
+```
+
+To rebuild the containers:
+```bash
+docker-compose down --volumes
+docker-compose up --build
 ```
 
 To lint the code:
