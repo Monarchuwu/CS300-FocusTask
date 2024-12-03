@@ -52,3 +52,4 @@ class TaskSubrelation(models.Model):
         Task, related_name="Main_task", on_delete=models.CASCADE)
     subTask = models.ForeignKey(
         Task, related_name="Sub_task",  on_delete=models.CASCADE)
+
