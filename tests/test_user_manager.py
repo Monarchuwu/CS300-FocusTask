@@ -12,12 +12,8 @@ def user_manager():
     return UserManager()
 
 
-@patch('todolist.models.databases.UserDB')
-def test_register_user_success(MockUserDB, user_manager):
-    mock_user = MagicMock()
-    MockUserDB.return_value = mock_user
-    mock_user.save.return_value = None
-
+@pytest.mark.django_db
+def test_register_user_success(user_manager):
     result = user_manager.registerUser(
         username="testuser",
         email="test@example.com",
@@ -25,22 +21,29 @@ def test_register_user_success(MockUserDB, user_manager):
         avatarURL=None
     )
     assert result == "User registered successfully"
-    mock_user.save.assert_called_once()
 
 
-@patch('todolist.models.databases.UserDB')
-def test_register_user_email_exists(MockUserDB, user_manager):
-    mock_user = MagicMock()
-    MockUserDB.return_value = mock_user
-    mock_user.save.side_effect = IntegrityError
+@pytest.mark.django_db
+def test_register_user_email_exists(user_manager):
+    result = user_manager.registerUser(
+        username="testuser",
+        email="test@example.com",
+        password="password123",
+        avatarURL=None
+    )
+    assert result == "User registered successfully"
 
-    with pytest.raises(ValueError, match="Error: Email already exists"):
+    try:
         user_manager.registerUser(
             username="testuser",
-            email="duplicate@example.com",
+            email="test@example.com",
             password="password123",
             avatarURL=None
         )
+    except ValueError as e:
+        assert str(e) == "An error occurred while registering the new user: Error: Email already exists"
+        return
+    assert False, "Expected ValueError not raised"
 
 
 @patch('todolist.models.databases.UserDB')

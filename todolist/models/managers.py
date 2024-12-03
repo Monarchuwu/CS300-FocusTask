@@ -14,11 +14,13 @@ class UserManager:
     def registerUser(self, username: str, email: str, password: str, avatarURL: str | None):
         passwordHash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         try:
+            if databases.UserDB.objects.filter(email=email).exists():
+                raise ValueError("Error: Email already exists")
             user = databases.UserDB(username=username, email=email, passwordHash=passwordHash, avatarURL=avatarURL)
             user.save()
             return "User registered successfully"
-        except IntegrityError:
-            raise ValueError("Error: Email already exists")
+        except Exception as e:
+            raise ValueError(f"An error occurred while registering the new user: {e}")
 
     def signIn(self, email: str, password: str):
         try:
