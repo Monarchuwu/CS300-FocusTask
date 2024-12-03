@@ -52,11 +52,11 @@ class TaskManager:
             databases.TodoItemDB.objects.create(
                 itemID=task.itemID,
                 name=task.name,
-                parentID=databases.TodoItemDB.objects.get(itemID=task.parentID) if task.parentID else None,
-                createdDate=task.createdDate,
+                parentID=None if task.parentID is None else databases.TodoItemDB.objects.get(itemID=task.parentID),
+                createdDate=datetime.now(), # ignore the createdDate from the input
                 userID=databases.UserDB.objects.get(userID=task.userID),
                 itemType=task.itemType,
-                labelID=databases.LabelDB.objects.get(labelID=task.labelID) if task.labelID else None,
+                labelID=None if task.labelID is None else databases.LabelDB.objects.get(labelID=task.labelID)
             )
         except databases.UserDB.DoesNotExist:
             raise ValueError(f"User with ID {task.userID} does not exist.")
@@ -67,7 +67,7 @@ class TaskManager:
         except IntegrityError:
             raise ValueError(f"A task with ID {task.itemID} already exists.")
         except Exception as e:
-            raise ValueError(f"An error occurred while adding the task: {e}")
+            raise ValueError(f"An error occurred while adding the task: {e} parentID is {task.parentID}")
 
     def deleteTask(self, taskID: int):
         try:
