@@ -4,12 +4,10 @@ WORKDIR /app
 
 # Install system packages
 RUN apt-get update && apt-get upgrade -y
-
-COPY /backend/requirements.txt .
-
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./backend .
+COPY . .
 
 EXPOSE 8000
 
