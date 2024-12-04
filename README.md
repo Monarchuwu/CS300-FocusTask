@@ -29,12 +29,49 @@ Go to the root directory of the project and run the following commands:
 docker-compose up --build
 ```
 
+#### Backend
+The backend is ready when you see the following message:
+```bash
+focus_task_backend   | Watching for file changes with StatReloader
+```
+
 Migrate the database:
 ```bash
 docker-compose exec backend python manage.py migrate
 ```
 
+To create a superuser:
+```bash
+docker-compose exec backend python manage.py createsuperuser
+```
+
+#### Frontend
+If `frontend/node_modules` is not installed in the frontend container, run the following command in the `frontend` directory:
+```bash
+npm install
+```
+
+To start the frontend, run the following command in the `frontend` directory:
+```bash
+npm start
+```
+
+The frontend is ready when you see the following message:
+```
+You can now view frontend in the browser.
+
+  Local:            http://localhost:3000
+  On Your Network:  http://172.19.0.2:3000
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+
+webpack compiled successfully
+``` 
+
 ## Development
+
+If your run the app in the browser under the ip given after npm run start as "On Your Network", then if you make changes in `frontend/src/App.js` this should automaticly reload the page when saved.
 
 To execute commands in the backend container:
 ```bash
@@ -51,4 +88,10 @@ To lint the code:
 ```bash
 flake8
 ```
+
+To test the code using pytest:
+```bash
+docker-compose exec backend pytest
+```
+
 

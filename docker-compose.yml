@@ -28,13 +28,6 @@ services:
     depends_on:
       - db
 
-  frontend:
-    build: ./frontend
-    container_name: focus_task_frontend
-    volumes:
-      - ./frontend:/app
-    ports:
-      - "3000:3000"
 
 volumes:
   pg_data:
