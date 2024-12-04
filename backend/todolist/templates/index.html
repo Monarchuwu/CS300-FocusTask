@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Index Page</title>
+    <style>
+        .task-name-btn:hover {
+            background-color: #45a049;
+        }
+
+        .task-name-btn:active {
+            background-color: #388e3c;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: left;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .add-task-form {
+            display: none;
+            /* Form ẩn ban đầu */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            z-index: 1000;
+            width: 300px;
+        }
+
+        .add-task-form form {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ADD TASK -->
+    <button id="addTaskButton" onclick="showAddTaskForm()">Add Task</button>
+
+    <div id="addTaskForm" class="add-task-form">
+        <h2>Add New Task</h2>
+        <form action="add-task/" method="POST">
+            {% csrf_token %}
+            <label for="taskID">TaskID:</label>
+            <input type="text" id="taskID" name="taskID" required><br><br>
+
+            <label for="taskName">TaskName:</label>
+            <input type="text" id="taskName" name="taskName" required><br><br>
+
+            <label for="dueDate">Due date:</label>
+            <textarea id="dueDate" name="dueDate" required></textarea><br><br>
+
+            <!--<label for="reminder">Reminding date:</label>
+            <textarea id="reminder" name="reminder" required></textarea><br><br>
+
+            <label for="repeatOne">repeatOne:</label>
+            <input type="checkbox" id="repeatOne" name="repeatOne"><br><br>
+
+            <label for="repeatEveryDay">repeatEveryDay:</label>
+            <input type="checkbox" id="repeatEveryDay" name="repeatEveryDay"><br><br>
+
+            <label for="repeatEveryWeek">repeatEveryWeek:</label>
+            <input type="checkbox" id="repeatEveryWeek" name="repeatEveryWeek"><br><br>-->
+
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" required></textarea><br><br>
+
+            <label for="isDoneState">Is Done:</label>
+            <input type="checkbox" id="isDoneState" name="isDoneState"><br><br>
+
+            <label for="createdDate">Created Date:</label>
+            <textarea id="createdDate" name="createdDate" required></textarea><br><br>
+
+            <button type="submit">Add Task</button>
+            <button type="button" onclick="closeAddTaskForm()">Cancel</button>
+        </form>
+    </div>
+
+
+    <!-- MAIN CONTENT (INBOX and TODAY) -->
+    <button id="toggleButton" onclick="toggleView()">Inbox</button>
+
+    <ul>
+        {% for task in tasks %}
+        <li>
+            <input type="checkbox" id="task-{{ task.taskID }}" {% if task.isDoneState %}checked{% endif %}
+                onchange="toggleTaskDone('{{ task.taskID }}')">
+
+            <h2 class="task-name-btn" onclick="showTaskDetails('{{ task.taskID }}')">{{ task.taskName }}</h2>
+            <p>{{ task.description }}</p>
+            <small>Ngày tạo: {{ task.createdDate }}</small>
+
+            <!-- Model Popup to display task information -->
+            <div id="task-modal-{{ task.taskID }}" class="popup">
+                <div class="popup-content">
+                    <span class="close-btn" onclick="closeModal('{{ task.taskID }}')">&times;</span>
+                    <h2>{{ task.taskID }}</h2>
+                    <p><strong>Task Name:</strong> {{ task.taskName }}</p>
+                    <p><strong>Description:</strong> {{ task.description }}</p>
+                    <p><strong>Created Date:</strong> {{ task.createdDate }}</p>
+                    <p><strong>Is Done:</strong> {{ task.isDoneState }}</p>
+                    <p><strong>Due Date:</strong> {{ task.dueDate }}</p>
+                    <p><strong>Reminder:</strong> {{ task.reminder }}</p>
+                    <p><strong>Repeat One:</strong> {{ task.repeatOne }}</p>
+                    <p><strong>Repeat Every Day:</strong> {{ task.repeatEveryDay }}</p>
+                    <p><strong>Repeat Every Week:</strong> {{ task.repeatEveryWeek }}</p>
+                </div>
+            </div>
+        </li>
+        {% empty %}
+        <li>There are no tasks to display.</li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        // Send AJAX request to update `isDoneState` of task
+        function toggleTaskDone(taskId) {
+            fetch(`/toggle-task-done/${taskId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}', // Secure Django CSRF token
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert('An error occurred while updating the task.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        function toggleView() {
+            const button = document.getElementById("toggleButton");
+            const viewToday = getQueryParam("view_today") === "true";
+
+            if (viewToday) {
+                window.location.href = "?view_today=false";
+            } else {
+                window.location.href = "?view_today=true";
+            }
+        }
+
+        // Open modal
+        function showTaskDetails(taskId) {
+            const modal = document.getElementById(`task-modal-${taskId}`);
+            modal.style.display = "flex";
+        }
+
+        // Close modal
+        function closeModal(taskId) {
+            const modal = document.getElementById(`task-modal-${taskId}`);
+            modal.style.display = "none";
+        }
+
+        // Display form Add Task
+        function showAddTaskForm() {
+            document.getElementById("addTaskForm").style.display = "block";
+        }
+
+        // Close form Add Task
+        function closeAddTaskForm() {
+            document.getElementById("addTaskForm").style.display = "none";
+        }
+
+        // Click anywhere outside modal, close modal
+        window.onclick = function (event) {
+            const modals = document.querySelectorAll('.task-modal');
+            modals.forEach(function (modal) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            });
+        }
+
+        // Set initial value for the button based on view_today parameter
+        window.onload = function () {
+            const viewToday = getQueryParam("view_today") === "true";
+            document.getElementById("toggleButton").innerText = viewToday ? "Today" : "Inbox";
+        };
+    </script>
+</body>
+
+</html>

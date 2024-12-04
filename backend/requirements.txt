@@ -1,0 +1,7 @@
+Django==5.1
+flake8
+pytest
+pytest-django
+bcrypt
+djangorestframework==3.14
+django-cors-headers

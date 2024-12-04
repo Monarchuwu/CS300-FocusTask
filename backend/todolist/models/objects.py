@@ -1,4 +1,15 @@
 from datetime import datetime, timedelta
+import json
+
+def value_in_dict(dict: dict, key: str, default = None):
+    if key not in dict or key.lower() == "none" or key.lower() == "null":
+        return default
+    return dict[key]
+
+def normalize_data(dict: dict, required_keys: list = []):
+    for key in required_keys:
+        dict[key] = value_in_dict(dict, key)
+    return dict
 
 class User:
     def __init__(self,
@@ -14,6 +25,25 @@ class User:
         self.passwordHash = passwordHash
         self.avatarURL = avatarURL
         self.createdAt = createdAt
+    def __str__(self) -> str:
+        json_data = {
+            "userID": self.userID,
+            "username": self.username,
+            "email": self.email,
+            "passwordHash": self.passwordHash,
+            "avatarURL": self.avatarURL,
+            "createdAt": self.createdAt
+        }
+        return json.dumps(json_data)
+    @staticmethod
+    def from_json(json_data):
+        json_data = normalize_data(json_data, ["userID", "username", "email", "passwordHash", "avatarURL", "createdAt"])
+        return User(json_data["userID"],
+                    json_data["username"],
+                    json_data["email"],
+                    json_data["passwordHash"],
+                    json_data["avatarURL"],
+                    json_data["createdAt"])
 
 class WebsiteBlocking:
     def __init__(self,
@@ -64,7 +94,7 @@ class TodoItem:
                  itemID: int,
                  name: str,
                  parentID: int | None,
-                 createdDate: datetime,
+                 createdDate: datetime | None,
                  userID: int,
                  itemType: str,
                  labelID: int | None):
@@ -75,6 +105,30 @@ class TodoItem:
         self.userID = userID
         self.itemType = itemType
         self.labelID = labelID
+
+    def __str__(self):
+        json_data = {
+            "itemID": self.itemID,
+            "name": self.name,
+            "parentID": self.parentID,
+            "createdDate": self.createdDate,
+            "userID": self.userID,
+            "itemType": self.itemType,
+            "labelID": self.labelID
+        }
+        return json.dumps(json_data)
+    
+    @staticmethod
+    def from_json(json_data):
+        json_data = normalize_data(json_data, ["itemID", "name", "parentID", "createdDate", "userID", "itemType", "labelID"])
+        print(json_data)
+        return TodoItem(json_data["itemID"],
+                        json_data["name"],
+                        json_data["parentID"],
+                        json_data["createdDate"],
+                        json_data["userID"],
+                        json_data["itemType"],
+                        json_data["labelID"])
 
 class TaskAttributes:
     def __init__(self,

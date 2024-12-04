@@ -11,13 +11,13 @@ services:
     volumes:
     - pg_data:/var/lib/postgresql/data
 
-  app:
-    build: .
-    container_name: focus_task_app
+  backend:
+    build: ./backend
+    container_name: focus_task_backend
     ports:
       - '8000:8000'
     volumes:
-      - .:/app
+      - ./backend:/app
     environment:
       - DJANGO_ENV=${DJANGO_ENV}
       - DATABASE_NAME=${DATABASE_NAME}
@@ -27,6 +27,7 @@ services:
       - DATABASE_PORT=${DATABASE_PORT}
     depends_on:
       - db
+
 
 volumes:
   pg_data:
