@@ -22,3 +22,11 @@ def user_register(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+    
+@csrf_exempt
+def user_signin(request):
+    pass
+
+@csrf_exempt
+def user_signout(request):
+    pass

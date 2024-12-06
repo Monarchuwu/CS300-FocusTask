@@ -12,6 +12,14 @@ def index(request):
     return HttpResponse("Hello, world. You're at the todolist.")
 
 @csrf_exempt
+def project_add(request):
+    pass
+
+@csrf_exempt
+def section_add(request):
+    pass
+
+@csrf_exempt
 def task_add(request):
     if request.method == 'POST':
         try:
@@ -29,3 +37,38 @@ def task_add(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
     
+@csrf_exempt
+def todo_item_delete(request):
+    pass
+
+@csrf_exempt
+def todo_item_update(request):
+    pass
+
+@csrf_exempt
+def task_attributes_update(request):
+    pass
+
+@csrf_exempt
+def todo_item_get_project(request):
+    pass
+
+@csrf_exempt
+def todo_item_get(request):
+    pass
+
+@csrf_exempt
+def task_attributes_get(request):
+    pass
+
+@csrf_exempt
+def todo_item_get_list(request):
+    pass
+
+@csrf_exempt
+def task_get_today_list(request):
+    pass
+
+@csrf_exempt
+def task_attributes_get_list(request):
+    pass
