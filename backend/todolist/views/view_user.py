@@ -14,19 +14,46 @@ def user_register(request):
             username = data['username']
             email = data['email']
             password = data['password']
-            avatarURL = data['avatarURL']
+            avatarURL = data.get('avatarURL', None)
             UserManager().registerUser(username, email, password, avatarURL)
             
-            return JsonResponse({'status': 'success', 'message': 'User added successfully'})
+            return JsonResponse({'status': 'success'})
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
     
 @csrf_exempt
 def user_signin(request):
-    pass
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data['email']
+            password = data['password']
+            authenticationToken = UserManager().signIn(email, password)
+
+            return JsonResponse({'status': 'success', 'data': {'authenticationToken': authenticationToken}})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def user_signout(request):
-    pass
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            UserManager().signOut(token)
+
+            return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
