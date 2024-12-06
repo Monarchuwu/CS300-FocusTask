@@ -1,29 +1,21 @@
 import pytest
 import json
-from unittest.mock import patch, MagicMock
+from todolist.models.managers import UserManager
 
 
-def post_api_user_register(client, data):
-    url = "/todolist/api/user/register"
-    return client.post(url, data=data, content_type='application/json')
-
-def post_api_user_signin(client, data):
-    url = "/todolist/api/user/signin"
-    return client.post(url, data=data, content_type='application/json')
-
-def post_api_user_signout(client, data):
-    url = "/todolist/api/user/signout"
-    return client.post(url, data=data, content_type='application/json')
+@pytest.fixture
+def userManager():
+    return UserManager()
 
 
 @pytest.mark.django_db
 def test_api_user_register(client):
-    payload = {
+    url = "/todolist/api/user/register"
+    response = client.post(url, content_type='application/json', data=json.dumps({
         "username": "testuser",
         "email": "test@gmail.com",
         "password": "password123"
-    }
-    response = post_api_user_register(client, json.dumps(payload))
+    }))
 
     assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
     assert response.headers["Content-Type"] == "application/json", \
@@ -32,15 +24,17 @@ def test_api_user_register(client):
     jsonData = response.json()
     assert jsonData['status'] == 'success'
 
-@pytest.mark.django_db
-def test_api_user_signin(client):
-    post_api_user_register(client, json.dumps({
-        "username": "testuser",
-        "email": "test@gmail.com",
-        "password": "password123"
-    }))
 
-    response = post_api_user_signin(client, json.dumps({
+@pytest.mark.django_db
+def test_api_user_signin(client, userManager):
+    userManager.registerUser(
+        username="testuser",
+        email="test@gmail.com",
+        password="password123",
+    )
+
+    url = "/todolist/api/user/signin"
+    response = client.post(url, content_type='application/json', data=json.dumps({
         "email": "test@gmail.com",
         "password": "password123"
     }))
@@ -55,20 +49,21 @@ def test_api_user_signin(client):
     data = jsonData['data']
     assert 'authenticationToken' in data
 
-@pytest.mark.django_db
-def test_api_user_signout(client):
-    post_api_user_register(client, json.dumps({
-        "username": "testuser",
-        "email": "test@gmail.com",
-        "password": "password123"
-    }))
-    response = post_api_user_signin(client, json.dumps({
-        "email": "test@gmail.com",
-        "password": "password123"
-    }))
-    authenticationToken = response.json()['data']['authenticationToken']
 
-    response = post_api_user_signout(client, json.dumps({
+@pytest.mark.django_db
+def test_api_user_signout(client, userManager):
+    userManager.registerUser(
+        username="testuser",
+        email="test@gmail.com",
+        password="password123",
+    )
+    authenticationToken = userManager.signIn(
+        email="test@gmail.com",
+        password="password123"
+    )
+
+    url = "/todolist/api/user/signout"
+    response = client.post(url, content_type='application/json', data=json.dumps({
         "authenticationToken": authenticationToken
     }))
 

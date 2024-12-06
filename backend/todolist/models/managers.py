@@ -17,7 +17,7 @@ class UserManager:
         except databases.UserDB.DoesNotExist:
             raise ValueError("Error: Authentication token not found")
     
-    def registerUser(self, username: str, email: str, password: str, avatarURL: str | None):
+    def registerUser(self, username: str, email: str, password: str, avatarURL: str = None):
         passwordHash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         passwordHash = passwordHash.decode('utf-8')
         try:
