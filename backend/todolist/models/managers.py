@@ -1,18 +1,25 @@
 import bcrypt
 from datetime import datetime, timedelta
+from django.utils import timezone
 
 from . import databases, objects
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 
 class UserManager:
-    _currentUserID = None
-
-    def getCurrentUserID(self):
-        return self._currentUserID
+    def getUserID(self, authenticationToken: str):
+        try:
+            token = databases.AuthenticationTokenDB.objects.get(tokenValue=authenticationToken)
+            if token.expiryDate < timezone.now():
+                token.delete()
+                raise ValueError("Error: Authentication token expired")
+            return token.userID.userID
+        except databases.UserDB.DoesNotExist:
+            raise ValueError("Error: Authentication token not found")
     
     def registerUser(self, username: str, email: str, password: str, avatarURL: str | None):
         passwordHash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        passwordHash = passwordHash.decode('utf-8')
         try:
             if databases.UserDB.objects.filter(email=email).exists():
                 raise ValueError("Error: Email already exists")
@@ -25,19 +32,23 @@ class UserManager:
     def signIn(self, email: str, password: str):
         try:
             user = databases.UserDB.objects.get(email=email)
-            if bcrypt.checkpw(password.encode('utf-8'), user.passwordHash.encode('utf-8')):
-                self._currentUserID = user.userID
-                return "Sign-in successful"
-            else:
+            if not bool(bcrypt.checkpw(password.encode('utf-8'), user.passwordHash.encode('utf-8'))):
                 raise ValueError("Error: Incorrect password")
         except ObjectDoesNotExist:
             raise ValueError("Error: User not found")
+        
+        # Create a new authentication token
+        token = bcrypt.gensalt().decode('utf-8')
+        databases.AuthenticationTokenDB.objects.create(userID=user, tokenValue=token, expiryDate=timezone.now() + timedelta(days=1))
+        return token
 
-    def signOut(self):
-        if self._currentUserID is None:
-            raise ValueError("Error: No user signed in")
-        self._currentUserID = None
-        return "Sign-out successful"
+    def signOut(self, authenticationToken: str):
+        try:
+            databases.AuthenticationTokenDB.objects.get(tokenValue=authenticationToken).delete()
+            return "User signed out successfully"
+        except databases.AuthenticationTokenDB.DoesNotExist:
+            raise ValueError("Error: Authentication token not found")
+
 
 class TaskManager:
     def getTaskList(self, projectID: int):
@@ -105,7 +116,6 @@ class TaskManager:
         except Exception as e:
             raise ValueError(f"An error occurred while editing the task: {e}")
 
-
     # toggle task status between pending and completed
     def toggleTask(self, taskID: int):
         try:
@@ -148,7 +158,6 @@ class TaskManager:
             raise ValueError(f"TaskAttributes for task ID {taskID} do not exist.")
         except Exception as e:
             raise ValueError(f"An error occurred while removing the task from today's list: {e}")
-
 
     def suggestTodayTask(self):
         try:
@@ -195,19 +204,17 @@ class TaskManager:
 
 
 class WebsiteBlockingManager:
-    def getBlockList(self):
+    def getBlockList(self, userID: int):
         try:
-            current_user = UserManager.getCurrentUserID()
-            records = databases.WebsiteBlockingDB.objects.filter(UserID=current_user)
+            records = databases.WebsiteBlockingDB.objects.filter(UserID=userID)
             return [record.get_data_object() for record in records]
         except Exception as e:
             print(f"Error fetching block list: {e}")
             return []
 
-    def addToBlockList(self, URL: str):
+    def addToBlockList(self, userID: int, URL: str):
         try:
-            current_user = UserManager.getCurrentUserID()
-            new_block = databases.WebsiteBlockingDB(URL=URL, UserID=current_user)
+            new_block = databases.WebsiteBlockingDB(URL=URL, UserID=userID)
             new_block.save()
             return f"Website '{URL}' added to block list."
         except IntegrityError:
@@ -215,19 +222,17 @@ class WebsiteBlockingManager:
         except Exception as e:
             raise ValueError(f"Error adding to block list: {e}")
 
-    def deleteFromBlockList(self, blockID: int):
+    def deleteFromBlockList(self, userID: int, blockID: int):
         try:
-            current_user = UserManager.getCurrentUserID()
-            databases.WebsiteBlockingDB.objects.filter(blockID=blockID, UserID=current_user).delete()
+            databases.WebsiteBlockingDB.objects.filter(blockID=blockID, UserID=userID).delete()
             return f"BlockID {blockID} removed from block list."
         except Exception as e:
             raise ValueError(f"Error deleting from block list: {e}")
 
     # toggle website blocking status
-    def toggleBlock(self, blockID: int):
+    def toggleBlock(self, userID: int, blockID: int):
         try:
-            current_user = UserManager.getCurrentUserID()
-            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=current_user)
+            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=userID)
             block_entry.isBlocking = not block_entry.isBlocking
             block_entry.save()
             return f"BlockID {blockID} toggled to {'blocking' if block_entry.isBlocking else 'not blocking'}."
@@ -236,10 +241,9 @@ class WebsiteBlockingManager:
         except Exception as e:
             raise ValueError(f"Error toggling block status: {e}")
 
-    def setBlock(self, blockID: int, status: bool):
+    def setBlock(self, userID: int, blockID: int, status: bool):
         try:
-            current_user = UserManager.getCurrentUserID()
-            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=current_user)
+            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=userID)
             block_entry.isBlocking = status
             block_entry.save()
             return f"BlockID {blockID} set to {'blocking' if status else 'not blocking'}."
@@ -247,6 +251,7 @@ class WebsiteBlockingManager:
             raise ValueError(f"BlockID {blockID} does not exist.")
         except Exception as e:
             raise ValueError(f"Error setting block status: {e}")
+
 
 class PreferencesManager:
     def setLanguage(self, userID: int, language: databases.PreferencesDB.Language):
@@ -259,7 +264,6 @@ class PreferencesManager:
         except Exception as e:
             raise ValueError(f"An error occurred while changing the preferred language of userID: {userID}") 
         
-
     def setTimezone(self, userID: int, timezone: databases.PreferencesDB.Timezone):
         try:
             preference = databases.PreferencesDB.objects.get(userID = userID)
@@ -325,6 +329,7 @@ class PreferencesManager:
             raise ValueError(f"Preference for user ID {userID} do not exist.")
         except Exception as e:
             raise ValueError(f"An error occurred while getting the preferred auto block of userID: {userID}") 
+
 
 class PomodoroManager:
     class Status:

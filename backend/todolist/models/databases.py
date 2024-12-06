@@ -91,7 +91,7 @@ class PreferencesDB(MyDB):
 class AuthenticationTokenDB(MyDB):
     tokenID = models.IntegerField(primary_key = True)
     userID = models.ForeignKey(UserDB, on_delete = models.CASCADE)
-    tokenValue = models.CharField(max_length = 100)
+    tokenValue = models.CharField(max_length = 64, unique = True)
     expiryDate = models.DateTimeField("Expiry date")
 
     def get_data_object(self):
