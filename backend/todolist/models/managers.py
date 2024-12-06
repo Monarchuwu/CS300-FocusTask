@@ -6,6 +6,7 @@ from . import databases, objects
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 
+
 class UserManager:
     def getUserID(self, authenticationToken: str):
         try:
@@ -60,61 +61,127 @@ class TaskManager:
         except Exception as e:
             raise ValueError(f"An error occurred while fetching the task list: {e}")
 
-    def addTask(self, task: objects.TodoItem):
+    def addTodoItem(self, todoItem: objects.TodoItem):
         try:
-            databases.TodoItemDB.objects.create(
-                itemID=task.itemID,
-                name=task.name,
-                parentID=None if task.parentID is None else databases.TodoItemDB.objects.get(itemID=task.parentID),
-                createdDate=datetime.now(), # ignore the createdDate from the input
-                userID=databases.UserDB.objects.get(userID=task.userID),
-                itemType=task.itemType,
-                labelID=None if task.labelID is None else databases.LabelDB.objects.get(labelID=task.labelID)
+            todoItem = databases.TodoItemDB(
+                name=todoItem.name,
+                parentID=None if todoItem.parentID is None else databases.TodoItemDB.objects.get(itemID=todoItem.parentID),
+                userID=databases.UserDB.objects.get(userID=todoItem.userID),
+                itemType=todoItem.itemType,
+                labelID=None if todoItem.labelID is None else databases.LabelDB.objects.get(labelID=todoItem.labelID)
             )
+            todoItem.save()
+            print(f"itemID after save: {todoItem.itemID}")
+            return todoItem.get_data_object()
         except databases.UserDB.DoesNotExist:
-            raise ValueError(f"User with ID {task.userID} does not exist.")
+            raise ValueError(f"User with ID {todoItem.userID} does not exist.")
         except databases.TodoItemDB.DoesNotExist:
-            raise ValueError(f"Parent task with ID {task.parentID} does not exist.")
+            raise ValueError(f"Parent todo item with ID {todoItem.parentID} does not exist.")
         except databases.LabelDB.DoesNotExist:
-            raise ValueError(f"Label with ID {task.labelID} does not exist.")
+            raise ValueError(f"Label with ID {todoItem.labelID} does not exist.")
         except IntegrityError:
-            raise ValueError(f"A task with ID {task.itemID} already exists.")
+            raise ValueError(f"A todo item with ID {todoItem.itemID} already exists.")
         except Exception as e:
-            raise ValueError(f"An error occurred while adding the task: {e} parentID is {task.parentID}")
+            raise ValueError(f"An error occurred while adding the todo item: {e} parentID is {todoItem.parentID}")
 
-    def deleteTask(self, taskID: int):
+    def deleteTodoItem(self, itemID: int):
         try:
-            task = databases.TodoItemDB.objects.get(itemID=taskID)
-            task.delete()
+            item = databases.TodoItemDB.objects.get(itemID=itemID)
+            item.delete()
         except databases.TodoItemDB.DoesNotExist:
-            raise ValueError(f"Task with ID {taskID} does not exist.")
+            raise ValueError(f"Todo Item with ID {itemID} does not exist.")
         except Exception as e:
-            raise ValueError(f"An error occurred while deleting the task: {e}")
+            raise ValueError(f"An error occurred while deleting the todo item: {e}")
         
-    def editTask(self, task: objects.TodoItem):
+    def editTodoItem(self, todoItem: objects.TodoItem):
         try:
             # Update TodoItem fields
-            task_db = databases.TodoItemDB.objects.get(itemID=task.itemID)
-            task_db.name = task.name
-            task_db.parentID = databases.TodoItemDB.objects.get(itemID=task.parentID) if task.parentID else None
-            task_db.labelID = databases.LabelDB.objects.get(labelID=task.labelID) if task.labelID else None
-            task_db.save()
-
-            # Update TaskAttributes if available
-            task_attributes = databases.TaskAttributesDB.objects.get(taskID=task.itemID)
-            if hasattr(task, "attributes"):
-                task_attributes.dueDate = task.attributes.dueDate
-                task_attributes.priority = task.attributes.priority
-                task_attributes.status = task.attributes.status
-                task_attributes.description = task.attributes.description
-                task_attributes.inTodayDate = task.attributes.inTodayDate
-                task_attributes.save()
+            item_db = databases.TodoItemDB.objects.get(itemID=todoItem.itemID)
+            item_db.name = todoItem.name
+            item_db.parentID = databases.TodoItemDB.objects.get(itemID=todoItem.parentID) if todoItem.parentID else None
+            item_db.labelID = databases.LabelDB.objects.get(labelID=todoItem.labelID) if todoItem.labelID else None
+            item_db.save()
         except databases.TodoItemDB.DoesNotExist:
-            raise ValueError(f"Task with ID {task.itemID} does not exist.")
-        except databases.TaskAttributesDB.DoesNotExist:
-            raise ValueError(f"TaskAttributes for task ID {task.itemID} do not exist.")
+            raise ValueError(f"Todo Item with ID {item_db.itemID} does not exist.")
         except Exception as e:
             raise ValueError(f"An error occurred while editing the task: {e}")
+
+    def getTodoItem(self, itemID: int):
+        try:
+            item = databases.TodoItemDB.objects.get(itemID=itemID)
+            return item.get_data_object()
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"Todo Item with ID {itemID} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while fetching the todo item: {e}")
+
+    #def addTaskAttributes(self, todoItem: objects.TodoItem):
+    #    try:
+    #        databases.TodoItemDB.objects.create(
+    #            name=todoItem.name,
+    #            parentID=None if todoItem.parentID is None else databases.TodoItemDB.objects.get(itemID=todoItem.parentID),
+    #            createdDate=datetime.now(), # ignore the createdDate from the input
+    #            userID=databases.UserDB.objects.get(userID=todoItem.userID),
+    #            itemType=todoItem.itemType,
+    #            labelID=None if todoItem.labelID is None else databases.LabelDB.objects.get(labelID=todoItem.labelID)
+    #        )
+    #    except databases.UserDB.DoesNotExist:
+    #        raise ValueError(f"User with ID {todoItem.userID} does not exist.")
+    #    except databases.TodoItemDB.DoesNotExist:
+    #        raise ValueError(f"Parent todo item with ID {todoItem.parentID} does not exist.")
+    #    except databases.LabelDB.DoesNotExist:
+    #        raise ValueError(f"Label with ID {todoItem.labelID} does not exist.")
+    #    except IntegrityError:
+    #        raise ValueError(f"A todo item with ID {todoItem.itemID} already exists.")
+    #    except Exception as e:
+    #        raise ValueError(f"An error occurred while adding the todo item: {e} parentID is {todoItem.parentID}")
+
+    def deleteTodoItem(self, itemID: int):
+        try:
+            item = databases.TodoItemDB.objects.get(itemID=itemID)
+            item.delete()
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"Todo Item with ID {itemID} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while deleting the todo item: {e}")
+        
+    def editTodoItem(self, todoItem: objects.TodoItem):
+        try:
+            # Update TodoItem fields
+            item_db = databases.TodoItemDB.objects.get(itemID=todoItem.itemID)
+            item_db.name = todoItem.name
+            item_db.parentID = databases.TodoItemDB.objects.get(itemID=todoItem.parentID) if todoItem.parentID else None
+            item_db.labelID = databases.LabelDB.objects.get(labelID=todoItem.labelID) if todoItem.labelID else None
+            item_db.save()
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"Todo Item with ID {item_db.itemID} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while editing the task: {e}")
+
+    #def editTodoItem(self, todoItem: objects.TodoItem):
+    #    try:
+    #        # Update TodoItem fields
+    #        item_db = databases.TodoItemDB.objects.get(itemID=todoItem.itemID)
+    #        item_db.name = todoItem.name
+    #        item_db.parentID = databases.TodoItemDB.objects.get(itemID=todoItem.parentID) if todoItem.parentID else None
+    #        item_db.labelID = databases.LabelDB.objects.get(labelID=todoItem.labelID) if todoItem.labelID else None
+    #        item_db.save()
+
+    #        # Update TaskAttributes if available
+    #        task_attributes = databases.TaskAttributesDB.objects.get(taskID=task.itemID)
+    #        if hasattr(task, "attributes"):
+    #            task_attributes.dueDate = task.attributes.dueDate
+    #            task_attributes.priority = task.attributes.priority
+    #            task_attributes.status = task.attributes.status
+    #            task_attributes.description = task.attributes.description
+    #            task_attributes.inTodayDate = task.attributes.inTodayDate
+    #            task_attributes.save()
+    #    except databases.TodoItemDB.DoesNotExist:
+    #        raise ValueError(f"Task with ID {task.itemID} does not exist.")
+    #    except databases.TaskAttributesDB.DoesNotExist:
+    #        raise ValueError(f"TaskAttributes for task ID {task.itemID} do not exist.")
+    #    except Exception as e:
+    #        raise ValueError(f"An error occurred while editing the task: {e}")
 
     # toggle task status between pending and completed
     def toggleTask(self, taskID: int):

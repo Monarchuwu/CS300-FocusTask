@@ -1,9 +1,9 @@
 from django.urls import path
 
-from .views import view_task, view_user, view_test
+from todolist.views import *
 
 urlpatterns = [
-    path("", view_task.index, name="index"),
+    path("", view_init.index, name="index"),
 
     path("api/user/register", view_user.user_register, name="user-register"),
     path("api/user/signin", view_user.user_signin, name="user-signin"),
@@ -22,5 +22,5 @@ urlpatterns = [
     path("api/task/get_today_list", view_task.task_get_today_list, name="task-get-today-list"),
     path("api/task_attributes/get_list", view_task.task_attributes_get_list, name="task-attributes-get-list"),
 
-    #path("api/test_api", view_test.test_api, name="test-api"),
+    path("api/test_api", view_test.test_api, name="test-api")
 ]

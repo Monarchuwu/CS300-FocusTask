@@ -6,18 +6,65 @@ from ..models.objects import *
 from ..models.managers import *
 from django.views.decorators.csrf import csrf_exempt
 
-
-# Create your views here.
-def index(request):
-    return HttpResponse("Hello, world. You're at the todolist.")
-
 @csrf_exempt
 def project_add(request):
-    pass
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            name = data['name']
+            userID = UserManager().getUserID(token)
+            # Create a new todo item object
+            todoItem = TodoItem(
+                itemID = None,
+                name = name,
+                parentID = None,
+                createdDate = None,
+                userID = userID,
+                itemType = 'Project',
+                labelID = None
+            )
+            todoItem = TaskManager().addTodoItem(todoItem)
+            
+            return JsonResponse({'status': 'success', 'data': str(todoItem)})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def section_add(request):
-    pass
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            name = data['name']
+            parentID = data['parentID']
+            if parentID is None:
+                raise Exception('Parent ID cannot be None')
+            
+            userID = UserManager().getUserID(token)
+            # Create a new todo item object
+            todoItem = TodoItem(
+                itemID = None,
+                name = name,
+                parentID = parentID,
+                createdDate = None,
+                userID = userID,
+                itemType = 'Section',
+                labelID = None
+            )
+            todoItem = TaskManager().addTodoItem(todoItem)
+            
+            return JsonResponse({'status': 'success', 'data': str(todoItem)})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def task_add(request):
@@ -31,9 +78,11 @@ def task_add(request):
             task_manager = TaskManager()
             task_manager.addTask(task)
             
-            return JsonResponse({'status': 'success', 'message': 'Task added successfully'})
+            return JsonResponse({'status': 'success'})
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
     
@@ -55,7 +104,24 @@ def todo_item_get_project(request):
 
 @csrf_exempt
 def todo_item_get(request):
-    pass
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            itemID = data['itemID']
+            
+            userID = UserManager().getUserID(token)
+            todoItem = TaskManager().getTodoItem(itemID)
+            if todoItem.userID != userID:
+                raise Exception('User does not have permission to access this item')
+            
+            return JsonResponse({'status': 'success', 'data': str(todoItem)})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def task_attributes_get(request):

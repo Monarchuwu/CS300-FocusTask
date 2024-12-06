@@ -25,6 +25,7 @@ class User:
         self.passwordHash = passwordHash
         self.avatarURL = avatarURL
         self.createdAt = createdAt
+
     def __str__(self) -> str:
         json_data = {
             "userID": self.userID,
@@ -35,6 +36,7 @@ class User:
             "createdAt": self.createdAt
         }
         return json.dumps(json_data)
+
     @staticmethod
     def from_json(json_data):
         json_data = normalize_data(json_data, ["userID", "username", "email", "passwordHash", "avatarURL", "createdAt"])
@@ -91,7 +93,7 @@ class Label:
 
 class TodoItem:
     def __init__(self,
-                 itemID: int,
+                 itemID: int | None,
                  name: str,
                  parentID: int | None,
                  createdDate: datetime | None,
@@ -111,7 +113,7 @@ class TodoItem:
             "itemID": self.itemID,
             "name": self.name,
             "parentID": self.parentID,
-            "createdDate": self.createdDate,
+            "createdDate": self.createdDate.isoformat(),
             "userID": self.userID,
             "itemType": self.itemType,
             "labelID": self.labelID
@@ -121,11 +123,11 @@ class TodoItem:
     @staticmethod
     def from_json(json_data):
         json_data = normalize_data(json_data, ["itemID", "name", "parentID", "createdDate", "userID", "itemType", "labelID"])
-        print(json_data)
+        createdDate = None if json_data["createdDate"] is None else datetime.fromisoformat(json_data["createdDate"])
         return TodoItem(json_data["itemID"],
                         json_data["name"],
                         json_data["parentID"],
-                        json_data["createdDate"],
+                        createdDate,
                         json_data["userID"],
                         json_data["itemType"],
                         json_data["labelID"])
@@ -133,11 +135,11 @@ class TodoItem:
 class TaskAttributes:
     def __init__(self,
                  taskID: int,
-                 dueDate: datetime | None,
-                 priority: str,
-                 status: str,
-                 description: str,
-                 inTodayDate: datetime):
+                 dueDate: datetime = None,
+                 priority: str = "Low",
+                 status: str = "Pending",
+                 description: str = "",
+                 inTodayDate: datetime = datetime(2100, 1, 1)):
         self.taskID = taskID
         self.dueDate = dueDate
         self.priority = priority
