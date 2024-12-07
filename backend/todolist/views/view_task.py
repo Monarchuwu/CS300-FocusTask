@@ -187,7 +187,25 @@ def todo_item_get(request):
 
 @csrf_exempt
 def task_attributes_get(request):
-    pass
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            taskID = data['taskID']
+            
+            userID = UserManager().getUserID(token)
+            todoItem = TaskManager().getTodoItem(taskID)
+            if todoItem.userID != userID:
+                raise Exception('User does not have permission to access this item')
+            taskAttributes = TaskManager().getTaskAttributes(taskID)
+
+            return JsonResponse({'status': 'success', 'data': str(taskAttributes)})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def todo_item_get_list(request):

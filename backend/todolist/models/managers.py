@@ -142,6 +142,15 @@ class TaskManager:
         except Exception as e:
             raise ValueError(f"An error occurred while deleting the task attributes: {e}")
 
+    def getTaskAttributes(self, taskID: int):
+        try:
+            task_attr = databases.TaskAttributesDB.objects.get(taskID=taskID)
+            return task_attr.get_data_object()
+        except databases.TaskAttributesDB.DoesNotExist:
+            raise ValueError(f"TaskAttributes for task ID {taskID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while fetching the task attributes: {e}")
+
     # toggle task status between pending and completed
     def toggleTask(self, taskID: int):
         try:

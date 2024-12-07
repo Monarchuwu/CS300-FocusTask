@@ -169,6 +169,26 @@ def test_api_todo_item_delete(client, authenticationToken):
 
 
 @pytest.mark.django_db
+def test_api_todo_item_delete_subtree(client, authenticationToken):
+    return
+
+
+@pytest.mark.django_db
+def test_api_todo_item_update(client, authenticationToken):
+    return
+
+
+@pytest.mark.django_db
+def test_api_task_attributes_update(client, authenticationToken):
+    return
+
+
+@pytest.mark.django_db
+def test_api_todo_item_get_project(client, authenticationToken):
+    return
+
+
+@pytest.mark.django_db
 def test_api_todo_item_get(client, authenticationToken):
     # Setup
     url = "/todolist/api/project/add"
@@ -195,7 +215,72 @@ def test_api_todo_item_get(client, authenticationToken):
     jsonData = response.json()
     assert jsonData['status'] == 'success'
 
-    data = jsonData['data']
+    data = json.loads(jsonData['data'])
     expectedKeys = ['itemID', 'name', 'parentID', 'createdDate', 'itemType', 'labelID']
     assert all(key in data for key in expectedKeys)
     assert 'userID' not in data
+
+
+@pytest.mark.django_db
+def test_api_task_attributes_get(client, authenticationToken):
+    # Setup project
+    url = "/todolist/api/project/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testproject",
+    }))
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
+    # Setup section
+    url = "/todolist/api/section/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testsection",
+        "parentID": itemID
+    }))
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
+    # Setup task
+    url = "/todolist/api/task/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testtask",
+        "parentID": itemID,
+    }))
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
+
+    # Test the API
+    url = "/todolist/api/task_attributes/get"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "taskID": itemID,
+    }))
+
+    # Check the response status
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert response.headers["Content-Type"] == "application/json", \
+        f"Expected content-type 'application/json', but got {response.headers['Content-Type']}"
+    
+    # Check the response data
+    jsonData = response.json()
+    assert jsonData['status'] == 'success'
+
+    data = json.loads(jsonData['data'])
+    expectedKeys = ['taskID', 'dueDate', 'priority', 'status', 'description', 'inTodayDate']
+    assert all(key in data for key in expectedKeys)
+
+
+@pytest.mark.django_db
+def test_api_todo_item_get_list(client, authenticationToken):
+    return
+
+
+@pytest.mark.django_db
+def test_api_task_get_today_list(client, authenticationToken):
+    return
+
+
+@pytest.mark.django_db
+def test_api_task_attributes_get_list(client, authenticationToken):
+    return
