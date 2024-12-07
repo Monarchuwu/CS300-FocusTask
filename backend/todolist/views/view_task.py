@@ -42,10 +42,16 @@ def section_add(request):
             token = data['authenticationToken']
             name = data['name']
             parentID = data['parentID']
-            if parentID is None:
-                raise Exception('Parent ID cannot be None')
-            
             userID = UserManager().getUserID(token)
+
+            if parentID is None:
+                raise Exception('Parent ID cannot be None')            
+            parentItem = TaskManager().getTodoItem(parentID)
+            if parentItem.itemType != 'Project':
+                raise Exception('Parent item must be a project')
+            if parentItem.userID != userID:
+                raise Exception('User does not have permission to access this project')
+
             # Create a new todo item object
             todoItem = TodoItem(
                 itemID = None,
