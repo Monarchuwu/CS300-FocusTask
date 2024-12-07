@@ -129,7 +129,28 @@ def task_add(request):
     
 @csrf_exempt
 def todo_item_delete(request):
-    pass
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            itemID = data['itemID']
+            
+            userID = UserManager().getUserID(token)
+            todoItem = TaskManager().getTodoItem(itemID)
+            if todoItem.userID != userID:
+                raise Exception('User does not have permission to access this item')
+            
+            if todoItem.itemType == 'Task':
+                TaskManager().deteleTaskAttributes(itemID)
+            TaskManager().deleteTodoItem(itemID)
+
+            return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def todo_item_update(request):

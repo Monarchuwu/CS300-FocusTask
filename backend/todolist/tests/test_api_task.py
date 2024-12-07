@@ -125,6 +125,50 @@ def test_api_task_add(client, authenticationToken):
 
 
 @pytest.mark.django_db
+def test_api_todo_item_delete(client, authenticationToken):
+    # Setup project
+    url = "/todolist/api/project/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testproject",
+    }))
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
+    # Setup section
+    url = "/todolist/api/section/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testsection",
+        "parentID": itemID
+    }))
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
+    # Setup task
+    url = "/todolist/api/task/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testtask",
+        "parentID": itemID,
+    }))
+
+    # Test the API
+    url = "/todolist/api/todo_item/delete"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "itemID": itemID,
+    }))
+
+    # Check the response status
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert response.headers["Content-Type"] == "application/json", \
+        f"Expected content-type 'application/json', but got {response.headers['Content-Type']}"
+    
+    # Check the response data
+    jsonData = response.json()
+    assert jsonData['status'] == 'success'
+
+
+@pytest.mark.django_db
 def test_api_todo_item_get(client, authenticationToken):
     # Setup
     url = "/todolist/api/project/add"

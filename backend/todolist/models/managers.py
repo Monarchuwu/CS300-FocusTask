@@ -132,44 +132,15 @@ class TaskManager:
             raise ValueError(f"Todo Item with ID {attrs.taskID} does not exist.")
         except Exception as e:
             raise ValueError(f"An error occurred while adding the task attributes: {e}")
-        
-    def editTodoItem(self, todoItem: objects.TodoItem):
+
+    def deteleTaskAttributes(self, taskID: int):
         try:
-            # Update TodoItem fields
-            item_db = databases.TodoItemDB.objects.get(itemID=todoItem.itemID)
-            item_db.name = todoItem.name
-            item_db.parentID = databases.TodoItemDB.objects.get(itemID=todoItem.parentID) if todoItem.parentID else None
-            item_db.labelID = databases.LabelDB.objects.get(labelID=todoItem.labelID) if todoItem.labelID else None
-            item_db.save()
-        except databases.TodoItemDB.DoesNotExist:
-            raise ValueError(f"Todo Item with ID {item_db.itemID} does not exist.")
+            task_attr = databases.TaskAttributesDB.objects.get(taskID=taskID)
+            task_attr.delete()
+        except databases.TaskAttributesDB.DoesNotExist:
+            raise ValueError(f"TaskAttributes for task ID {taskID} do not exist.")
         except Exception as e:
-            raise ValueError(f"An error occurred while editing the task: {e}")
-
-    #def editTodoItem(self, todoItem: objects.TodoItem):
-    #    try:
-    #        # Update TodoItem fields
-    #        item_db = databases.TodoItemDB.objects.get(itemID=todoItem.itemID)
-    #        item_db.name = todoItem.name
-    #        item_db.parentID = databases.TodoItemDB.objects.get(itemID=todoItem.parentID) if todoItem.parentID else None
-    #        item_db.labelID = databases.LabelDB.objects.get(labelID=todoItem.labelID) if todoItem.labelID else None
-    #        item_db.save()
-
-    #        # Update TaskAttributes if available
-    #        task_attributes = databases.TaskAttributesDB.objects.get(taskID=task.itemID)
-    #        if hasattr(task, "attributes"):
-    #            task_attributes.dueDate = task.attributes.dueDate
-    #            task_attributes.priority = task.attributes.priority
-    #            task_attributes.status = task.attributes.status
-    #            task_attributes.description = task.attributes.description
-    #            task_attributes.inTodayDate = task.attributes.inTodayDate
-    #            task_attributes.save()
-    #    except databases.TodoItemDB.DoesNotExist:
-    #        raise ValueError(f"Task with ID {task.itemID} does not exist.")
-    #    except databases.TaskAttributesDB.DoesNotExist:
-    #        raise ValueError(f"TaskAttributes for task ID {task.itemID} do not exist.")
-    #    except Exception as e:
-    #        raise ValueError(f"An error occurred while editing the task: {e}")
+            raise ValueError(f"An error occurred while deleting the task attributes: {e}")
 
     # toggle task status between pending and completed
     def toggleTask(self, taskID: int):
