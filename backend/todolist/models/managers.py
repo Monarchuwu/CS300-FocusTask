@@ -63,15 +63,13 @@ class TaskManager:
 
     def addTodoItem(self, todoItem: objects.TodoItem):
         try:
-            todoItem = databases.TodoItemDB(
+            todoItem = databases.TodoItemDB.objects.create(
                 name=todoItem.name,
                 parentID=None if todoItem.parentID is None else databases.TodoItemDB.objects.get(itemID=todoItem.parentID),
                 userID=databases.UserDB.objects.get(userID=todoItem.userID),
                 itemType=todoItem.itemType,
                 labelID=None if todoItem.labelID is None else databases.LabelDB.objects.get(labelID=todoItem.labelID)
             )
-            todoItem.save()
-            print(f"itemID after save: {todoItem.itemID}")
             return todoItem.get_data_object()
         except databases.UserDB.DoesNotExist:
             raise ValueError(f"User with ID {todoItem.userID} does not exist.")

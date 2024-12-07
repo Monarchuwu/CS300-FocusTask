@@ -28,7 +28,6 @@ def test_api_project_add(client, authenticationToken):
         "name": "testproject",
     }))
 
-    print(response.json())
     assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
     assert response.headers["Content-Type"] == "application/json", \
         f"Expected content-type 'application/json', but got {response.headers['Content-Type']}"
@@ -36,7 +35,7 @@ def test_api_project_add(client, authenticationToken):
     jsonData = response.json()
     assert jsonData['status'] == 'success'
 
-    data = jsonData['data']
+    data = json.loads(jsonData['data'])
     expectedKeys = ['itemID', 'name', 'parentID', 'createdDate', 'itemType', 'labelID']
     assert all(key in data for key in expectedKeys)
 
@@ -70,8 +69,8 @@ def test_api_todo_item_get(client, authenticationToken):
         "authenticationToken": authenticationToken,
         "name": "testproject",
     }))
-    print(response.json())
-    itemID = response.json()['data']["itemID"]
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
 
     url = "/todolist/api/todo_item/get"
     response = client.post(url, content_type='application/json', data=json.dumps({
