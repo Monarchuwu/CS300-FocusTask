@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.utils import timezone
 import json
 
 def value_in_dict(dict: dict, key: str, default = None):
@@ -120,6 +121,17 @@ class TodoItem:
         }
         return json.dumps(json_data)
     
+    def to_json_without_userID(self):
+        json_data = {
+            "itemID": self.itemID,
+            "name": self.name,
+            "parentID": self.parentID,
+            "createdDate": self.createdDate.isoformat(),
+            "itemType": self.itemType,
+            "labelID": self.labelID
+        }
+        return json.dumps(json_data)
+    
     @staticmethod
     def from_json(json_data):
         json_data = normalize_data(json_data, ["itemID", "name", "parentID", "createdDate", "userID", "itemType", "labelID"])
@@ -139,13 +151,34 @@ class TaskAttributes:
                  priority: str = "Low",
                  status: str = "Pending",
                  description: str = "",
-                 inTodayDate: datetime = datetime(2100, 1, 1)):
+                 inTodayDate: datetime = timezone.make_aware(datetime(2100, 1, 1))):
         self.taskID = taskID
         self.dueDate = dueDate
         self.priority = priority
         self.status = status
         self.description = description
         self.inTodayDate = inTodayDate
+
+    def __str__(self):
+        json_data = {
+            "taskID": self.taskID,
+            "dueDate": self.dueDate,
+            "priority": self.priority,
+            "status": self.status,
+            "description": self.description,
+            "inTodayDate": self.inTodayDate.isoformat()
+        }
+        return json.dumps(json_data)
+    
+    def to_json_without_taskID(self):
+        json_data = {
+            "dueDate": self.dueDate,
+            "priority": self.priority,
+            "status": self.status,
+            "description": self.description,
+            "inTodayDate": self.inTodayDate.isoformat()
+        }
+        return json.dumps(json_data)
 
 class Media:
     def __init__(self,

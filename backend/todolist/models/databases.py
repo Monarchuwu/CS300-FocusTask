@@ -150,8 +150,8 @@ class TaskAttributesDB(MyDB):
     dueDate = models.DateTimeField("Due date", null = True, blank = True)
     priority = models.CharField(max_length = 10, choices = Priority.choices, default = Priority.LOW)
     status = models.CharField(max_length = 10, choices = Status.choices, default = Status.PENDING)
-    description = models.CharField(max_length = 500, default = "")
-    inTodayDate = models.DateTimeField("In Today date", default = datetime(2100, 1, 1))
+    description = models.CharField(max_length = 500, default = "", blank = True)
+    inTodayDate = models.DateTimeField("In Today date", default = timezone.make_aware(datetime(2100, 1, 1)))
 
     def get_data_object(self):
         return objects.TaskAttributes(
