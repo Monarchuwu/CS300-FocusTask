@@ -1,44 +1,22 @@
-import './App.css';
+import styles from './App.module.css';
+
+import HomePage from './pages/HomePage';
+import SignInPage from './pages/SignInPage';
+import RegisterPage from './pages/RegisterPage';
+import NotFoundPage from './pages/NotFoundPage';
+
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 
 function App() {
-    const [message, setMessage] = React.useState("");
-    const [response, setResponse] = React.useState("");
-
-    const callTestAPI = async (message) => {
-        try {
-            const response = await fetch('http://localhost:8000/todolist/api/test_api', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ "message": message }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
-            const data = await response.json();
-            setResponse(data);
-        }
-        catch (e) {
-            console.error('There was a problem with the fetch operation:', e);
-            setResponse('Error: ' + e.message);
-        }
-    }
-
     return (
-        <div className='App'>
-            <h1>Send a simple request to the backend via the API</h1>
-            <input
-                type='text'
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-                placeholder="Enter your text here"
-            />
-            <button onClick={() => { callTestAPI(message) }}>Send</button>
-            <p>Response: {JSON.stringify(response)}</p>
+        <div className={styles.App}>
+            <Routes>
+                <Route path='/' element={<HomePage />} />
+                <Route path='/signin' element={<SignInPage />} />
+                <Route path='/register' element={<RegisterPage />} />
+                <Route path='/*' element={<NotFoundPage />} />
+            </Routes>
         </div>
     );
 }
