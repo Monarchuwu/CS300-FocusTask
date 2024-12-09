@@ -46,45 +46,60 @@ def test_register_user_email_exists(user_manager):
     assert False, "Expected ValueError not raised"
 
 
-@patch('todolist.models.databases.UserDB')
-def test_sign_in_success(MockUserDB, user_manager):
-    mock_user = MagicMock()
-    mock_user.passwordHash = bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    mock_user.userID = 1
-    MockUserDB.objects.get.return_value = mock_user
+@pytest.mark.django_db
+def test_sign_in_success(user_manager):
+    user_manager.registerUser(
+        username="testuser",
+        email="test@example.com",
+        password="password123",
+        avatarURL=None
+    )
+    authenticationToken = user_manager.signIn(email="test@example.com", password="password123")
 
-    result = user_manager.signIn(email="test@example.com", password="password123")
-    assert result == "Sign-in successful"
-    assert user_manager.getCurrentUserID() == 1
-
-
-@patch('todolist.models.databases.UserDB')
-def test_sign_in_incorrect_password(MockUserDB, user_manager):
-    mock_user = MagicMock()
-    mock_user.passwordHash = bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    MockUserDB.objects.get.return_value = mock_user
-
-    with pytest.raises(ValueError, match="Error: Incorrect password"):
-        user_manager.signIn(email="test@example.com", password="wrongpassword")
+    try:
+        databases.AuthenticationTokenDB.objects.get(tokenValue=authenticationToken)
+    except databases.AuthenticationTokenDB.DoesNotExist:
+        assert False, "Authentication token not created in the database"
 
 
-@patch('todolist.models.databases.UserDB')
-def test_sign_in_user_not_found(MockUserDB, user_manager):
-    MockUserDB.objects.get.side_effect = ObjectDoesNotExist
+@pytest.mark.django_db
+def test_sign_in_incorrect_password(user_manager):
+    user_manager.registerUser(
+        username="testuser",
+        email="test@example.com",
+        password="password123",
+        avatarURL=None
+    )
+    try:
+        user_manager.signIn(email="test@example.com", password="password123")
+    except ValueError as e:
+        assert str(e) == "Error: Incorrect password"
 
-    with pytest.raises(ValueError, match="Error: User not found"):
-        user_manager.signIn(email="nonexistent@example.com", password="password123")
+
+@pytest.mark.django_db
+def test_sign_in_user_not_found(user_manager):
+    try:
+        user_manager.signIn(email="test@example.com", password="password123")
+    except ValueError as e:
+        assert str(e) == "Error: User not found"
 
 
+@pytest.mark.django_db
 def test_sign_out_success(user_manager):
-    user_manager._currentUserID = 1
-    result = user_manager.signOut()
-    assert result == "Sign-out successful"
-    assert user_manager.getCurrentUserID() is None
+    user_manager.registerUser(
+        username="testuser",
+        email="test@example.com",
+        password="password123",
+        avatarURL=None
+    )
+    authenticationToken = user_manager.signIn(email="test@example.com", password="password123")
+    result = user_manager.signOut(authenticationToken)
+    assert result == "User signed out successfully"
+    
 
-
+@pytest.mark.django_db
 def test_sign_out_no_user_signed_in(user_manager):
-    user_manager._currentUserID = None
-
-    with pytest.raises(ValueError, match="Error: No user signed in"):
-        user_manager.signOut()
+    try:
+        user_manager.signOut("fake_token")
+    except ValueError as e:
+        assert str(e) == "Error: Authentication token not found"

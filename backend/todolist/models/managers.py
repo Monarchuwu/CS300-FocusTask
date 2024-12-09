@@ -1,18 +1,26 @@
 import bcrypt
 from datetime import datetime, timedelta
+from django.utils import timezone
 
 from . import databases, objects
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 
-class UserManager:
-    _currentUserID = None
 
-    def getCurrentUserID(self):
-        return self._currentUserID
+class UserManager:
+    def getUserID(self, authenticationToken: str):
+        try:
+            token = databases.AuthenticationTokenDB.objects.get(tokenValue=authenticationToken)
+            if token.expiryDate < timezone.now():
+                token.delete()
+                raise ValueError("Error: Authentication token expired")
+            return token.userID.userID
+        except databases.UserDB.DoesNotExist:
+            raise ValueError("Error: Authentication token not found")
     
-    def registerUser(self, username: str, email: str, password: str, avatarURL: str | None):
+    def registerUser(self, username: str, email: str, password: str, avatarURL: str = None):
         passwordHash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        passwordHash = passwordHash.decode('utf-8')
         try:
             if databases.UserDB.objects.filter(email=email).exists():
                 raise ValueError("Error: Email already exists")
@@ -25,19 +33,23 @@ class UserManager:
     def signIn(self, email: str, password: str):
         try:
             user = databases.UserDB.objects.get(email=email)
-            if bcrypt.checkpw(password.encode('utf-8'), user.passwordHash.encode('utf-8')):
-                self._currentUserID = user.userID
-                return "Sign-in successful"
-            else:
+            if not bool(bcrypt.checkpw(password.encode('utf-8'), user.passwordHash.encode('utf-8'))):
                 raise ValueError("Error: Incorrect password")
         except ObjectDoesNotExist:
             raise ValueError("Error: User not found")
+        
+        # Create a new authentication token
+        token = bcrypt.gensalt().decode('utf-8')
+        databases.AuthenticationTokenDB.objects.create(userID=user, tokenValue=token, expiryDate=timezone.now() + timedelta(days=1))
+        return token
 
-    def signOut(self):
-        if self._currentUserID is None:
-            raise ValueError("Error: No user signed in")
-        self._currentUserID = None
-        return "Sign-out successful"
+    def signOut(self, authenticationToken: str):
+        try:
+            databases.AuthenticationTokenDB.objects.get(tokenValue=authenticationToken).delete()
+            return "User signed out successfully"
+        except databases.AuthenticationTokenDB.DoesNotExist:
+            raise ValueError("Error: Authentication token not found")
+
 
 class TaskManager:
     def getTaskList(self, projectID: int):
@@ -49,62 +61,96 @@ class TaskManager:
         except Exception as e:
             raise ValueError(f"An error occurred while fetching the task list: {e}")
 
-    def addTask(self, task: objects.TodoItem):
+    def addTodoItem(self, todoItem: objects.TodoItem):
         try:
-            databases.TodoItemDB.objects.create(
-                itemID=task.itemID,
-                name=task.name,
-                parentID=None if task.parentID is None else databases.TodoItemDB.objects.get(itemID=task.parentID),
-                createdDate=datetime.now(), # ignore the createdDate from the input
-                userID=databases.UserDB.objects.get(userID=task.userID),
-                itemType=task.itemType,
-                labelID=None if task.labelID is None else databases.LabelDB.objects.get(labelID=task.labelID)
+            item = databases.TodoItemDB(
+                name=todoItem.name,
+                parentID=None if todoItem.parentID is None else databases.TodoItemDB.objects.get(itemID=todoItem.parentID),
+                userID=databases.UserDB.objects.get(userID=todoItem.userID),
+                createdDate=timezone.now() if todoItem.createdDate is None else todoItem.createdDate,
+                itemType=todoItem.itemType,
+                labelID=None if todoItem.labelID is None else databases.LabelDB.objects.get(labelID=todoItem.labelID)
             )
+            item.full_clean()
+            item.save()
+            return item.get_data_object()
         except databases.UserDB.DoesNotExist:
-            raise ValueError(f"User with ID {task.userID} does not exist.")
+            raise ValueError(f"User with ID {todoItem.userID} does not exist.")
         except databases.TodoItemDB.DoesNotExist:
-            raise ValueError(f"Parent task with ID {task.parentID} does not exist.")
+            raise ValueError(f"Parent todo item with ID {todoItem.parentID} does not exist.")
         except databases.LabelDB.DoesNotExist:
-            raise ValueError(f"Label with ID {task.labelID} does not exist.")
+            raise ValueError(f"Label with ID {todoItem.labelID} does not exist.")
         except IntegrityError:
-            raise ValueError(f"A task with ID {task.itemID} already exists.")
+            raise ValueError(f"A todo item with ID {todoItem.itemID} already exists.")
         except Exception as e:
-            raise ValueError(f"An error occurred while adding the task: {e} parentID is {task.parentID}")
+            raise ValueError(f"An error occurred while adding the todo item: {e} parentID is {todoItem.parentID}")
 
-    def deleteTask(self, taskID: int):
+    def deleteTodoItem(self, itemID: int):
         try:
-            task = databases.TodoItemDB.objects.get(itemID=taskID)
-            task.delete()
+            item = databases.TodoItemDB.objects.get(itemID=itemID)
+            item.delete()
         except databases.TodoItemDB.DoesNotExist:
-            raise ValueError(f"Task with ID {taskID} does not exist.")
+            raise ValueError(f"Todo Item with ID {itemID} does not exist.")
         except Exception as e:
-            raise ValueError(f"An error occurred while deleting the task: {e}")
+            raise ValueError(f"An error occurred while deleting the todo item: {e}")
         
-    def editTask(self, task: objects.TodoItem):
+    def editTodoItem(self, todoItem: objects.TodoItem):
         try:
             # Update TodoItem fields
-            task_db = databases.TodoItemDB.objects.get(itemID=task.itemID)
-            task_db.name = task.name
-            task_db.parentID = databases.TodoItemDB.objects.get(itemID=task.parentID) if task.parentID else None
-            task_db.labelID = databases.LabelDB.objects.get(labelID=task.labelID) if task.labelID else None
-            task_db.save()
-
-            # Update TaskAttributes if available
-            task_attributes = databases.TaskAttributesDB.objects.get(taskID=task.itemID)
-            if hasattr(task, "attributes"):
-                task_attributes.dueDate = task.attributes.dueDate
-                task_attributes.priority = task.attributes.priority
-                task_attributes.status = task.attributes.status
-                task_attributes.description = task.attributes.description
-                task_attributes.inTodayDate = task.attributes.inTodayDate
-                task_attributes.save()
+            item_db = databases.TodoItemDB.objects.get(itemID=todoItem.itemID)
+            item_db.name = todoItem.name
+            item_db.parentID = databases.TodoItemDB.objects.get(itemID=todoItem.parentID) if todoItem.parentID else None
+            item_db.labelID = databases.LabelDB.objects.get(labelID=todoItem.labelID) if todoItem.labelID else None
+            item_db.save()
         except databases.TodoItemDB.DoesNotExist:
-            raise ValueError(f"Task with ID {task.itemID} does not exist.")
-        except databases.TaskAttributesDB.DoesNotExist:
-            raise ValueError(f"TaskAttributes for task ID {task.itemID} do not exist.")
+            raise ValueError(f"Todo Item with ID {item_db.itemID} does not exist.")
         except Exception as e:
             raise ValueError(f"An error occurred while editing the task: {e}")
 
+    def getTodoItem(self, itemID: int):
+        try:
+            item = databases.TodoItemDB.objects.get(itemID=itemID)
+            return item.get_data_object()
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"Todo Item with ID {itemID} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while fetching the todo item: {e}")
+
+    def addTaskAttributes(self, attrs: objects.TaskAttributes):
+        try:
+            taskAttributes_db = databases.TaskAttributesDB(
+                taskID=databases.TodoItemDB.objects.get(itemID=attrs.taskID),
+                dueDate=attrs.dueDate,
+                priority=attrs.priority,
+                status=attrs.status,
+                description=attrs.description,
+                inTodayDate=attrs.inTodayDate
+            )
+            taskAttributes_db.full_clean()
+            taskAttributes_db.save()
+            return taskAttributes_db.get_data_object()
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"Todo Item with ID {attrs.taskID} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while adding the task attributes: {e}")
+
+    def deteleTaskAttributes(self, taskID: int):
+        try:
+            task_attr = databases.TaskAttributesDB.objects.get(taskID=taskID)
+            task_attr.delete()
+        except databases.TaskAttributesDB.DoesNotExist:
+            raise ValueError(f"TaskAttributes for task ID {taskID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while deleting the task attributes: {e}")
+
+    def getTaskAttributes(self, taskID: int):
+        try:
+            task_attr = databases.TaskAttributesDB.objects.get(taskID=taskID)
+            return task_attr.get_data_object()
+        except databases.TaskAttributesDB.DoesNotExist:
+            raise ValueError(f"TaskAttributes for task ID {taskID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while fetching the task attributes: {e}")
 
     # toggle task status between pending and completed
     def toggleTask(self, taskID: int):
@@ -148,7 +194,6 @@ class TaskManager:
             raise ValueError(f"TaskAttributes for task ID {taskID} do not exist.")
         except Exception as e:
             raise ValueError(f"An error occurred while removing the task from today's list: {e}")
-
 
     def suggestTodayTask(self):
         try:
@@ -195,19 +240,17 @@ class TaskManager:
 
 
 class WebsiteBlockingManager:
-    def getBlockList(self):
+    def getBlockList(self, userID: int):
         try:
-            current_user = UserManager.getCurrentUserID()
-            records = databases.WebsiteBlockingDB.objects.filter(UserID=current_user)
+            records = databases.WebsiteBlockingDB.objects.filter(UserID=userID)
             return [record.get_data_object() for record in records]
         except Exception as e:
             print(f"Error fetching block list: {e}")
             return []
 
-    def addToBlockList(self, URL: str):
+    def addToBlockList(self, userID: int, URL: str):
         try:
-            current_user = UserManager.getCurrentUserID()
-            new_block = databases.WebsiteBlockingDB(URL=URL, UserID=current_user)
+            new_block = databases.WebsiteBlockingDB(URL=URL, UserID=userID)
             new_block.save()
             return f"Website '{URL}' added to block list."
         except IntegrityError:
@@ -215,19 +258,17 @@ class WebsiteBlockingManager:
         except Exception as e:
             raise ValueError(f"Error adding to block list: {e}")
 
-    def deleteFromBlockList(self, blockID: int):
+    def deleteFromBlockList(self, userID: int, blockID: int):
         try:
-            current_user = UserManager.getCurrentUserID()
-            databases.WebsiteBlockingDB.objects.filter(blockID=blockID, UserID=current_user).delete()
+            databases.WebsiteBlockingDB.objects.filter(blockID=blockID, UserID=userID).delete()
             return f"BlockID {blockID} removed from block list."
         except Exception as e:
             raise ValueError(f"Error deleting from block list: {e}")
 
     # toggle website blocking status
-    def toggleBlock(self, blockID: int):
+    def toggleBlock(self, userID: int, blockID: int):
         try:
-            current_user = UserManager.getCurrentUserID()
-            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=current_user)
+            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=userID)
             block_entry.isBlocking = not block_entry.isBlocking
             block_entry.save()
             return f"BlockID {blockID} toggled to {'blocking' if block_entry.isBlocking else 'not blocking'}."
@@ -236,10 +277,9 @@ class WebsiteBlockingManager:
         except Exception as e:
             raise ValueError(f"Error toggling block status: {e}")
 
-    def setBlock(self, blockID: int, status: bool):
+    def setBlock(self, userID: int, blockID: int, status: bool):
         try:
-            current_user = UserManager.getCurrentUserID()
-            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=current_user)
+            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=userID)
             block_entry.isBlocking = status
             block_entry.save()
             return f"BlockID {blockID} set to {'blocking' if status else 'not blocking'}."
@@ -247,6 +287,7 @@ class WebsiteBlockingManager:
             raise ValueError(f"BlockID {blockID} does not exist.")
         except Exception as e:
             raise ValueError(f"Error setting block status: {e}")
+
 
 class PreferencesManager:
     def setLanguage(self, userID: int, language: databases.PreferencesDB.Language):
@@ -259,7 +300,6 @@ class PreferencesManager:
         except Exception as e:
             raise ValueError(f"An error occurred while changing the preferred language of userID: {userID}") 
         
-
     def setTimezone(self, userID: int, timezone: databases.PreferencesDB.Timezone):
         try:
             preference = databases.PreferencesDB.objects.get(userID = userID)
@@ -325,6 +365,7 @@ class PreferencesManager:
             raise ValueError(f"Preference for user ID {userID} do not exist.")
         except Exception as e:
             raise ValueError(f"An error occurred while getting the preferred auto block of userID: {userID}") 
+
 
 class PomodoroManager:
     class Status:

@@ -15,9 +15,8 @@ def test_get_block_list(mock_database):
     ]
     mock_database.objects.filter.return_value = mock_records
 
-    with patch.object(UserManager, "getCurrentUserID", return_value=1):
-        manager = WebsiteBlockingManager()
-        result = manager.getBlockList()
+    manager = WebsiteBlockingManager()
+    result = manager.getBlockList(1)
 
     assert result == [
         {"URL": "example.com"},
@@ -25,27 +24,24 @@ def test_get_block_list(mock_database):
     ]
 
 def test_add_to_block_list(mock_database):
-    with patch.object(UserManager, "getCurrentUserID", return_value=1):
-        mock_instance = MagicMock()
-        mock_database.return_value = mock_instance
+    mock_instance = MagicMock()
+    mock_database.return_value = mock_instance
 
-        manager = WebsiteBlockingManager()
-        result = manager.addToBlockList("example.com")
+    manager = WebsiteBlockingManager()
+    result = manager.addToBlockList(1, "example.com")
 
     mock_instance.save.assert_called_once()
     assert result == "Website 'example.com' added to block list."
 
 def test_add_to_block_list_duplicate(mock_database):
     mock_database.side_effect = IntegrityError
-    with patch.object(UserManager, "getCurrentUserID", return_value=1):
-        manager = WebsiteBlockingManager()
-        with pytest.raises(ValueError, match="Website example.com already in block list"):
-            manager.addToBlockList("example.com")
+    manager = WebsiteBlockingManager()
+    with pytest.raises(ValueError, match="Website example.com already in block list"):
+        manager.addToBlockList(1, "example.com")
 
 def test_delete_from_block_list(mock_database):
-    with patch.object(UserManager, "getCurrentUserID", return_value=1):
-        manager = WebsiteBlockingManager()
-        result = manager.deleteFromBlockList(123)
+    manager = WebsiteBlockingManager()
+    result = manager.deleteFromBlockList(1, 123)
 
     mock_database.objects.filter.assert_called_once_with(blockID=123, UserID=1)
     mock_database.objects.filter.return_value.delete.assert_called_once()
@@ -55,9 +51,8 @@ def test_toggle_block(mock_database):
     mock_entry = MagicMock(isBlocking=True)
     mock_database.objects.get.return_value = mock_entry
 
-    with patch.object(UserManager, "getCurrentUserID", return_value=1):
-        manager = WebsiteBlockingManager()
-        result = manager.toggleBlock(123)
+    manager = WebsiteBlockingManager()
+    result = manager.toggleBlock(1, 123)
 
     assert result == "BlockID 123 toggled to not blocking."
     assert mock_entry.isBlocking is False
@@ -67,9 +62,8 @@ def test_set_block(mock_database):
     mock_entry = MagicMock()
     mock_database.objects.get.return_value = mock_entry
 
-    with patch.object(UserManager, "getCurrentUserID", return_value=1):
-        manager = WebsiteBlockingManager()
-        result = manager.setBlock(123, True)
+    manager = WebsiteBlockingManager()
+    result = manager.setBlock(1, 123, True)
 
     assert result == "BlockID 123 set to blocking."
     assert mock_entry.isBlocking is True

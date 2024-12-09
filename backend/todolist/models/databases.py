@@ -9,7 +9,7 @@ class MyDB(models.Model):
         return NotImplementedError("This method should be implemented in the derived class")
 
 class UserDB(MyDB):
-    userID = models.IntegerField(primary_key = True)
+    userID = models.AutoField(primary_key = True)
     username = models.CharField(max_length = 100)
     email = models.EmailField()
     passwordHash = models.CharField(max_length = 100)
@@ -27,7 +27,7 @@ class UserDB(MyDB):
         )
 
 class WebsiteBlockingDB(MyDB):
-    blockID = models.IntegerField(primary_key = True)
+    blockID = models.AutoField(primary_key = True)
     URL = models.URLField()
     UserID = models.ForeignKey(UserDB, on_delete = models.CASCADE)
     createdAt = models.DateTimeField("Created date", default = timezone.now)
@@ -89,9 +89,9 @@ class PreferencesDB(MyDB):
         )
 
 class AuthenticationTokenDB(MyDB):
-    tokenID = models.IntegerField(primary_key = True)
+    tokenID = models.AutoField(primary_key = True)
     userID = models.ForeignKey(UserDB, on_delete = models.CASCADE)
-    tokenValue = models.CharField(max_length = 100)
+    tokenValue = models.CharField(max_length = 64, unique = True)
     expiryDate = models.DateTimeField("Expiry date")
 
     def get_data_object(self):
@@ -103,7 +103,7 @@ class AuthenticationTokenDB(MyDB):
         )
 
 class LabelDB(MyDB):
-    labelID = models.IntegerField(primary_key = True)
+    labelID = models.AutoField(primary_key = True)
     name = models.CharField(max_length = 100)
 
     def get_data_object(self):
@@ -118,7 +118,7 @@ class TodoItemDB(MyDB):
         SECTION = "Section"
         TASK = "Task"
 
-    itemID = models.IntegerField(primary_key = True)
+    itemID = models.AutoField(primary_key = True)
     name = models.CharField(max_length = 100)
     parentID = models.ForeignKey("self", on_delete = models.CASCADE, null = True, blank = True)
     createdDate = models.DateTimeField("Created date", default = timezone.now)
@@ -150,8 +150,8 @@ class TaskAttributesDB(MyDB):
     dueDate = models.DateTimeField("Due date", null = True, blank = True)
     priority = models.CharField(max_length = 10, choices = Priority.choices, default = Priority.LOW)
     status = models.CharField(max_length = 10, choices = Status.choices, default = Status.PENDING)
-    description = models.CharField(max_length = 500, default = "")
-    inTodayDate = models.DateTimeField("In Today date", default = datetime(2100, 1, 1))
+    description = models.CharField(max_length = 500, default = "", blank = True)
+    inTodayDate = models.DateTimeField("In Today date", default = timezone.make_aware(datetime(2100, 1, 1)))
 
     def get_data_object(self):
         return objects.TaskAttributes(
@@ -164,7 +164,7 @@ class TaskAttributesDB(MyDB):
         )
 
 class MediaDB(MyDB):
-    mediaID = models.IntegerField(primary_key = True)
+    mediaID = models.AutoField(primary_key = True)
     fileURL = models.URLField()
     taskID = models.ForeignKey(TodoItemDB, on_delete = models.CASCADE)
     uploadedDate = models.DateTimeField("Uploaded date", default = timezone.now)
@@ -178,7 +178,7 @@ class MediaDB(MyDB):
         )
 
 class LogsDB(MyDB):
-    logID = models.IntegerField(primary_key = True)
+    logID = models.AutoField(primary_key = True)
     taskID = models.ForeignKey(TodoItemDB, on_delete = models.CASCADE)
     logContent = models.CharField(max_length = 500)
     createdAt = models.DateTimeField("Created date", default = timezone.now)
@@ -196,7 +196,7 @@ class ReminderDB(MyDB):
         BEFORE_DUE_DATE = "Before Due Date"
         AT_SPECIFIC_MOMENT = "At Specific Moment"
 
-    reminderID = models.IntegerField(primary_key = True)
+    reminderID = models.AutoField(primary_key = True)
     taskID = models.ForeignKey(TodoItemDB, on_delete = models.CASCADE)
     reminderMode = models.CharField(max_length = 20, choices = ReminderMode.choices, default = ReminderMode.BEFORE_DUE_DATE)
     timeOffset = models.DurationField()
@@ -218,7 +218,7 @@ class PomodoroHistoryDB(MyDB):
         PAUSED = "Paused"
         CANCELED = "Canceled"
 
-    pomodoroID = models.IntegerField(primary_key = True)
+    pomodoroID = models.AutoField(primary_key = True)
     taskID = models.ForeignKey(TodoItemDB, on_delete = models.CASCADE)
     startTime = models.DateTimeField("Start time")
     duration = models.DurationField()
