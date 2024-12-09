@@ -67,6 +67,7 @@ class TaskManager:
                 name=todoItem.name,
                 parentID=None if todoItem.parentID is None else databases.TodoItemDB.objects.get(itemID=todoItem.parentID),
                 userID=databases.UserDB.objects.get(userID=todoItem.userID),
+                createdDate=timezone.now() if todoItem.createdDate is None else todoItem.createdDate,
                 itemType=todoItem.itemType,
                 labelID=None if todoItem.labelID is None else databases.LabelDB.objects.get(labelID=todoItem.labelID)
             )

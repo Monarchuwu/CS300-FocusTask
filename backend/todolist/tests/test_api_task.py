@@ -1,3 +1,4 @@
+from django.utils import timezone
 import pytest
 import json
 from todolist.models.managers import UserManager
@@ -429,7 +430,7 @@ def test_api_todo_item_get_list(client, authenticationToken):
     url = "/todolist/api/todo_item/get_list"
     response = client.post(url, content_type='application/json', data=json.dumps({
         "authenticationToken": authenticationToken,
-        "itemID": itemID,
+        "itemID": projectID,
     }))
 
     # Check the response status
@@ -477,7 +478,8 @@ def test_api_task_get_today_list(client, authenticationToken):
         "parentID": sectionID,
         "priority": "High",
         "description": "Nothing here",
-    }))
+        "inTodayDate": timezone.now(),
+    }, default = str))
     data = json.loads(response.json()['data'])
     itemID = data["itemID"]
 
