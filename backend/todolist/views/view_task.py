@@ -326,6 +326,25 @@ def todo_item_get_list(request):
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
+def todo_item_get_all(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+
+            userID = UserManager().getUserID(token)
+            itemList = TaskManager().getAllTodoItem(userID = userID)
+            itemList = [item.to_json_without_userID() for item in itemList]
+
+            return JsonResponse({'status': 'success', 'data': itemList})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
 def task_get_today_list(request):
     if request.method == 'POST':
         try:
