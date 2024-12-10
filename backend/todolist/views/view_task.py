@@ -86,10 +86,10 @@ def task_add(request):
             if parentID is None:
                 raise Exception('Parent ID cannot be None')
             parentItem = TaskManager().getTodoItem(parentID)
-            if parentItem.itemType != 'Section':
-                raise Exception('Parent item must be a section')
+            if parentItem.itemType == 'Project':
+                raise Exception('Parent item must not be a project')
             if parentItem.userID != userID:
-                raise Exception('User does not have permission to access this section')
+                raise Exception('User does not have permission to access this parent item')
 
             # Create a new todo item object
             todoItem = TodoItem(
