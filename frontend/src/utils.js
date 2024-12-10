@@ -33,6 +33,7 @@ export const callAPITemplate = async (
         const data = await response.json();
         if (data.status === 'success') {
             success(data.data);
+            return data.data;
         }
         else {
             console.error(data.message || 'An error occurred');
