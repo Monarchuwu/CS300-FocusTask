@@ -207,7 +207,7 @@ def task_attributes_update(request):
             taskAttrs.priority = priority if (priority is not None) else taskAttrs.priority
             taskAttrs.status = status if (status is not None) else taskAttrs.status
             taskAttrs.description = description if (description is not None) else taskAttrs.description
-            taskAttrs.inTodayDate = inTodayDate if (inTodayDate is not None) else taskAttrs.inTodayDate
+            taskAttrs.inTodayDate = datetime.fromisoformat(inTodayDate) if (inTodayDate is not None) else taskAttrs.inTodayDate
 
             TaskManager().deteleTaskAttributes(taskID = taskID)
             TaskManager().addTaskAttributes(attrs=taskAttrs)
