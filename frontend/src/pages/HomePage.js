@@ -15,11 +15,20 @@ function HomePage() {
     const [newTaskName, setNewTaskName] = React.useState("");
     const [newTaskDescription, setNewTaskDescription] = React.useState("");
     const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
+    const [updateTaskDetail, setUpdateTaskDetail] = React.useState(0);
     const [taskDetails, setTaskDetails] = React.useState(null);
     const [tree, setTree] = React.useState({});
     const [taskStatusMap, setTaskStatusMap] = React.useState({});
     const [debounceStatus, setDebounceStatus] = React.useState({});
 
+    const isToday = (stringDate) => {
+        if (!stringDate) return false; // null or undefined
+        const today = new Date();
+        const dateToCheck = new Date(stringDate);
+        return today.getDate() === dateToCheck.getDate() &&
+            today.getMonth() === dateToCheck.getMonth() &&
+            today.getFullYear() === dateToCheck.getFullYear()
+    }
     const callSignOutAPI = async () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
@@ -131,6 +140,15 @@ function HomePage() {
                                     <p>Description: {taskDetails.description || 'N/A'}</p>
                                     <p>In Today Date: {taskDetails.inTodayDate || 'N/A'}</p>
                                     <button onClick={() => setViewTaskDetailID(null)}>Close</button>
+                                    {isToday(taskDetails.inTodayDate) ? (
+                                        <button onClick={() => {
+                                            callUpdateInTodayDateAPI(node.itemID, '2100-01-01T00:00:00+00:00');
+                                        }}>Remove From Today's Task</button>
+                                    ) : (
+                                        <button onClick={() => {
+                                            callUpdateInTodayDateAPI(node.itemID, new Date().toISOString().replace('Z', '+00:00'));
+                                        }}>Add To Today's Task</button>
+                                    )}
                                 </div>
                             )}
                         </>
@@ -230,6 +248,14 @@ function HomePage() {
             console.error(e);
         }
     }
+    const callUpdateInTodayDateAPI = async (taskID, inTodayDate) => {
+        const authToken = localStorage.getItem('authToken');
+        await callAPITemplate(
+            'http://localhost:8000/todolist/api/task_attributes/update',
+            JSON.stringify({ "authenticationToken": authToken, "taskID": taskID, "inTodayDate": inTodayDate }),
+        )
+        setUpdateTaskDetail(updateTaskDetail + 1);
+    }
 
     React.useEffect(() => {
         if (localStorage.getItem('authToken') === null) {
@@ -248,7 +274,7 @@ function HomePage() {
                     setTaskDetails(null);
                 });
         }
-    }, [viewTaskDetailID]);
+    }, [viewTaskDetailID, updateTaskDetail]);
     React.useEffect(() => {
         const timeout = setTimeout(() => {
             if (Object.keys(debounceStatus).length > 0) {
