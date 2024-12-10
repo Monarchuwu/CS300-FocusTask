@@ -17,6 +17,8 @@ function HomePage() {
     const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
     const [taskDetails, setTaskDetails] = React.useState(null);
     const [tree, setTree] = React.useState({});
+    const [taskStatusMap, setTaskStatusMap] = React.useState({});
+    const [debounceStatus, setDebounceStatus] = React.useState({});
 
     const callSignOutAPI = async () => {
         const authToken = localStorage.getItem('authToken');
@@ -37,6 +39,10 @@ function HomePage() {
             (data) => fetchTodoList()
         )
     }
+    const handleStatusChange = (taskID, status) => {
+        setTaskStatusMap((prev) => ({ ...prev, [taskID]: status }));
+        setDebounceStatus({ ...debounceStatus, [taskID]: status });
+    }
     const buildForest = (items) => {
         const itemMap = {}; // Map items by itemID for easy access
         const tree = {};
@@ -56,60 +62,69 @@ function HomePage() {
 
         return tree;
     }
-    const renderTree = (node) => {
+    const renderTree = (node, taskStatusMap) => {
         return (
             <ul key={node.itemID}>
                 <li>
+                    {node.itemType === 'Task' && (
+                        <input
+                            type="checkbox"
+                            checked={taskStatusMap[node.itemID] === 'Completed'}
+                            onChange={(e) => {
+                                const status = e.target.checked ? 'Completed' : 'Pending';
+                                handleStatusChange(node.itemID, status);
+                            }}
+                        />
+                    )}
                     <strong>{node.name}</strong> ({node.itemType})
                     <button onClick={() => console.log(node)}>Edit</button>
                     <button onClick={() => callDeleteTodoItemAPI(node.itemID)}>Delete</button>
-                    {
-                        node.itemType === 'Project' ?
-                            <>
-                                <button onClick={() => setAddingSectionID(node.itemID)}>Add Section</button>
-                                {addingSectionID === node.itemID && (
-                                    <div>
-                                        <input
-                                            type="text"
-                                            value={newSectionName}
-                                            onChange={(e) => setNewSectionName(e.target.value)}
-                                        />
-                                        <button onClick={() => { setAddingSectionID(null); setNewSectionName(""); }}>Cancel</button>
-                                        <button onClick={() => callAddSectionAPI(newSectionName, node.itemID)}>Add</button>
-                                    </div>
-                                )}
-                            </> :
-                            <>
-                                <button onClick={() => setAddingTaskID(node.itemID)}>Add Task</button>
-                                {addingTaskID === node.itemID && (
-                                    <div>
-                                        <label>Name</label>
-                                        <input
-                                            type="text"
-                                            value={newTaskName}
-                                            onChange={(e) => setNewTaskName(e.target.value)}
-                                        />
-                                        <br />
-                                        <label>Description</label>
-                                        <input
-                                            type="text"
-                                            value={newTaskDescription}
-                                            onChange={(e) => setNewTaskDescription(e.target.value)}
-                                        />
-                                        <br />
-                                        <button onClick={() => { setAddingTaskID(null); setNewTaskName(""); setNewTaskDescription(""); }}>Cancel</button>
-                                        <button onClick={() => callAddTaskAPI(newTaskName, node.itemID, undefined, undefined, undefined, newTaskDescription)}>Add</button>
-                                    </div>
-                                )}
-                            </>
-                    }
-                    {
-                        node.itemType === 'Task' &&
+                    {node.itemType === 'Project' ? (
+                        <>
+                            <button onClick={() => setAddingSectionID(node.itemID)}>Add Section</button>
+                            {addingSectionID === node.itemID && (
+                                <div>
+                                    <input
+                                        type="text"
+                                        value={newSectionName}
+                                        onChange={(e) => setNewSectionName(e.target.value)}
+                                    />
+                                    <button onClick={() => { setAddingSectionID(null); setNewSectionName(""); }}>Cancel</button>
+                                    <button onClick={() => callAddSectionAPI(newSectionName, node.itemID)}>Add</button>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <button onClick={() => setAddingTaskID(node.itemID)}>Add Task</button>
+                            {addingTaskID === node.itemID && (
+                                <div>
+                                    <label>Name</label>
+                                    <input
+                                        type="text"
+                                        value={newTaskName}
+                                        onChange={(e) => setNewTaskName(e.target.value)}
+                                    />
+                                    <br />
+                                    <label>Description</label>
+                                    <input
+                                        type="text"
+                                        value={newTaskDescription}
+                                        onChange={(e) => setNewTaskDescription(e.target.value)}
+                                    />
+                                    <br />
+                                    <button onClick={() => { setAddingTaskID(null); setNewTaskName(""); setNewTaskDescription(""); }}>Cancel</button>
+                                    <button onClick={() => callAddTaskAPI(newTaskName, node.itemID, undefined, undefined, undefined, newTaskDescription)}>Add</button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                    {node.itemType === 'Task' && (
                         <>
                             <button onClick={() => setViewTaskDetailID(node.itemID)}>View Detail</button>
                             {viewTaskDetailID === node.itemID && taskDetails && (
                                 <div>
-                                    <p>Task Details:</p>
+                                    <p><strong>Task Details:</strong></p>
                                     <p>Due Date: {taskDetails.dueDate || 'N/A'}</p>
                                     <p>Priority: {taskDetails.priority || 'N/A'}</p>
                                     <p>Status: {taskDetails.status || 'N/A'}</p>
@@ -119,10 +134,10 @@ function HomePage() {
                                 </div>
                             )}
                         </>
-                    }
+                    )}
                     {node.children && node.children.length > 0 && (
                         <ul>
-                            {node.children.map(child => renderTree(child))}
+                            {node.children.map(child => renderTree(child, taskStatusMap))}
                         </ul>
                     )}
                 </li>
@@ -131,14 +146,26 @@ function HomePage() {
     };
     const fetchTodoList = async () => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
-            'http://localhost:8000/todolist/api/todo_item/get_all',
-            JSON.stringify({ "authenticationToken": authToken }),
-            (data) => {
-                const items = data.map(item => JSON.parse(item));
-                setTree(buildForest(items));
-            }
-        )
+        try {
+            const dataItem = await callAPITemplate(
+                'http://localhost:8000/todolist/api/todo_item/get_all',
+                JSON.stringify({ "authenticationToken": authToken }),
+            );
+            const items = dataItem.map(item => JSON.parse(item));
+            setTree(buildForest(items));
+
+            const taskIDs = items.filter(item => item.itemType === 'Task').map(task => task.itemID);
+            const dataAttributes = await callAPITemplate(
+                'http://localhost:8000/todolist/api/task_attributes/get_list',
+                JSON.stringify({ "authenticationToken": authToken, "itemIDs": taskIDs }),
+            );
+            const attrsList = dataAttributes.map(attr => JSON.parse(attr));
+            const taskStatusMap = Object.fromEntries(attrsList.map(attr => [attr.taskID, attr.status]));
+            setTaskStatusMap(taskStatusMap);
+        }
+        catch (e) {
+            console.error(e);
+        }
     }
     const callAddProjectAPI = async (name) => {
         const authToken = localStorage.getItem('authToken');
@@ -215,16 +242,29 @@ function HomePage() {
     React.useEffect(() => {
         if (viewTaskDetailID) {
             callGetTaskAttributesAPI(viewTaskDetailID)
-                .then(data => {
-                    console.log(data);
-                    setTaskDetails(data);
-                })
+                .then(data => setTaskDetails(data))
                 .catch(e => {
                     console.error('Failed to fetch task attributes:', e);
                     setTaskDetails(null);
                 });
         }
     }, [viewTaskDetailID]);
+    React.useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (Object.keys(debounceStatus).length > 0) {
+                const authToken = localStorage.getItem('authToken');
+                Object.entries(debounceStatus).forEach(([taskID, status]) => {
+                    callAPITemplate(
+                        'http://localhost:8000/todolist/api/task_attributes/update',
+                        JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": status })
+                    );
+                });
+                fetchTodoList();
+                setDebounceStatus({});
+            }
+        }, 300);
+        return () => clearTimeout(timeout);
+    }, [debounceStatus]);
 
     return (
         <div>
@@ -246,7 +286,7 @@ function HomePage() {
 
             <div>
                 {Object.values(tree).length > 0 ? (
-                    Object.values(tree).map(root => renderTree(root))
+                    Object.values(tree).map(root => renderTree(root, taskStatusMap))
                 ) : (
                     <p>No data available</p>
                 )}
