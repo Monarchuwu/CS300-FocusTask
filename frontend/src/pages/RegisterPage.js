@@ -40,8 +40,8 @@ function RegisterPage() {
         callRegisterAPI(username, email, password);
     }
     return (
-        <form id="SignUpForm">
-            <h1>Register</h1>
+        <div id="SignUpForm">
+            <h1>Sign up</h1>
             <div>
                 <TextField type="text" name="username" value={username} 
                     sx={{ mb: '24px' }} label="Username" onChange={(e) => setUsername(e.target.value)} required/>
@@ -57,7 +57,7 @@ function RegisterPage() {
             </div>
             <Alert severity="error">{message}</Alert>
             <Button variant='text' onClick={() => navigate('/signin')}>Already had an account? Log in</Button>
-        </form>
+        </div>
     );
 }
 

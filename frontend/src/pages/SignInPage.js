@@ -41,8 +41,8 @@ function SignInPage() {
         callSignInAPI(email, password);
     }
     return (
-        <form id="LogInForm">
-            <h1>Log In</h1>
+        <div id="LogInForm">
+            <h1>Log in</h1>
             <div>
                 <TextField id="email" label="Email" value={email} 
                     sx={{ mb: '24px' }} onChange={(e) => setEmail(e.target.value)} required/>
@@ -55,7 +55,7 @@ function SignInPage() {
             </div>
             <p>{message}</p>
             <Button variant="text" onClick={() => navigate('/register')}>Don’t have an account? Sign Up</Button>
-        </form>
+        </div>
     );
 }
 
