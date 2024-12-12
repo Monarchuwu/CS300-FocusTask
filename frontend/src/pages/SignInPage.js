@@ -3,6 +3,12 @@ import { callAPITemplate } from '../utils';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import {
+    TextField,
+    Button,
+} from '@mui/material';
+
+
 function SignInPage() {
     const navigate = useNavigate();
     const [email, setEmail] = React.useState('');
@@ -28,10 +34,6 @@ function SignInPage() {
         return emailRegex.test(email);
     }
     const handleSubmit = () => {
-        if (email === '' || password === '') {
-            setMessage('Please fill in all fields');
-            return;
-        }
         if (!isValidEmail(email)) {
             setMessage('Email is invalid!');
             return;
@@ -39,24 +41,21 @@ function SignInPage() {
         callSignInAPI(email, password);
     }
     return (
-        <div>
-            <h1>Sign In</h1>
+        <form id="LogInForm">
+            <h1>Log In</h1>
             <div>
-                <label>
-                    Email:
-                    <input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                </label>
+                <TextField id="email" label="Email" value={email} 
+                    sx={{ mb: '24px' }} onChange={(e) => setEmail(e.target.value)} required/>
                 <br />
-                <label>
-                    Password:
-                    <input type="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                </label>
+                <TextField id="password" label="Password" type="password" 
+                    value={password} sx={{ mb: '24px' }} 
+                    onChange={(e) => setPassword(e.target.value)} required/>
                 <br />
-                <button type="submit" onClick={() => handleSubmit()}>Sign In</button>
+                <Button variant="contained" type="submit" onClick={() => handleSubmit()}>Log In</Button>
             </div>
             <p>{message}</p>
-            <button onClick={() => navigate('/register')}>Sign Up</button>
-        </div>
+            <Button variant="text" onClick={() => navigate('/register')}>Don’t have an account? Sign Up</Button>
+        </form>
     );
 }
 

@@ -5,6 +5,12 @@ import { callAPITemplate } from '../utils';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import {
+    TextField,
+    Button,
+    Alert, 
+} from '@mui/material';
+
 function RegisterPage() {
     const navigate = useNavigate();
     const [username, setUsername] = React.useState('');
@@ -27,10 +33,6 @@ function RegisterPage() {
         return emailRegex.test(email);
     }
     const handleSubmit = () => {
-        if (username === '' || email === '' || password === '') {
-            setMessage('Please fill in all fields');
-            return;
-        }
         if (!isValidEmail(email)) {
             setMessage('Email is invalid!');
             return;
@@ -38,29 +40,24 @@ function RegisterPage() {
         callRegisterAPI(username, email, password);
     }
     return (
-        <div>
+        <form id="SignUpForm">
             <h1>Register</h1>
             <div>
-                <label>
-                    Username:
-                    <input type="text" name="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-                </label>
+                <TextField type="text" name="username" value={username} 
+                    sx={{ mb: '24px' }} label="Username" onChange={(e) => setUsername(e.target.value)} required/>
                 <br />
-                <label>
-                    Email:
-                    <input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                </label>
+                <TextField type="email" name="email" value={email}
+                    sx={{ mb: '24px' }} label="Email" onChange={(e) => setEmail(e.target.value)} required />
                 <br />
-                <label>
-                    Password:
-                    <input type="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                </label>
+                <TextField type="password" name="password" value={password} 
+                    sx={{ mb: '24px' }} label="Password" onChange={(e) => setPassword(e.target.value)} required/>
                 <br />
-                <button type="submit" onClick={() => handleSubmit()}>Register</button>
+                <Button variant='contained' type="submit" sx={{ mb: '24px' }}
+                    onClick={() => handleSubmit()}>Create Account</Button>
             </div>
-            <p>{message}</p>
-            <button onClick={() => navigate('/signin')}>Sign In</button>
-        </div>
+            <Alert severity="error">{message}</Alert>
+            <Button variant='text' onClick={() => navigate('/signin')}>Already had an account? Log in</Button>
+        </form>
     );
 }
 
