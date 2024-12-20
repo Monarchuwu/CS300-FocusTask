@@ -3,11 +3,14 @@ import styles from './SideBar.module.css';
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, NavLink } from 'react-router-dom';
 
 function SideBar() {
     const navigate = useNavigate();
+    const location = useLocation();
 
+
+    // API call functions
     const callSignOutAPI = async () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
@@ -19,6 +22,10 @@ function SideBar() {
             }
         )
     }
+    // handle className for navbar items
+    const handleNavLinkClassName = ({ isActive }) => isActive ?
+        `${styles.navbarItem} ${styles.navbarItemActive}` : styles.navbarItem
+
 
     // Check if the authentication token is still valid
     // navigate to /signin if needed
@@ -41,11 +48,14 @@ function SideBar() {
         }
     }, []);
 
+
     return (
         <div className={styles.container}>
             <h1>SideBar</h1>
-            <p>Inbox</p>
-            <p>Today</p>
+            <nav className={styles.navbar}>
+                <li><NavLink className={handleNavLinkClassName} to='/'>Inbox</NavLink></li>
+                <li><NavLink className={handleNavLinkClassName} to='/today'>Today</NavLink></li>
+            </nav>
             <p>Pomodoro</p>
 
             <button onClick={() => callSignOutAPI()}>Sign Out</button>
