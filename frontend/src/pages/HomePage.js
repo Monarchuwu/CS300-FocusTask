@@ -4,17 +4,13 @@ import { callAPITemplate } from '../utils';
 
 import React from 'react';
 
-function HomePage({ selectedProject }) {
+function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     // State variables for adding new section, task
     const [isAddingSection, setIsAddingSection] = React.useState(false);
     const [newSectionName, setNewSectionName] = React.useState("");
     const [addingTaskID, setAddingTaskID] = React.useState(null);
     const [newTaskName, setNewTaskName] = React.useState("");
     const [newTaskDescription, setNewTaskDescription] = React.useState("");
-    // State variables for viewing task details
-    const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
-    const [updateTaskDetail, setUpdateTaskDetail] = React.useState(0);
-    const [taskDetails, setTaskDetails] = React.useState(null);
     // State variables for rendering the tree
     const [tree, setTree] = React.useState({}); // Forest of items that will be rendered
     const [taskStatusMap, setTaskStatusMap] = React.useState({}); // Checkbox status of tasks
@@ -69,36 +65,6 @@ function HomePage({ selectedProject }) {
             (data) => fetchTodoList(selectedProject)
         )
     }
-    const callGetTaskAttributesAPI = async (taskID) => {
-        const authToken = localStorage.getItem('authToken');
-        try {
-            const data = await callAPITemplate(
-                'http://localhost:8000/todolist/api/task_attributes/get',
-                JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
-            );
-            return JSON.parse(data);
-        }
-        catch (e) {
-            console.error(e);
-        }
-    }
-    const callUpdateInTodayDateAPI = async (taskID, inTodayDate) => {
-        const authToken = localStorage.getItem('authToken');
-        await callAPITemplate(
-            'http://localhost:8000/todolist/api/task_attributes/update',
-            JSON.stringify({ "authenticationToken": authToken, "taskID": taskID, "inTodayDate": inTodayDate }),
-        )
-        setUpdateTaskDetail(updateTaskDetail + 1);
-    }
-    // Helper function to check if a date string is today
-    const isToday = (stringDate) => {
-        if (!stringDate) return false; // null or undefined
-        const today = new Date();
-        const dateToCheck = new Date(stringDate);
-        return today.getDate() === dateToCheck.getDate() &&
-            today.getMonth() === dateToCheck.getMonth() &&
-            today.getFullYear() === dateToCheck.getFullYear()
-    }
     // Handle checkbox status change (add to the debounce queue)
     const handleStatusChange = (taskID, status) => {
         setTaskStatusMap((prev) => ({ ...prev, [taskID]: status }));
@@ -126,6 +92,7 @@ function HomePage({ selectedProject }) {
     }
     // Fetch todo list data from the server
     const fetchTodoList = async (projectID) => {
+        if (!projectID) return;
         const authToken = localStorage.getItem('authToken');
         try {
             const dataItem = await callAPITemplate(
@@ -164,9 +131,11 @@ function HomePage({ selectedProject }) {
                             }}
                         />
                     )}
-                    {/* Name, Edit button, and Delete button */}
+                    {/* Name, Edit button (Task only), and Delete button */}
                     <strong>{node.name}</strong> ({node.itemType})
-                    <button onClick={() => console.log(node)}>Edit</button>
+                    {node.itemType === 'Task' &&
+                        <button onClick={() => setViewTaskDetailID(node.itemID)}>Edit</button>
+                    }
                     <button onClick={() => callDeleteTodoItemAPI(node.itemID)}>Delete</button>
                     {/* Add Task button and input boxes */}
                     {node.itemType === 'Section' &&
@@ -194,32 +163,6 @@ function HomePage({ selectedProject }) {
                             )}
                         </>
                     }
-                    {/* View Task Detail */}
-                    {node.itemType === 'Task' && (
-                        <>
-                            <button onClick={() => setViewTaskDetailID(node.itemID)}>View Detail</button>
-                            {viewTaskDetailID === node.itemID && taskDetails && (
-                                <div>
-                                    <p><strong>Task Details:</strong></p>
-                                    <p>Due Date: {taskDetails.dueDate || 'N/A'}</p>
-                                    <p>Priority: {taskDetails.priority || 'N/A'}</p>
-                                    <p>Status: {taskDetails.status || 'N/A'}</p>
-                                    <p>Description: {taskDetails.description || 'N/A'}</p>
-                                    <p>In Today Date: {taskDetails.inTodayDate || 'N/A'}</p>
-                                    <button onClick={() => setViewTaskDetailID(null)}>Close</button>
-                                    {isToday(taskDetails.inTodayDate) ? (
-                                        <button onClick={() => {
-                                            callUpdateInTodayDateAPI(node.itemID, '2100-01-01T00:00:00+00:00');
-                                        }}>Remove From Today's Task</button>
-                                    ) : (
-                                        <button onClick={() => {
-                                            callUpdateInTodayDateAPI(node.itemID, new Date().toISOString().replace('Z', '+00:00'));
-                                        }}>Add To Today's Task</button>
-                                    )}
-                                </div>
-                            )}
-                        </>
-                    )}
                     {/* Render children */}
                     {node.children && node.children.length > 0 && (
                         <ul>
@@ -230,38 +173,37 @@ function HomePage({ selectedProject }) {
             </ul>
         );
     };
+    // Apply the debounced status changes to the server
+    const applyDebounceStatus = async (debounceStatus) => {
+        const authToken = localStorage.getItem('authToken');
+        for (const [taskID, status] of Object.entries(debounceStatus)) {
+            try {
+                await callAPITemplate(
+                    'http://localhost:8000/todolist/api/task_attributes/update',
+                    JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": status })
+                );
+            }
+            catch (e) {
+                console.error(e);
+            }
+        };
+        fetchTodoList(selectedProject);
+        setUpdateTaskAttrs(Math.random());
+    }
 
 
     // Fetch todo list data on page load
     React.useEffect(() => {
         fetchTodoList(selectedProject);
-    }, [selectedProject]);
-    // Fetch task details when viewTaskDetailID changes
-    React.useEffect(() => {
-        if (viewTaskDetailID) {
-            callGetTaskAttributesAPI(viewTaskDetailID)
-                .then(data => setTaskDetails(data))
-                .catch(e => {
-                    console.error('Failed to fetch task attributes:', e);
-                    setTaskDetails(null);
-                });
-        }
-    }, [viewTaskDetailID, updateTaskDetail]);
-    // Update checkbox status smoothly with debouncing (300ms)
+    }, [selectedProject, updateTaskAttrs]);
+    // Update checkbox status smoothly with debouncing (50ms)
     React.useEffect(() => {
         const timeout = setTimeout(() => {
             if (Object.keys(debounceStatus).length > 0) {
-                const authToken = localStorage.getItem('authToken');
-                Object.entries(debounceStatus).forEach(([taskID, status]) => {
-                    callAPITemplate(
-                        'http://localhost:8000/todolist/api/task_attributes/update',
-                        JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": status })
-                    );
-                });
-                fetchTodoList(selectedProject);
+                applyDebounceStatus(debounceStatus);
                 setDebounceStatus({});
             }
-        }, 300);
+        }, 50);
         return () => clearTimeout(timeout);
     }, [debounceStatus]);
 
@@ -270,20 +212,22 @@ function HomePage({ selectedProject }) {
         <div>
             <h1>Welcome to the Home Page</h1>
             {/* Add Section */}
-            <>
-                <button onClick={() => setIsAddingSection(true)}>Add Section</button>
-                {isAddingSection && (
-                    <div>
-                        <input
-                            type="text"
-                            value={newSectionName}
-                            onChange={(e) => setNewSectionName(e.target.value)}
-                        />
-                        <button onClick={() => { setIsAddingSection(false); setNewSectionName(""); }}>Cancel</button>
-                        <button onClick={() => callAddSectionAPI(newSectionName, selectedProject)}>Add</button>
-                    </div>
-                )}
-            </>
+            {selectedProject &&
+                <>
+                    <button onClick={() => setIsAddingSection(true)}>Add Section</button>
+                    {isAddingSection && (
+                        <div>
+                            <input
+                                type="text"
+                                value={newSectionName}
+                                onChange={(e) => setNewSectionName(e.target.value)}
+                            />
+                            <button onClick={() => { setIsAddingSection(false); setNewSectionName(""); }}>Cancel</button>
+                            <button onClick={() => callAddSectionAPI(newSectionName, selectedProject)}>Add</button>
+                        </div>
+                    )}
+                </>
+            }
             {/* Render the tree */}
             <div>
                 {Object.values(tree).length > 0 ? (

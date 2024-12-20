@@ -4,11 +4,7 @@ import { callAPITemplate } from '../utils';
 
 import React from 'react';
 
-function TodayPage() {
-    // State variables for viewing task details
-    const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
-    const [updateTaskDetail, setUpdateTaskDetail] = React.useState(0);
-    const [taskDetails, setTaskDetails] = React.useState(null);
+function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     // State variables for rendering the tree
     const [taskList, setTaskList] = React.useState([]); // a list of tasks that will be rendered
     const [taskStatusMap, setTaskStatusMap] = React.useState({}); // Checkbox status of tasks
@@ -24,36 +20,6 @@ function TodayPage() {
             JSON.stringify({ "authenticationToken": authToken, "itemID": itemID }),
             (data) => fetchTodoList()
         )
-    }
-    const callGetTaskAttributesAPI = async (taskID) => {
-        const authToken = localStorage.getItem('authToken');
-        try {
-            const data = await callAPITemplate(
-                'http://localhost:8000/todolist/api/task_attributes/get',
-                JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
-            );
-            return JSON.parse(data);
-        }
-        catch (e) {
-            console.error(e);
-        }
-    }
-    const callUpdateInTodayDateAPI = async (taskID, inTodayDate) => {
-        const authToken = localStorage.getItem('authToken');
-        await callAPITemplate(
-            'http://localhost:8000/todolist/api/task_attributes/update',
-            JSON.stringify({ "authenticationToken": authToken, "taskID": taskID, "inTodayDate": inTodayDate }),
-        )
-        setUpdateTaskDetail(updateTaskDetail + 1);
-    }
-    // Helper function to check if a date string is today
-    const isToday = (stringDate) => {
-        if (!stringDate) return false; // null or undefined
-        const today = new Date();
-        const dateToCheck = new Date(stringDate);
-        return today.getDate() === dateToCheck.getDate() &&
-            today.getMonth() === dateToCheck.getMonth() &&
-            today.getFullYear() === dateToCheck.getFullYear()
     }
     // Handle checkbox status change (add to the debounce queue)
     const handleStatusChange = (taskID, status) => {
@@ -84,38 +50,37 @@ function TodayPage() {
             console.error(e);
         }
     }
+    // Apply the debounced status changes to the server
+    const applyDebounceStatus = async (debounceStatus) => {
+        const authToken = localStorage.getItem('authToken');
+        for (const [taskID, status] of Object.entries(debounceStatus)) {
+            try {
+                await callAPITemplate(
+                    'http://localhost:8000/todolist/api/task_attributes/update',
+                    JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": status })
+                );
+            }
+            catch (e) {
+                console.error(e);
+            }
+        };
+        fetchTodoList();
+        setUpdateTaskAttrs(Math.random());
+    }
 
 
-    // Fetch todo list data on page load
+    // Fetch todo list data on page load and when updating a Task Attribute
     React.useEffect(() => {
         fetchTodoList();
-    }, []);
-    // Fetch task details when viewTaskDetailID changes
-    React.useEffect(() => {
-        if (viewTaskDetailID) {
-            callGetTaskAttributesAPI(viewTaskDetailID)
-                .then(data => setTaskDetails(data))
-                .catch(e => {
-                    console.error('Failed to fetch task attributes:', e);
-                    setTaskDetails(null);
-                });
-        }
-    }, [viewTaskDetailID, updateTaskDetail]);
-    // Update checkbox status smoothly with debouncing (300ms)
+    }, [updateTaskAttrs]);
+    // Update checkbox status smoothly with debouncing (50ms)
     React.useEffect(() => {
         const timeout = setTimeout(() => {
             if (Object.keys(debounceStatus).length > 0) {
-                const authToken = localStorage.getItem('authToken');
-                Object.entries(debounceStatus).forEach(([taskID, status]) => {
-                    callAPITemplate(
-                        'http://localhost:8000/todolist/api/task_attributes/update',
-                        JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": status })
-                    );
-                });
-                fetchTodoList();
+                applyDebounceStatus(debounceStatus);
                 setDebounceStatus({});
             }
-        }, 300);
+        }, 50);
         return () => clearTimeout(timeout);
     }, [debounceStatus]);
 
@@ -138,32 +103,8 @@ function TodayPage() {
                         />
                         {/* Name, Edit button, and Delete button */}
                         <strong>{task.name}</strong> ({task.itemType})
-                        <button onClick={() => console.log(task)}>Edit</button>
+                        <button onClick={() => setViewTaskDetailID(task.itemID)}>Edit</button>
                         <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
-                        {/* View Task Detail */}
-                        <>
-                            <button onClick={() => setViewTaskDetailID(task.itemID)}>View Detail</button>
-                            {viewTaskDetailID === task.itemID && taskDetails && (
-                                <div>
-                                    <p><strong>Task Details:</strong></p>
-                                    <p>Due Date: {taskDetails.dueDate || 'N/A'}</p>
-                                    <p>Priority: {taskDetails.priority || 'N/A'}</p>
-                                    <p>Status: {taskDetails.status || 'N/A'}</p>
-                                    <p>Description: {taskDetails.description || 'N/A'}</p>
-                                    <p>In Today Date: {taskDetails.inTodayDate || 'N/A'}</p>
-                                    <button onClick={() => setViewTaskDetailID(null)}>Close</button>
-                                    {isToday(taskDetails.inTodayDate) ? (
-                                        <button onClick={() => {
-                                            callUpdateInTodayDateAPI(task.itemID, '2100-01-01T00:00:00+00:00');
-                                        }}>Remove From Today's Task</button>
-                                    ) : (
-                                        <button onClick={() => {
-                                            callUpdateInTodayDateAPI(task.itemID, new Date().toISOString().replace('Z', '+00:00'));
-                                        }}>Add To Today's Task</button>
-                                    )}
-                                </div>
-                            )}
-                        </>
                     </li>
                 ))}
             </ul>

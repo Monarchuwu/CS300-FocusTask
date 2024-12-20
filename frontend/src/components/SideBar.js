@@ -3,11 +3,10 @@ import styles from './SideBar.module.css';
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
-import { useLocation, useNavigate, NavLink } from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
 
 function SideBar({ selectedProject, setSelectedProject }) {
     const navigate = useNavigate();
-    const location = useLocation();
     // State variables for adding new project
     const [isAddingProject, setIsAddingProject] = React.useState(false);
     const [newProjectName, setNewProjectName] = React.useState("");

@@ -2,7 +2,12 @@
     /*text-align: center;*/
 }
 
-.container {
+.container_2Columns {
     display: grid;
     grid-template-columns: 1fr 5fr;
+}
+
+.container_3Columns {
+    display: grid;
+    grid-template-columns: 1fr 4fr 1fr;
 }
