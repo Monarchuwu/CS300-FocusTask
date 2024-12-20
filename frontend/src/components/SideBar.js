@@ -5,12 +5,29 @@ import { callAPITemplate } from '../utils';
 import React from 'react';
 import { useLocation, useNavigate, NavLink } from 'react-router-dom';
 
-function SideBar() {
+function SideBar({ selectedProject, setSelectedProject }) {
     const navigate = useNavigate();
     const location = useLocation();
+    // State variables for adding new project
+    const [isAddingProject, setIsAddingProject] = React.useState(false);
+    const [newProjectName, setNewProjectName] = React.useState("");
+    // State variable for displaying all projects
+    const [projects, setProjects] = React.useState([]);
 
 
     // API call functions
+    const callAddProjectAPI = async (name) => {
+        const authToken = localStorage.getItem('authToken');
+        callAPITemplate(
+            'http://localhost:8000/todolist/api/project/add',
+            JSON.stringify({ "authenticationToken": authToken, "name": name }),
+            (data) => {
+                setIsAddingProject(false);
+                setNewProjectName("");
+                fetchProjectList();
+            }
+        )
+    }
     const callSignOutAPI = async () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
@@ -21,6 +38,16 @@ function SideBar() {
                 navigate('/signin');
             }
         )
+    }
+    // Fetch all projects and rerender
+    const fetchProjectList = async () => {
+        const authToken = localStorage.getItem('authToken');
+        const dataItems = await callAPITemplate(
+            'http://localhost:8000/todolist/api/project/get_all',
+            JSON.stringify({ "authenticationToken": authToken }),
+        );
+        const items = dataItems.map(item => JSON.parse(item));
+        setProjects(items);
     }
     // handle className for navbar items
     const handleNavLinkClassName = ({ isActive }) => isActive ?
@@ -47,6 +74,10 @@ function SideBar() {
             );
         }
     }, []);
+    // Get all projects
+    React.useEffect(() => {
+        fetchProjectList();
+    }, []);
 
 
     return (
@@ -59,6 +90,37 @@ function SideBar() {
             <p>Pomodoro</p>
 
             <button onClick={() => callSignOutAPI()}>Sign Out</button>
+
+            <div className={styles.projectContent}>
+                <h2 className={styles.projectTitle}>Projects</h2>
+
+                {/* add project button and its logic */}
+                <button onClick={() => setIsAddingProject(true)}>Add project</button>
+                {isAddingProject && (
+                    <div>
+                        <input
+                            type="text"
+                            value={newProjectName}
+                            onChange={(e) => setNewProjectName(e.target.value)}
+                        />
+                        <button onClick={() => { setIsAddingProject(false); setNewProjectName(""); }}>Cancel</button>
+                        <button onClick={() => callAddProjectAPI(newProjectName)}>Add</button>
+                    </div>
+                )}
+
+                {/* project list */}
+                <div className={styles.projectList}>{
+                    projects.map(project =>
+                        <button
+                            key={project.itemID}
+                            className={selectedProject === project.itemID
+                                ? `${styles.project} ${styles.projectActive}`
+                                : styles.project}
+                            onClick={() => setSelectedProject(project.itemID)}
+                        >{project.name}</button>
+                    )
+                }</div>
+            </div>
         </div>
     );
 }

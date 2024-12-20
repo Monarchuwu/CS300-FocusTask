@@ -4,11 +4,9 @@ import { callAPITemplate } from '../utils';
 
 import React from 'react';
 
-function HomePage() {
-    // State variables for adding new project, section, task
-    const [isAddingProject, setIsAddingProject] = React.useState(false);
-    const [newProjectName, setNewProjectName] = React.useState("");
-    const [addingSectionID, setAddingSectionID] = React.useState(null);
+function HomePage({ selectedProject }) {
+    // State variables for adding new section, task
+    const [isAddingSection, setIsAddingSection] = React.useState(false);
     const [newSectionName, setNewSectionName] = React.useState("");
     const [addingTaskID, setAddingTaskID] = React.useState(null);
     const [newTaskName, setNewTaskName] = React.useState("");
@@ -18,34 +16,22 @@ function HomePage() {
     const [updateTaskDetail, setUpdateTaskDetail] = React.useState(0);
     const [taskDetails, setTaskDetails] = React.useState(null);
     // State variables for rendering the tree
-    const [tree, setTree] = React.useState({}); // Forest of items that rendered
+    const [tree, setTree] = React.useState({}); // Forest of items that will be rendered
     const [taskStatusMap, setTaskStatusMap] = React.useState({}); // Checkbox status of tasks
     // State variable for debouncing status (checkbox) changes
     const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
 
 
     // API call functions
-    const callAddProjectAPI = async (name) => {
-        const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
-            'http://localhost:8000/todolist/api/project/add',
-            JSON.stringify({ "authenticationToken": authToken, "name": name }),
-            (data) => {
-                setIsAddingProject(false);
-                setNewProjectName("");
-                fetchTodoList();
-            }
-        )
-    }
     const callAddSectionAPI = async (name, parentID) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
             'http://localhost:8000/todolist/api/section/add',
             JSON.stringify({ "authenticationToken": authToken, "name": name, "parentID": parentID }),
             (data) => {
-                setAddingSectionID(null);
+                setIsAddingSection(false);
                 setNewSectionName("");
-                fetchTodoList();
+                fetchTodoList(selectedProject);
             }
         )
     }
@@ -71,7 +57,7 @@ function HomePage() {
                 setAddingTaskID(null);
                 setNewTaskName("");
                 setNewTaskDescription("");
-                fetchTodoList();
+                fetchTodoList(selectedProject);
             }
         )
     }
@@ -80,7 +66,7 @@ function HomePage() {
         callAPITemplate(
             'http://localhost:8000/todolist/api/todo_item/delete',
             JSON.stringify({ "authenticationToken": authToken, "itemID": itemID }),
-            (data) => fetchTodoList()
+            (data) => fetchTodoList(selectedProject)
         )
     }
     const callGetTaskAttributesAPI = async (taskID) => {
@@ -119,7 +105,7 @@ function HomePage() {
         setDebounceStatus({ ...debounceStatus, [taskID]: status });
     }
     // Called by fetchTodoList to build the tree structure (prepare for rendering)
-    const buildForest = (items) => {
+    const buildForest = (items, projectID) => {
         const itemMap = {}; // Map items by itemID for easy access
         const tree = {};
 
@@ -128,7 +114,7 @@ function HomePage() {
         });
 
         items.forEach(item => {
-            if (item.parentID === null) {
+            if (item.parentID === projectID) {
                 tree[item.itemID] = itemMap[item.itemID];
             }
             else if (itemMap[item.parentID]) {
@@ -139,15 +125,15 @@ function HomePage() {
         return tree;
     }
     // Fetch todo list data from the server
-    const fetchTodoList = async () => {
+    const fetchTodoList = async (projectID) => {
         const authToken = localStorage.getItem('authToken');
         try {
             const dataItem = await callAPITemplate(
-                'http://localhost:8000/todolist/api/todo_item/get_all',
-                JSON.stringify({ "authenticationToken": authToken }),
+                'http://localhost:8000/todolist/api/todo_item/get_list',
+                JSON.stringify({ "authenticationToken": authToken, "itemID": projectID }),
             );
-            const items = dataItem.map(item => JSON.parse(item));
-            setTree(buildForest(items));
+            const items = dataItem.map(item => JSON.parse(item)).filter(item => item.itemID !== projectID);
+            setTree(buildForest(items, projectID));
 
             const taskIDs = items.filter(item => item.itemType === 'Task').map(task => task.itemID);
             const dataAttributes = await callAPITemplate(
@@ -167,6 +153,7 @@ function HomePage() {
         return (
             <ul key={node.itemID}>
                 <li>
+                    {/* Checkbox for Task */}
                     {node.itemType === 'Task' && (
                         <input
                             type="checkbox"
@@ -177,25 +164,12 @@ function HomePage() {
                             }}
                         />
                     )}
+                    {/* Name, Edit button, and Delete button */}
                     <strong>{node.name}</strong> ({node.itemType})
                     <button onClick={() => console.log(node)}>Edit</button>
                     <button onClick={() => callDeleteTodoItemAPI(node.itemID)}>Delete</button>
-                    {node.itemType === 'Project' ? (
-                        <>
-                            <button onClick={() => setAddingSectionID(node.itemID)}>Add Section</button>
-                            {addingSectionID === node.itemID && (
-                                <div>
-                                    <input
-                                        type="text"
-                                        value={newSectionName}
-                                        onChange={(e) => setNewSectionName(e.target.value)}
-                                    />
-                                    <button onClick={() => { setAddingSectionID(null); setNewSectionName(""); }}>Cancel</button>
-                                    <button onClick={() => callAddSectionAPI(newSectionName, node.itemID)}>Add</button>
-                                </div>
-                            )}
-                        </>
-                    ) : (
+                    {/* Add Task button and input boxes */}
+                    {node.itemType === 'Section' &&
                         <>
                             <button onClick={() => setAddingTaskID(node.itemID)}>Add Task</button>
                             {addingTaskID === node.itemID && (
@@ -219,7 +193,8 @@ function HomePage() {
                                 </div>
                             )}
                         </>
-                    )}
+                    }
+                    {/* View Task Detail */}
                     {node.itemType === 'Task' && (
                         <>
                             <button onClick={() => setViewTaskDetailID(node.itemID)}>View Detail</button>
@@ -245,6 +220,7 @@ function HomePage() {
                             )}
                         </>
                     )}
+                    {/* Render children */}
                     {node.children && node.children.length > 0 && (
                         <ul>
                             {node.children.map(child => renderTree(child, taskStatusMap))}
@@ -258,8 +234,8 @@ function HomePage() {
 
     // Fetch todo list data on page load
     React.useEffect(() => {
-        fetchTodoList();
-    }, []);
+        fetchTodoList(selectedProject);
+    }, [selectedProject]);
     // Fetch task details when viewTaskDetailID changes
     React.useEffect(() => {
         if (viewTaskDetailID) {
@@ -282,7 +258,7 @@ function HomePage() {
                         JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": status })
                     );
                 });
-                fetchTodoList();
+                fetchTodoList(selectedProject);
                 setDebounceStatus({});
             }
         }, 300);
@@ -293,20 +269,22 @@ function HomePage() {
     return (
         <div>
             <h1>Welcome to the Home Page</h1>
-
-            <button onClick={() => setIsAddingProject(true)}>Add project</button>
-            {isAddingProject && (
-                <div>
-                    <input
-                        type="text"
-                        value={newProjectName}
-                        onChange={(e) => setNewProjectName(e.target.value)}
-                    />
-                    <button onClick={() => { setIsAddingProject(false); setNewProjectName(""); }}>Cancel</button>
-                    <button onClick={() => callAddProjectAPI(newProjectName)}>Add</button>
-                </div>
-            )}
-
+            {/* Add Section */}
+            <>
+                <button onClick={() => setIsAddingSection(true)}>Add Section</button>
+                {isAddingSection && (
+                    <div>
+                        <input
+                            type="text"
+                            value={newSectionName}
+                            onChange={(e) => setNewSectionName(e.target.value)}
+                        />
+                        <button onClick={() => { setIsAddingSection(false); setNewSectionName(""); }}>Cancel</button>
+                        <button onClick={() => callAddSectionAPI(newSectionName, selectedProject)}>Add</button>
+                    </div>
+                )}
+            </>
+            {/* Render the tree */}
             <div>
                 {Object.values(tree).length > 0 ? (
                     Object.values(tree).map(root => renderTree(root, taskStatusMap))

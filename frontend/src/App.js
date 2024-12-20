@@ -12,16 +12,22 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 function App() {
+    const [selectedProject, setSelectedProject] = React.useState(null);
+
     return (
         <div className={styles.App}>
             <Routes>
                 <Route path='/' element={
-                    <LayoutWithNavBar>
+                    <LayoutWithNavBar
+                        selectedProject={selectedProject}
+                        setSelectedProject={setSelectedProject}>
                         <HomePage />
                     </LayoutWithNavBar>
                 } />
                 <Route path='/today' element={
-                    <LayoutWithNavBar>
+                    <LayoutWithNavBar
+                        selectedProject={selectedProject}
+                        setSelectedProject={setSelectedProject}>
                         <TodayPage />
                     </LayoutWithNavBar>
                 } />
@@ -35,11 +41,14 @@ function App() {
 
 export default App;
 
-function LayoutWithNavBar({ children }) {
+function LayoutWithNavBar({ children, selectedProject, setSelectedProject }) {
     return (
         <div className={styles.container}>
-            <SideBar />
-            {children}
+            <SideBar selectedProject={selectedProject} setSelectedProject={setSelectedProject} />
+            {children.type === HomePage
+                ? React.cloneElement(children, { selectedProject })
+                : children
+            }
         </div>
     );
 }

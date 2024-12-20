@@ -13,3 +13,19 @@
     color: white;
     background-color: black;
 }
+
+.projectContent {}
+
+.projectTitle {}
+
+.projectList {
+    display: flex;
+    flex-direction: column;
+}
+
+.project {}
+
+.projectActive {
+    color: white;
+    background-color: black;
+}
