@@ -15,7 +15,7 @@ class UserManager:
                 token.delete()
                 raise ValueError("Error: Authentication token expired")
             return token.userID.userID
-        except databases.UserDB.DoesNotExist:
+        except databases.AuthenticationTokenDB.DoesNotExist:
             raise ValueError("Error: Authentication token not found")
     
     def registerUser(self, username: str, email: str, password: str, avatarURL: str = None):

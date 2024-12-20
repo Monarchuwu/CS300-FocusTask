@@ -73,3 +73,21 @@ def test_api_user_signout(client, userManager):
     
     jsonData = response.json()
     assert jsonData['status'] == 'success'
+
+
+@pytest.mark.django_db
+def test_api_authentication_status_notfound(client):
+    url = "/todolist/api/authentication/status"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": "fakeToken"
+    }))
+
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert response.headers["Content-Type"] == "application/json", \
+        f"Expected content-type 'application/json', but got {response.headers['Content-Type']}"
+
+    jsonData = response.json()
+    assert jsonData['status'] == 'success'
+
+    data = jsonData['data']
+    assert data['status'] == False
