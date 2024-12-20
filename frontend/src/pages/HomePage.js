@@ -3,10 +3,9 @@ import styles from './HomePage.module.css';
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 function HomePage() {
-    const navigate = useNavigate();
+    // State variables for adding new project, section, task
     const [isAddingProject, setIsAddingProject] = React.useState(false);
     const [newProjectName, setNewProjectName] = React.useState("");
     const [addingSectionID, setAddingSectionID] = React.useState(null);
@@ -14,29 +13,65 @@ function HomePage() {
     const [addingTaskID, setAddingTaskID] = React.useState(null);
     const [newTaskName, setNewTaskName] = React.useState("");
     const [newTaskDescription, setNewTaskDescription] = React.useState("");
+    // State variables for viewing task details
     const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
     const [updateTaskDetail, setUpdateTaskDetail] = React.useState(0);
     const [taskDetails, setTaskDetails] = React.useState(null);
-    const [tree, setTree] = React.useState({});
-    const [taskStatusMap, setTaskStatusMap] = React.useState({});
-    const [debounceStatus, setDebounceStatus] = React.useState({});
+    // State variables for rendering the tree
+    const [tree, setTree] = React.useState({}); // Forest of items that rendered
+    const [taskStatusMap, setTaskStatusMap] = React.useState({}); // Checkbox status of tasks
+    // State variable for debouncing status (checkbox) changes
+    const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
 
-    const isToday = (stringDate) => {
-        if (!stringDate) return false; // null or undefined
-        const today = new Date();
-        const dateToCheck = new Date(stringDate);
-        return today.getDate() === dateToCheck.getDate() &&
-            today.getMonth() === dateToCheck.getMonth() &&
-            today.getFullYear() === dateToCheck.getFullYear()
-    }
-    const callSignOutAPI = async () => {
+
+    // API call functions
+    const callAddProjectAPI = async (name) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/user/signout',
-            JSON.stringify({ "authenticationToken": authToken }),
+            'http://localhost:8000/todolist/api/project/add',
+            JSON.stringify({ "authenticationToken": authToken, "name": name }),
             (data) => {
-                localStorage.removeItem('authToken');
-                navigate('/signin');
+                setIsAddingProject(false);
+                setNewProjectName("");
+                fetchTodoList();
+            }
+        )
+    }
+    const callAddSectionAPI = async (name, parentID) => {
+        const authToken = localStorage.getItem('authToken');
+        callAPITemplate(
+            'http://localhost:8000/todolist/api/section/add',
+            JSON.stringify({ "authenticationToken": authToken, "name": name, "parentID": parentID }),
+            (data) => {
+                setAddingSectionID(null);
+                setNewSectionName("");
+                fetchTodoList();
+            }
+        )
+    }
+    const callAddTaskAPI = async (name, parentID, dueDate = null, priority = null, status = null, description = null, inTodayDate = null) => {
+        const authToken = localStorage.getItem('authToken');
+        var payload = {
+            "authenticationToken": authToken,
+            "name": name,
+            "parentID": parentID,
+            "dueDate": dueDate,
+            "priority": priority,
+            "status": status,
+            "description": description,
+            "inTodayDate": inTodayDate
+        }
+        payload = Object.fromEntries(
+            Object.entries(payload).filter(([_, value]) => value !== null)
+        );
+        callAPITemplate(
+            'http://localhost:8000/todolist/api/task/add',
+            JSON.stringify(payload),
+            (data) => {
+                setAddingTaskID(null);
+                setNewTaskName("");
+                setNewTaskDescription("");
+                fetchTodoList();
             }
         )
     }
@@ -48,10 +83,42 @@ function HomePage() {
             (data) => fetchTodoList()
         )
     }
+    const callGetTaskAttributesAPI = async (taskID) => {
+        const authToken = localStorage.getItem('authToken');
+        try {
+            const data = await callAPITemplate(
+                'http://localhost:8000/todolist/api/task_attributes/get',
+                JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
+            );
+            return JSON.parse(data);
+        }
+        catch (e) {
+            console.error(e);
+        }
+    }
+    const callUpdateInTodayDateAPI = async (taskID, inTodayDate) => {
+        const authToken = localStorage.getItem('authToken');
+        await callAPITemplate(
+            'http://localhost:8000/todolist/api/task_attributes/update',
+            JSON.stringify({ "authenticationToken": authToken, "taskID": taskID, "inTodayDate": inTodayDate }),
+        )
+        setUpdateTaskDetail(updateTaskDetail + 1);
+    }
+    // Helper function to check if a date string is today
+    const isToday = (stringDate) => {
+        if (!stringDate) return false; // null or undefined
+        const today = new Date();
+        const dateToCheck = new Date(stringDate);
+        return today.getDate() === dateToCheck.getDate() &&
+            today.getMonth() === dateToCheck.getMonth() &&
+            today.getFullYear() === dateToCheck.getFullYear()
+    }
+    // Handle checkbox status change (add to the debounce queue)
     const handleStatusChange = (taskID, status) => {
         setTaskStatusMap((prev) => ({ ...prev, [taskID]: status }));
         setDebounceStatus({ ...debounceStatus, [taskID]: status });
     }
+    // Called by fetchTodoList to build the tree structure (prepare for rendering)
     const buildForest = (items) => {
         const itemMap = {}; // Map items by itemID for easy access
         const tree = {};
@@ -71,6 +138,31 @@ function HomePage() {
 
         return tree;
     }
+    // Fetch todo list data from the server
+    const fetchTodoList = async () => {
+        const authToken = localStorage.getItem('authToken');
+        try {
+            const dataItem = await callAPITemplate(
+                'http://localhost:8000/todolist/api/todo_item/get_all',
+                JSON.stringify({ "authenticationToken": authToken }),
+            );
+            const items = dataItem.map(item => JSON.parse(item));
+            setTree(buildForest(items));
+
+            const taskIDs = items.filter(item => item.itemType === 'Task').map(task => task.itemID);
+            const dataAttributes = await callAPITemplate(
+                'http://localhost:8000/todolist/api/task_attributes/get_list',
+                JSON.stringify({ "authenticationToken": authToken, "itemIDs": taskIDs }),
+            );
+            const attrsList = dataAttributes.map(attr => JSON.parse(attr));
+            const taskStatusMap = Object.fromEntries(attrsList.map(attr => [attr.taskID, attr.status]));
+            setTaskStatusMap(taskStatusMap);
+        }
+        catch (e) {
+            console.error(e);
+        }
+    }
+    // Render the todoitem tree recursively
     const renderTree = (node, taskStatusMap) => {
         return (
             <ul key={node.itemID}>
@@ -162,122 +254,13 @@ function HomePage() {
             </ul>
         );
     };
-    const fetchTodoList = async () => {
-        const authToken = localStorage.getItem('authToken');
-        try {
-            const dataItem = await callAPITemplate(
-                'http://localhost:8000/todolist/api/todo_item/get_all',
-                JSON.stringify({ "authenticationToken": authToken }),
-            );
-            const items = dataItem.map(item => JSON.parse(item));
-            setTree(buildForest(items));
 
-            const taskIDs = items.filter(item => item.itemType === 'Task').map(task => task.itemID);
-            const dataAttributes = await callAPITemplate(
-                'http://localhost:8000/todolist/api/task_attributes/get_list',
-                JSON.stringify({ "authenticationToken": authToken, "itemIDs": taskIDs }),
-            );
-            const attrsList = dataAttributes.map(attr => JSON.parse(attr));
-            const taskStatusMap = Object.fromEntries(attrsList.map(attr => [attr.taskID, attr.status]));
-            setTaskStatusMap(taskStatusMap);
-        }
-        catch (e) {
-            console.error(e);
-        }
-    }
-    const callAddProjectAPI = async (name) => {
-        const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
-            'http://localhost:8000/todolist/api/project/add',
-            JSON.stringify({ "authenticationToken": authToken, "name": name }),
-            (data) => {
-                setIsAddingProject(false);
-                setNewProjectName("");
-                fetchTodoList();
-            }
-        )
-    }
-    const callAddSectionAPI = async (name, parentID) => {
-        const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
-            'http://localhost:8000/todolist/api/section/add',
-            JSON.stringify({ "authenticationToken": authToken, "name": name, "parentID": parentID }),
-            (data) => {
-                setAddingSectionID(null);
-                setNewSectionName("");
-                fetchTodoList();
-            }
-        )
-    }
-    const callAddTaskAPI = async (name, parentID, dueDate = null, priority = null, status = null, description = null, inTodayDate = null) => {
-        const authToken = localStorage.getItem('authToken');
-        var payload = {
-            "authenticationToken": authToken,
-            "name": name,
-            "parentID": parentID,
-            "dueDate": dueDate,
-            "priority": priority,
-            "status": status,
-            "description": description,
-            "inTodayDate": inTodayDate
-        }
-        payload = Object.fromEntries(
-            Object.entries(payload).filter(([_, value]) => value !== null)
-        );
-        callAPITemplate(
-            'http://localhost:8000/todolist/api/task/add',
-            JSON.stringify(payload),
-            (data) => {
-                setAddingTaskID(null);
-                setNewTaskName("");
-                setNewTaskDescription("");
-                fetchTodoList();
-            }
-        )
-    }
-    const callGetTaskAttributesAPI = async (taskID) => {
-        const authToken = localStorage.getItem('authToken');
-        try {
-            const data = await callAPITemplate(
-                'http://localhost:8000/todolist/api/task_attributes/get',
-                JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
-            );
-            return JSON.parse(data);
-        }
-        catch (e) {
-            console.error(e);
-        }
-    }
-    const callUpdateInTodayDateAPI = async (taskID, inTodayDate) => {
-        const authToken = localStorage.getItem('authToken');
-        await callAPITemplate(
-            'http://localhost:8000/todolist/api/task_attributes/update',
-            JSON.stringify({ "authenticationToken": authToken, "taskID": taskID, "inTodayDate": inTodayDate }),
-        )
-        setUpdateTaskDetail(updateTaskDetail + 1);
-    }
 
-    React.useEffect(() => {
-        const authToken = localStorage.getItem('authToken');
-        if (authToken === null) {
-            navigate('/signin');
-        }
-        else {
-            callAPITemplate(
-                'http://localhost:8000/todolist/api/authentication/status',
-                JSON.stringify({ "authenticationToken": authToken }),
-                (data) => {
-                    if (!data.status) {
-                        localStorage.removeItem('authToken');
-                        navigate('/signin');
-                    }
-                },
-            );
-        }
-    }, []);
+    // Fetch todo list data on page load
     React.useEffect(() => {
         fetchTodoList();
     }, []);
+    // Fetch task details when viewTaskDetailID changes
     React.useEffect(() => {
         if (viewTaskDetailID) {
             callGetTaskAttributesAPI(viewTaskDetailID)
@@ -288,6 +271,7 @@ function HomePage() {
                 });
         }
     }, [viewTaskDetailID, updateTaskDetail]);
+    // Update checkbox status smoothly with debouncing (300ms)
     React.useEffect(() => {
         const timeout = setTimeout(() => {
             if (Object.keys(debounceStatus).length > 0) {
@@ -305,9 +289,9 @@ function HomePage() {
         return () => clearTimeout(timeout);
     }, [debounceStatus]);
 
+
     return (
         <div>
-            <button onClick={() => callSignOutAPI()}>Sign Out</button>
             <h1>Welcome to the Home Page</h1>
 
             <button onClick={() => setIsAddingProject(true)}>Add project</button>
