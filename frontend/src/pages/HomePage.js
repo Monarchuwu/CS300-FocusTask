@@ -258,8 +258,21 @@ function HomePage() {
     }
 
     React.useEffect(() => {
-        if (localStorage.getItem('authToken') === null) {
+        const authToken = localStorage.getItem('authToken');
+        if (authToken === null) {
             navigate('/signin');
+        }
+        else {
+            callAPITemplate(
+                'http://localhost:8000/todolist/api/authentication/status',
+                JSON.stringify({ "authenticationToken": authToken }),
+                (data) => {
+                    if (!data.status) {
+                        localStorage.removeItem('authToken');
+                        navigate('/signin');
+                    }
+                },
+            );
         }
     }, []);
     React.useEffect(() => {
