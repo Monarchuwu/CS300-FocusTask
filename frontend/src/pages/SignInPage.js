@@ -8,6 +8,8 @@ import {
     Button,
 } from '@mui/material';
 
+import { Helmet } from 'react-helmet';
+
 
 function SignInPage() {
     const navigate = useNavigate();
@@ -41,20 +43,25 @@ function SignInPage() {
         callSignInAPI(email, password);
     }
     return (
-        <div id="LogInForm">
-            <h1>Log in</h1>
-            <div>
-                <TextField id="email" label="Email" value={email} 
-                    sx={{ mb: '24px' }} onChange={(e) => setEmail(e.target.value)} required/>
-                <br />
-                <TextField id="password" label="Password" type="password" 
-                    value={password} sx={{ mb: '24px' }} 
-                    onChange={(e) => setPassword(e.target.value)} required/>
-                <br />
-                <Button variant="contained" type="submit" onClick={() => handleSubmit()}>Log In</Button>
+        <div>
+            <Helmet>
+                <title>Log In - FocusTask</title>
+            </Helmet>
+            <div id="LogInForm">
+                <h1>Log in</h1>
+                <div>
+                    <TextField id="email" label="Email" value={email} 
+                        sx={{ mb: '24px' }} onChange={(e) => setEmail(e.target.value)} required/>
+                    <br />
+                    <TextField id="password" label="Password" type="password" 
+                        value={password} sx={{ mb: '24px' }} 
+                        onChange={(e) => setPassword(e.target.value)} required/>
+                    <br />
+                    <Button variant="contained" type="submit" onClick={() => handleSubmit()}>Log In</Button>
+                </div>
+                <p>{message}</p>
+                <Button variant="text" onClick={() => navigate('/register')}>Don’t have an account? Sign Up</Button>
             </div>
-            <p>{message}</p>
-            <Button variant="text" onClick={() => navigate('/register')}>Don’t have an account? Sign Up</Button>
         </div>
     );
 }

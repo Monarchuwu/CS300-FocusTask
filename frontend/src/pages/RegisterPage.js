@@ -11,6 +11,8 @@ import {
     Alert, 
 } from '@mui/material';
 
+import { Helmet } from 'react-helmet';
+
 function RegisterPage() {
     const navigate = useNavigate();
     const [username, setUsername] = React.useState('');
@@ -40,23 +42,28 @@ function RegisterPage() {
         callRegisterAPI(username, email, password);
     }
     return (
-        <div id="SignUpForm">
-            <h1>Sign up</h1>
-            <div>
-                <TextField type="text" name="username" value={username} 
-                    sx={{ mb: '24px' }} label="Username" onChange={(e) => setUsername(e.target.value)} required/>
-                <br />
-                <TextField type="email" name="email" value={email}
-                    sx={{ mb: '24px' }} label="Email" onChange={(e) => setEmail(e.target.value)} required />
-                <br />
-                <TextField type="password" name="password" value={password} 
-                    sx={{ mb: '24px' }} label="Password" onChange={(e) => setPassword(e.target.value)} required/>
-                <br />
-                <Button variant='contained' type="submit" sx={{ mb: '24px' }}
-                    onClick={() => handleSubmit()}>Create Account</Button>
+        <div>
+            <Helmet>
+                <title>Sign Up - FocusTask</title>
+            </Helmet>
+            <div id="SignUpForm">
+                <h1>Sign up</h1>
+                <div>
+                    <TextField type="text" name="username" value={username} 
+                        sx={{ mb: '24px' }} label="Username" onChange={(e) => setUsername(e.target.value)} required/>
+                    <br />
+                    <TextField type="email" name="email" value={email}
+                        sx={{ mb: '24px' }} label="Email" onChange={(e) => setEmail(e.target.value)} required />
+                    <br />
+                    <TextField type="password" name="password" value={password} 
+                        sx={{ mb: '24px' }} label="Password" onChange={(e) => setPassword(e.target.value)} required/>
+                    <br />
+                    <Button variant='contained' type="submit" sx={{ mb: '24px' }}
+                        onClick={() => handleSubmit()}>Create Account</Button>
+                </div>
+                <Alert severity="error">{message}</Alert>
+                <Button variant='text' onClick={() => navigate('/signin')}>Already had an account? Log in</Button>
             </div>
-            <Alert severity="error">{message}</Alert>
-            <Button variant='text' onClick={() => navigate('/signin')}>Already had an account? Log in</Button>
         </div>
     );
 }
