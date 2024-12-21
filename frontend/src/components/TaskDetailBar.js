@@ -99,6 +99,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs 
     // Fetch task details when taskID changes
     React.useEffect(() => {
         fetchTaskDetails();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskID, updateTaskAttrs]);
     // Update checkbox status smoothly with debouncing (50ms)
     React.useEffect(() => {
@@ -109,11 +110,12 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs 
             }
         }, 50);
         return () => clearTimeout(timeout);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debounceStatus]);
 
 
     return (
-        <div>
+        <div className={styles.container}>
             <h1>TaskDetail</h1>
             <button onClick={() => setTaskID(null)}>Close</button>
 

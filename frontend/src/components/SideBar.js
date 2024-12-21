@@ -72,6 +72,7 @@ function SideBar({ selectedProject, setSelectedProject }) {
                 },
             );
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     // Get all projects
     React.useEffect(() => {

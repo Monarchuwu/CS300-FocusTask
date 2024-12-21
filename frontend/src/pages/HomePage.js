@@ -195,6 +195,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
     // Fetch todo list data on page load
     React.useEffect(() => {
         fetchTodoList(selectedProject);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedProject, updateTaskAttrs]);
     // Update checkbox status smoothly with debouncing (50ms)
     React.useEffect(() => {
@@ -205,6 +206,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
             }
         }, 50);
         return () => clearTimeout(timeout);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debounceStatus]);
 
 
@@ -229,7 +231,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
                 </>
             }
             {/* Render the tree */}
-            <div>
+            <div className={styles.treeItems}>
                 {Object.values(tree).length > 0 ? (
                     Object.values(tree).map(root => renderTree(root, taskStatusMap))
                 ) : (
