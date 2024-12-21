@@ -1,0 +1,31 @@
+.container {}
+
+.navbar {
+    list-style: none;
+}
+
+.navbarItem {
+    text-decoration: none;
+    color: black;
+}
+
+.navbarItemActive {
+    color: white;
+    background-color: black;
+}
+
+.projectContent {}
+
+.projectTitle {}
+
+.projectList {
+    display: flex;
+    flex-direction: column;
+}
+
+.project {}
+
+.projectActive {
+    color: white;
+    background-color: black;
+}

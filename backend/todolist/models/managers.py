@@ -15,7 +15,7 @@ class UserManager:
                 token.delete()
                 raise ValueError("Error: Authentication token expired")
             return token.userID.userID
-        except databases.UserDB.DoesNotExist:
+        except databases.AuthenticationTokenDB.DoesNotExist:
             raise ValueError("Error: Authentication token not found")
     
     def registerUser(self, username: str, email: str, password: str, avatarURL: str = None):
@@ -119,6 +119,15 @@ class TaskManager:
     def getAllTodoItem(self, userID: int):
         try:
             items = databases.TodoItemDB.objects.filter(userID=userID)
+            return [item.get_data_object() for item in items]
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"User with ID {userID} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while fetching all the todo items: {e}")
+
+    def getAllProject(self, userID: int):
+        try:
+            items = databases.TodoItemDB.objects.filter(userID=userID, itemType=databases.TodoItemDB.ItemType.PROJECT)
             return [item.get_data_object() for item in items]
         except databases.TodoItemDB.DoesNotExist:
             raise ValueError(f"User with ID {userID} does not exist.")
