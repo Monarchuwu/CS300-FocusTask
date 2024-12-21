@@ -231,3 +231,15 @@ class PomodoroHistory:
         self.endTime = endTime
         self.status = status
         self.createdAt = createdAt
+
+    def __str__(self):
+        json_data = {
+            "pomodoroID": self.pomodoroID,
+            "taskID": self.taskID,
+            "startTime": self.startTime.isoformat(),
+            "duration": self.duration,
+            "endTime": self.endTime.isoformat(),
+            "status": self.status,
+            "createdAt": self.createdAt.isoformat(),
+        }
+        return json.dumps(json_data)

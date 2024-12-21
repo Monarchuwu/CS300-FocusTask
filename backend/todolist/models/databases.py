@@ -224,6 +224,7 @@ class PomodoroHistoryDB(MyDB):
     duration = models.DurationField()
     currentDuration = models.DurationField(null=True)
     endTime = models.DateTimeField("End time")
+    intervals = models.JSONField()
     status = models.CharField(max_length = 10, choices = Status.choices, default = Status.COMPLETED)
     createdAt = models.DateTimeField("Created date", default = timezone.now)
 
