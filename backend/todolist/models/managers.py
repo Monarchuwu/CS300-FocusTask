@@ -425,6 +425,7 @@ class PomodoroManager:
                     taskID = task,
                     startTime = None,
                     duration = None,
+                    currentDuration = None,
                     endTime = None,
                     status = databases.PomodoroHistoryDB.Status.CANCELED,
                     createdAt = timezone.now()
@@ -539,8 +540,8 @@ class PomodoroManager:
             
             for pomodoro in pomodoros:
                 for i, (start_time, end_time) in enumerate(zip(pomodoro.intervals[:-1], pomodoro.intervals[1:])):
-                    overlap_start = max(datetime.fromisoformat(start_time).astimezone(), hour_start)
-                    overlap_end = min(datetime.fromisoformat(end_time).astimezone(), hour_end)
+                    overlap_start = max(datetime.fromisoformat(start_time), hour_start.astimezone())
+                    overlap_end = min(datetime.fromisoformat(end_time), hour_end.astimezone())
                     if overlap_start < overlap_end:
                         if i % 2 == 0:
                             run_time += overlap_end - overlap_start
