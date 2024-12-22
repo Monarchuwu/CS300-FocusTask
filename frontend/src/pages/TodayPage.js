@@ -84,6 +84,14 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
         return () => clearTimeout(timeout);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debounceStatus]);
+    // Cleanup function
+    React.useEffect(() => {
+        return () => {
+            setViewTaskDetailID(null);
+            setSuggestTaskList(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
 
     return (

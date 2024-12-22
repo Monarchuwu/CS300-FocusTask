@@ -208,6 +208,11 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
         return () => clearTimeout(timeout);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debounceStatus]);
+    // Cleanup function
+    React.useEffect(() => {
+        return () => setViewTaskDetailID(null)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
 
     return (
