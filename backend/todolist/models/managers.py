@@ -1,7 +1,6 @@
 import bcrypt
 from datetime import datetime, timedelta
 from django.utils import timezone
-from sympy import use
 
 from . import databases, objects
 from django.db import IntegrityError
