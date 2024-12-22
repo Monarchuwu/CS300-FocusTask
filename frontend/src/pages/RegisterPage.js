@@ -58,7 +58,7 @@ function RegisterPage() {
                 </Grid>
                 <Grid id="SignUpForm" size={{ xs: 12, md: 5 }} height='100vh'>
                     <LogoText width='260px' />
-                    <Box component="form" sx={{ px: '100px', width: '100%', maxWidth: '570px' }}>
+                    <Box sx={{ px: '100px', width: '100%', maxWidth: '570px' }}>
                         <h1>Sign up</h1>
                         <TextField type="text" name="username" value={username} 
                             sx={{ mb: '24px' }} label="Username" onChange={(e) => setUsername(e.target.value)} fullWidth required/>

@@ -62,7 +62,7 @@ function SignInPage() {
                 </Grid>
                 <Grid id="LogInForm" size={{ xs: 12, md: 5 }} height='100vh'>
                     <LogoText width='260px' />
-                    <Box component="form" sx={{ px: '100px', width: '100%', maxWidth: '570px' }}>
+                    <Box sx={{ px: '100px', width: '100%', maxWidth: '570px' }}>
                         <h1>Log in</h1>
                         <TextField id="email" label="Email" value={email} 
                             sx={{ mb: '24px' }} onChange={(e) => setEmail(e.target.value)} 
