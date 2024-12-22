@@ -220,12 +220,12 @@ class PomodoroHistoryDB(MyDB):
 
     pomodoroID = models.AutoField(primary_key = True)
     taskID = models.ForeignKey(TodoItemDB, on_delete = models.CASCADE)
-    startTime = models.DateTimeField("Start time")
-    duration = models.DurationField()
+    startTime = models.DateTimeField("Start time", null = True)
+    duration = models.DurationField(null = True)
     currentDuration = models.DurationField(null=True)
-    endTime = models.DateTimeField("End time")
-    intervals = models.JSONField(default=[])
-    status = models.CharField(max_length = 10, choices = Status.choices, default = Status.COMPLETED)
+    endTime = models.DateTimeField("End time", null = True)
+    intervals = models.JSONField(default=list)
+    status = models.CharField(max_length = 10, choices = Status.choices, default = Status.CANCELED)
     createdAt = models.DateTimeField("Created date", default = timezone.now)
 
     def get_data_object(self):
@@ -234,6 +234,7 @@ class PomodoroHistoryDB(MyDB):
             self.taskID.itemID,
             self.startTime,
             self.duration,
+            self.currentDuration,
             self.endTime,
             self.status,
             self.createdAt

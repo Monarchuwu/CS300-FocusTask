@@ -404,36 +404,37 @@ class PomodoroManager:
     def checkUserAccessToPomodoro(self, userID: int, pomodoroID: int):
         try:
             pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID=pomodoroID)
-            task = databases.TodoItemDB.objects.get(userID=userID, itemID=pomodoro.taskID)
-            if task:
-                return True
-            else:
-                return False
+            task = databases.TodoItemDB.objects.filter(userID=userID, itemID=pomodoro.taskID.itemID)
+            return task.exists()
             
         except databases.TodoItemDB.DoesNotExist:
             raise ValueError(f"TodoItem with userID {userID} and pomodoroID {pomodoroID} do not exist.")
         except databases.PomodoroHistoryDB.DoesNotExist:
             raise ValueError(f"PomodoroHistory ID {pomodoroID} do not exist.")
         except Exception as e:
+            print(e)
             raise ValueError(f"An error occurred while checking the userID {userID} for pomodoroID: {pomodoroID}") 
 
     def setTaskID(self, taskID: int):
         try:
-            task = databases.TodoItemDB.objects.get(taskID = taskID)
+            task = databases.TodoItemDB.objects.get(itemID = taskID)
             if (task):
+                if databases.PomodoroHistoryDB.objects.filter(taskID__itemID=taskID).exists():
+                    return databases.PomodoroHistoryDB.objects.get(taskID__itemID=taskID).get_data_object()
                 pomodoro = databases.PomodoroHistoryDB.objects.create(
-                    taskID = taskID,
+                    taskID = task,
                     startTime = None,
                     duration = None,
                     endTime = None,
                     status = databases.PomodoroHistoryDB.Status.CANCELED,
-                    createdAt = datetime.now()
+                    createdAt = timezone.now()
                 )
                 return pomodoro.get_data_object()
             
         except databases.TodoItemDB.DoesNotExist:
             raise ValueError(f"Task ID {taskID} do not exist.")
         except Exception as e:
+            print(e)
             raise ValueError(f"An error occurred while checking the taskID for pomodoro: {taskID}") 
 
     def setTime(self, pomodoroID: int, length: timedelta):
@@ -452,7 +453,7 @@ class PomodoroManager:
         try:
             pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
             if pomodoro.status == databases.PomodoroHistoryDB.Status.CANCELED:
-                pomodoro.startTime = datetime.now()
+                pomodoro.startTime = timezone.now()
                 pomodoro.endTime = pomodoro.startTime
                 if pomodoro.intervals is None:
                     pomodoro.intervals = []
@@ -469,7 +470,7 @@ class PomodoroManager:
         try:
             pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
             if pomodoro.status == databases.PomodoroHistoryDB.Status.PAUSED:
-                pomodoro.endTime = datetime.now()
+                pomodoro.endTime = timezone.now()
                 pomodoro.intervals.append(pomodoro.endTime.isoformat())
                 pomodoro.status = databases.PomodoroHistoryDB.Status.RUNNING
                 pomodoro.save()
@@ -485,7 +486,7 @@ class PomodoroManager:
             pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
             if pomodoro.status == databases.PomodoroHistoryDB.Status.RUNNING:
                 pomodoro.status = databases.PomodoroHistoryDB.Status.PAUSED
-                elapsed = datetime.now() - pomodoro.endTime
+                elapsed = timezone.now() - pomodoro.endTime
                 pomodoro.currentDuration -= elapsed
                 pomodoro.endTime += elapsed
                 pomodoro.intervals.append(pomodoro.endTime.isoformat())
@@ -499,12 +500,13 @@ class PomodoroManager:
     def getTime(self, pomodoroID: int):
         try:
             pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
-            elapsed = (now:=datetime.now()) - pomodoro.endTime
-            pomodoro.currentDuration -= elapsed
-            pomodoro.endTime = now
-            pomodoro.save()
-            if (pomodoro.currentDuration <= timedelta()):
-                self.end(pomodoroID)
+            if pomodoro.status == databases.PomodoroHistoryDB.Status.RUNNING:
+                elapsed = (now:=timezone.now()) - pomodoro.endTime
+                pomodoro.currentDuration -= elapsed
+                pomodoro.endTime = now
+                pomodoro.save()
+                if (pomodoro.currentDuration <= timedelta()):
+                    self.end(pomodoroID)
             return max(pomodoro.currentDuration, timedelta())
         except databases.PomodoroHistoryDB.DoesNotExist:
             raise ValueError(f"PomodoroHistory with ID {pomodoroID} do not exist.")
@@ -516,7 +518,7 @@ class PomodoroManager:
             pomodoro = databases.PomodoroHistoryDB.objects.get(pomodoroID = pomodoroID)
             pomodoro.status = databases.PomodoroHistoryDB.Status.COMPLETED
             pomodoro.currentDuration = timedelta()
-            pomodoro.endTime = datetime.now()
+            pomodoro.endTime = timezone.now()
             pomodoro.intervals.append(pomodoro.endTime.isoformat())
             pomodoro.save()
             return pomodoro.get_data_object()
@@ -526,23 +528,28 @@ class PomodoroManager:
             raise ValueError(f"An error occurred while ending timer for pomodoro with ID: {pomodoroID}")
 
     def get_hour_list(self, userID: int, hour: datetime):
-        hour_start = hour
-        hour_end = hour + timedelta(hours=1)
+        try:
+            hour_start = hour
+            hour_end = hour + timedelta(hours=1)
 
-        run_time = timedelta()
-        pause_time = timedelta()
+            run_time = timedelta()
+            pause_time = timedelta()
 
-        pomodoros = databases.PomodoroHistoryDB.objects.filter(taskID__userID__userID=userID)
-        for pomodoro in pomodoros:
-            for i, (start_time, end_time) in enumerate(zip(pomodoro.intervals[:-1], pomodoro.intervals[1:])):
-                overlap_start = max(start_time, hour_start)
-                overlap_end = min(end_time, hour_end)
-                if overlap_start < overlap_end:
-                    if i % 2 == 0:
-                        run_time += overlap_end - overlap_start
-                    else:
-                        pause_time += overlap_end - overlap_start
-        return (run_time, pause_time)
+            pomodoros = databases.PomodoroHistoryDB.objects.filter(taskID__userID__userID=userID, status=databases.PomodoroHistoryDB.Status.COMPLETED)
+            
+            for pomodoro in pomodoros:
+                for i, (start_time, end_time) in enumerate(zip(pomodoro.intervals[:-1], pomodoro.intervals[1:])):
+                    overlap_start = max(datetime.fromisoformat(start_time).astimezone(), hour_start)
+                    overlap_end = min(datetime.fromisoformat(end_time).astimezone(), hour_end)
+                    if overlap_start < overlap_end:
+                        if i % 2 == 0:
+                            run_time += overlap_end - overlap_start
+                        else:
+                            pause_time += overlap_end - overlap_start
+            return (run_time, pause_time)
+        except Exception as e:
+            print(e)
+            raise ValueError(f"An error occured while getting the hour stats for userID {userID} in hour {hour.isoformat()}")
     def get_day_list(self, userID: int, date: datetime):
         date_start = date
         date_end = date + timedelta(days=1)
@@ -550,7 +557,7 @@ class PomodoroManager:
         run_time = timedelta()
         pause_time = timedelta()
 
-        pomodoros = databases.PomodoroHistoryDB.objects.filter(taskID__userID__userID=userID)
+        pomodoros = databases.PomodoroHistoryDB.objects.filter(taskID__userID__userID=userID, status=databases.PomodoroHistoryDB.Status.COMPLETED)
         for pomodoro in pomodoros:
             for i, (start_time, end_time) in enumerate(zip(pomodoro.intervals[:-1], pomodoro.intervals[1:])):
                 overlap_start = max(start_time, date_start)

@@ -121,7 +121,8 @@ def pomodoro_set_length(request):
             data = json.loads(request.body)
             token = data['authenticationToken']
             pomodoroID = data['pomodoroID']
-            length = data['length']
+            seconds = data['length']
+            length=timedelta(seconds=seconds)
             userID = UserManager().getUserID(token)
             if PomodoroManager().checkUserAccessToPomodoro(userID, pomodoroID):
                 pomodoro = PomodoroManager().setTime(pomodoroID=pomodoroID, length=length)
@@ -146,7 +147,7 @@ def pomodoro_get_time(request):
             userID = UserManager().getUserID(token)
             if PomodoroManager().checkUserAccessToPomodoro(userID, pomodoroID):
                 currentTime = PomodoroManager().getTime(pomodoroID=pomodoroID)
-                return JsonResponse({'status': 'success', 'data': currentTime})
+                return JsonResponse({'status': 'success', 'data': currentTime.total_seconds()})
             else:
                 return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status = 401)
 
@@ -163,11 +164,12 @@ def get_history_hour(request):
         try:
             data = json.loads(request.body)
             token = data['authenticationToken']
-            time = datetime.fromisoformat(data['hour']).hour()
+            time = datetime.fromisoformat(data['hour'])
+            time = datetime(year=time.year, month=time.month, day=time.day, hour=time.hour).astimezone()
             userID = UserManager().getUserID(token)
             
             run_time, pause_time = PomodoroManager().get_hour_list(userID, time)
-            return JsonResponse({'status': 'success', 'data': [run_time, pause_time]})
+            return JsonResponse({'status': 'success', 'data': [run_time.total_seconds(), pause_time.total_seconds()]})
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
         except Exception as e:
