@@ -2,6 +2,7 @@ import styles from './App.module.css';
 
 import SideBar from './components/SideBar';
 import TaskDetailBar from './components/TaskDetailBar';
+import SuggestTaskBar from './components/SuggestTaskBar';
 
 import HomePage from './pages/HomePage';
 import TodayPage from './pages/TodayPage';
@@ -19,10 +20,11 @@ function App() {
     const location = useLocation();
     // State variable for DOM to wait while checking validation status  
     const [isLoading, setIsLoading] = React.useState(true);
-    // State variables for selected project and task detail
+    // State variables for selected project, task detail, and suggested task list
     const [selectedProject, setSelectedProject] = React.useState(null);
     const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
     const [updateTaskAttrs, setUpdateTaskAttrs] = React.useState(0);
+    const [suggestTaskList, setSuggestTaskList] = React.useState(false);
 
 
     // Check if the authentication token is still valid
@@ -89,7 +91,9 @@ function App() {
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
-                        setUpdateTaskAttrs={setUpdateTaskAttrs}>
+                        setUpdateTaskAttrs={setUpdateTaskAttrs}
+                        suggestTaskList={suggestTaskList}
+                        setSuggestTaskList={setSuggestTaskList}>
                         <HomePage />
                     </LayoutWithNavBar>
                 } />
@@ -100,7 +104,9 @@ function App() {
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
-                        setUpdateTaskAttrs={setUpdateTaskAttrs}>
+                        setUpdateTaskAttrs={setUpdateTaskAttrs}
+                        suggestTaskList={suggestTaskList}
+                        setSuggestTaskList={setSuggestTaskList}>
                         <TodayPage />
                     </LayoutWithNavBar>
                 } />
@@ -118,21 +124,35 @@ function LayoutWithNavBar({
     children,
     selectedProject, setSelectedProject,
     viewTaskDetailID, setViewTaskDetailID,
-    updateTaskAttrs, setUpdateTaskAttrs
+    updateTaskAttrs, setUpdateTaskAttrs,
+    suggestTaskList, setSuggestTaskList
 }) {
     return (
-        <div className={viewTaskDetailID ? styles.container_3Columns : styles.container_2Columns}>
+        <div className={suggestTaskList || viewTaskDetailID ? styles.container_3Columns : styles.container_2Columns}>
             <SideBar selectedProject={selectedProject} setSelectedProject={setSelectedProject} />
             {children.type === HomePage
-                ? React.cloneElement(children, { selectedProject, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs })
-                : React.cloneElement(children, { setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs })
+                ? React.cloneElement(children, {
+                    selectedProject,
+                    setViewTaskDetailID,
+                    updateTaskAttrs, setUpdateTaskAttrs
+                })
+                : React.cloneElement(children, {
+                    setViewTaskDetailID,
+                    updateTaskAttrs, setUpdateTaskAttrs,
+                    setSuggestTaskList
+                })
             }
-            {viewTaskDetailID && <TaskDetailBar
-                taskID={viewTaskDetailID}
-                setTaskID={setViewTaskDetailID}
-                updateTaskAttrs={updateTaskAttrs}
-                setUpdateTaskAttrs={setUpdateTaskAttrs}
-            />}
+            {suggestTaskList ?
+                <SuggestTaskBar
+                    setUpdateTaskAttrs={setUpdateTaskAttrs}
+                    setSuggestTaskList={setSuggestTaskList}
+                />
+                : viewTaskDetailID && <TaskDetailBar
+                    taskID={viewTaskDetailID}
+                    setTaskID={setViewTaskDetailID}
+                    updateTaskAttrs={updateTaskAttrs}
+                    setUpdateTaskAttrs={setUpdateTaskAttrs}
+                />}
         </div>
     );
 }

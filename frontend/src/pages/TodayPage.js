@@ -4,7 +4,7 @@ import { callAPITemplate } from '../utils';
 
 import React from 'react';
 
-function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
+function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, setSuggestTaskList }) {
     // State variables for rendering the tree
     const [taskList, setTaskList] = React.useState([]); // a list of tasks that will be rendered
     const [taskStatusMap, setTaskStatusMap] = React.useState({}); // Checkbox status of tasks
@@ -89,6 +89,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs })
     return (
         <div>
             <h1>Today</h1>
+            <button onClick={() => setSuggestTaskList(true)}>Suggestions</button>
             {/* Render Task List */}
             <ul className={styles.taskList}>
                 {taskList.map(task => (
