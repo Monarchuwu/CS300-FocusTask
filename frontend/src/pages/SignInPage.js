@@ -6,9 +6,15 @@ import { useNavigate } from 'react-router-dom';
 import {
     TextField,
     Button,
+    Alert,
+    Grid2 as Grid
 } from '@mui/material';
 
 import { Helmet } from 'react-helmet';
+
+import Introduction from '../components/Introduction';
+
+import LogoText from '../components/LogoText';
 
 
 function SignInPage() {
@@ -47,9 +53,13 @@ function SignInPage() {
             <Helmet>
                 <title>Log In - FocusTask</title>
             </Helmet>
-            <div id="LogInForm">
-                <h1>Log in</h1>
-                <div>
+            <Grid container spacing={2} justifyContent="center">
+                <Grid size={{ xs: 12, md: 7 }}>
+                    <Introduction />
+                </Grid>
+                <Grid id="LogInForm" size={{ xs: 12, md: 5 }}>
+                    <LogoText width='260px'/>
+                    <h1>Log in</h1>
                     <TextField id="email" label="Email" value={email} 
                         sx={{ mb: '24px' }} onChange={(e) => setEmail(e.target.value)} required/>
                     <br />
@@ -57,11 +67,12 @@ function SignInPage() {
                         value={password} sx={{ mb: '24px' }} 
                         onChange={(e) => setPassword(e.target.value)} required/>
                     <br />
-                    <Button variant="contained" type="submit" onClick={() => handleSubmit()}>Log In</Button>
-                </div>
-                <p>{message}</p>
-                <Button variant="text" onClick={() => navigate('/register')}>Don’t have an account? Sign Up</Button>
-            </div>
+                    <Button variant="contained" type="submit" onClick={() => handleSubmit()}
+                        sx={{ mb: '24px' }}>Log In</Button>
+                    {message && <Alert severity="error">{message}</Alert>}
+                    <Button variant="text" onClick={() => navigate('/register')}>Don't have an account? Sign Up</Button>
+                </Grid>
+            </Grid>
         </div>
     );
 }
