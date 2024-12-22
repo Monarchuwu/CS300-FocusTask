@@ -9,16 +9,78 @@ import SignInPage from './pages/SignInPage';
 import RegisterPage from './pages/RegisterPage';
 import NotFoundPage from './pages/NotFoundPage';
 
+import { callAPITemplate } from './utils';
+
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 
 function App() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    // State variable for DOM to wait while checking validation status  
+    const [isLoading, setIsLoading] = React.useState(true);
+    // State variables for selected project and task detail
     const [selectedProject, setSelectedProject] = React.useState(null);
     const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
     const [updateTaskAttrs, setUpdateTaskAttrs] = React.useState(0);
 
-    return (
-        <div className={styles.App}>
+
+    // Check if the authentication token is still valid
+    // when the app is loaded
+    React.useEffect(() => {
+        const checkToken = async () => {
+            const isSignInPages = location.pathname === '/signin' || location.pathname === '/register';
+            const authToken = localStorage.getItem('authToken');
+
+            try {
+                if (isSignInPages) {
+                    if (authToken !== null) {
+                        await callAPITemplate(
+                            'http://localhost:8000/todolist/api/authentication/status',
+                            JSON.stringify({ "authenticationToken": authToken }),
+                            (data) => {
+                                if (data.status) {
+                                    navigate('/', { replace: true });
+                                }
+                            }
+                        );
+                    }
+                }
+                else {
+                    if (authToken === null) {
+                        navigate('/signin', { replace: true });
+                    }
+                    else {
+                        await callAPITemplate(
+                            'http://localhost:8000/todolist/api/authentication/status',
+                            JSON.stringify({ "authenticationToken": authToken }),
+                            (data) => {
+                                if (!data.status) {
+                                    localStorage.removeItem('authToken');
+                                    navigate('/signin', { replace: true });
+                                }
+                            }
+                        );
+                    }
+                }
+            }
+            catch (error) {
+                console.error('Error:', error);
+                return;
+            }
+
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 0);
+        }
+        checkToken();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+
+    return (isLoading
+        ? <div>Loading...</div>
+        : <div className={styles.App}>
             <Routes>
                 <Route path='/' element={
                     <LayoutWithNavBar
