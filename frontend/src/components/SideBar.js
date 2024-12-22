@@ -53,27 +53,6 @@ function SideBar({ selectedProject, setSelectedProject }) {
         `${styles.navbarItem} ${styles.navbarItemActive}` : styles.navbarItem
 
 
-    // Check if the authentication token is still valid
-    // navigate to /signin if needed
-    React.useEffect(() => {
-        const authToken = localStorage.getItem('authToken');
-        if (authToken === null) {
-            navigate('/signin');
-        }
-        else {
-            callAPITemplate(
-                'http://localhost:8000/todolist/api/authentication/status',
-                JSON.stringify({ "authenticationToken": authToken }),
-                (data) => {
-                    if (!data.status) {
-                        localStorage.removeItem('authToken');
-                        navigate('/signin');
-                    }
-                },
-            );
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
     // Get all projects
     React.useEffect(() => {
         fetchProjectList();
