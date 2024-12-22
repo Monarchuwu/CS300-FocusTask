@@ -1,4 +1,4 @@
-import styles from './RegisterPage.module.css';
+import styles from './SignInRegister.module.css';
 
 import { callAPITemplate } from '../utils';
 
@@ -9,11 +9,15 @@ import {
     TextField,
     Button,
     Alert, 
+    Grid2 as Grid,
+    Box
 } from '@mui/material';
 
 import { Helmet } from 'react-helmet';
 
 import Introduction from '../components/Introduction';
+import LogoText from '../components/LogoText';
+
 
 function RegisterPage() {
     const navigate = useNavigate();
@@ -48,22 +52,31 @@ function RegisterPage() {
             <Helmet>
                 <title>Sign Up - FocusTask</title>
             </Helmet>
-            <div id="SignUpForm">
-                <h1>Sign up</h1>
-                <TextField type="text" name="username" value={username} 
-                    sx={{ mb: '24px' }} label="Username" onChange={(e) => setUsername(e.target.value)} required/>
-                <br />
-                <TextField type="email" name="email" value={email}
-                    sx={{ mb: '24px' }} label="Email" onChange={(e) => setEmail(e.target.value)} required />
-                <br />
-                <TextField type="password" name="password" value={password} 
-                    sx={{ mb: '24px' }} label="Password" onChange={(e) => setPassword(e.target.value)} required/>
-                <br />
-                <Button variant='contained' type="submit" sx={{ mb: '24px' }}
-                    onClick={() => handleSubmit()}>Create Account</Button>
-                {message && <Alert severity="error">{message}</Alert>}
-                <Button variant='text' onClick={() => navigate('/signin')}>Already had an account? Log in</Button>
-            </div>
+            <Grid container spacing={2} justifyContent="center">
+                <Grid size={{ xs: 12, md: 7 }}>
+                    <Introduction />
+                </Grid>
+                <Grid id="SignUpForm" size={{ xs: 12, md: 5 }} height='100vh'>
+                    <LogoText width='260px' />
+                    <Box component="form" sx={{ px: '100px', width: '100%', maxWidth: '570px' }}>
+                        <h1>Sign up</h1>
+                        <TextField type="text" name="username" value={username} 
+                            sx={{ mb: '24px' }} label="Username" onChange={(e) => setUsername(e.target.value)} fullWidth required/>
+                        <br />
+                        <TextField type="email" name="email" value={email}
+                            sx={{ mb: '24px' }} label="Email" onChange={(e) => setEmail(e.target.value)} fullWidth required />
+                        <br />
+                        <TextField type="password" name="password" value={password} 
+                            sx={{ mb: '24px' }} label="Password" onChange={(e) => setPassword(e.target.value)} fullWidth required/>
+                        <br />
+                        <Button variant='contained' type="submit" sx={{ mb: '24px' }}
+                            onClick={() => handleSubmit()} fullWidth className={styles.SignInButton}>Create Account</Button>
+                        {message && <Alert severity="error">{message}</Alert>}
+                        <Button variant='text' onClick={() => navigate('/signin')}
+                            sx='text-align: center; display: block; margin: 0 auto;'>Already had an account? Log in</Button>
+                    </Box>
+                </Grid>
+            </Grid>
         </div>
     );
 }

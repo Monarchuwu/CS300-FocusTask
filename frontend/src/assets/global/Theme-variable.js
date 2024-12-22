@@ -124,6 +124,14 @@ const baseTheme = createTheme({
         },
       },
     },
+
+    MuiInputLabel: {
+        styleOverrides: {
+            root: {
+                fontWeight: 500,
+            },
+        },
+    }
   },
   mixins: {
     toolbar: {
