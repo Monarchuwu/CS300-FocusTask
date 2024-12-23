@@ -447,8 +447,9 @@ class PomodoroManager:
         try:
             task = databases.TodoItemDB.objects.get(itemID = taskID)
             if (task):
-                if databases.PomodoroHistoryDB.objects.filter(taskID__itemID=taskID).exists():
-                    return databases.PomodoroHistoryDB.objects.get(taskID__itemID=taskID).get_data_object()
+                pomodoroList = databases.PomodoroHistoryDB.objects.filter(taskID__itemID=taskID).exclude(status=databases.PomodoroHistoryDB.Status.COMPLETED)
+                if pomodoroList.exists():
+                    return pomodoroList.first().get_data_object()
                 pomodoro = databases.PomodoroHistoryDB.objects.create(
                     taskID = task,
                     startTime = None,

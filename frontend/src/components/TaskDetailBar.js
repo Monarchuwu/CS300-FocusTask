@@ -103,21 +103,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
             'http://localhost:8000/todolist/api/pomodoro/set_task',
             JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
             (data) => {
-                setTaskPomodoro({ ...data, name: taskDetails.name });
-                navigate('/pomodoro');
-            },
-            () => { },
-            (e) => {
-                // test pomodoro data
-                console.log('Failed to start pomodoro:', e);
-                setTaskPomodoro({
-                    pomodoroID: 1,
-                    itemID: 1,
-                    startTime: new Date().toISOString(),
-                    duration: 60,
-                    status: "Running",
-                    name: "test"
-                });
+                setTaskPomodoro({ ...JSON.parse(data), name: taskDetails.name });
                 navigate('/pomodoro');
             }
         );
