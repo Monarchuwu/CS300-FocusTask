@@ -221,6 +221,7 @@ class PomodoroHistory:
                  taskID: int,
                  startTime: datetime,
                  duration: timedelta,
+                 currentDuration: timedelta,
                  endTime: datetime,
                  status: str,
                  createdAt: datetime):
@@ -228,6 +229,20 @@ class PomodoroHistory:
         self.taskID = taskID
         self.startTime = startTime
         self.duration = duration
+        self.currentDuration = currentDuration
         self.endTime = endTime
         self.status = status
         self.createdAt = createdAt
+
+    def __str__(self):
+        json_data = {
+            "pomodoroID": self.pomodoroID,
+            "taskID": self.taskID,
+            "startTime": self.startTime.isoformat() if self.startTime is not None else None,
+            "duration": self.duration.total_seconds() if self.duration is not None else None,
+            "currentDuration": self.currentDuration.total_seconds() if self.currentDuration is not None else None,
+            "endTime": self.endTime.isoformat() if self.endTime is not None else None,
+            "status": self.status,
+            "createdAt": self.createdAt.isoformat(),
+        }
+        return json.dumps(json_data)
