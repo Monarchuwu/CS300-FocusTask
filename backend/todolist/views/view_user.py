@@ -57,3 +57,21 @@ def user_signout(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def authentication_status(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            UserManager().getUserID(token)
+
+            return JsonResponse({'status': 'success', 'data': {'status': True}})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            if str(e) == 'Error: Authentication token expired' or str(e) == 'Error: Authentication token not found':
+                return JsonResponse({'status': 'success', 'data': {'status': False}})
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

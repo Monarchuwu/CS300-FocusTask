@@ -8,6 +8,7 @@ urlpatterns = [
     path("api/user/register", view_user.user_register, name="user-register"),
     path("api/user/signin", view_user.user_signin, name="user-signin"),
     path("api/user/signout", view_user.user_signout, name="user-signout"),
+    path("api/authentication/status", view_user.authentication_status, name="authentication-status"),
 
     path("api/project/add", view_task.project_add, name="project-add"),
     path("api/section/add", view_task.section_add, name="section-add"),
@@ -19,6 +20,8 @@ urlpatterns = [
     path("api/todo_item/get", view_task.todo_item_get, name="todo-item-get"),
     path("api/task_attributes/get", view_task.task_attributes_get, name="task-attributes-get"),
     path("api/todo_item/get_list", view_task.todo_item_get_list, name="todo-item-get-list"),
+    path("api/todo_item/get_all", view_task.todo_item_get_all, name="todo-item-get-all"),
+    path("api/project/get_all", view_task.project_get_all, name="project-get-all"),
     path("api/task/get_today_list", view_task.task_get_today_list, name="task-get-today-list"),
     path("api/task_attributes/get_list", view_task.task_attributes_get_list, name="task-attributes-get-list"),
     path("api/task/suggest_today", view_task.task_suggest_today, name="task-suggest-today"),
@@ -35,6 +38,7 @@ urlpatterns = [
     path("api/pomodoro/get_history_hour", view_pomodoro.get_history_hour, name="pomodoro-get_history_hour"),
     path("api/pomodoro/get_history_hour_fullday", view_pomodoro.get_history_hour_fullday, name="pomodoro-get-history-hour-fullday"),
     path("api/pomodoro/get_history_day", view_pomodoro.get_history_day, name="pomodoro-get-history-day"),
+    path("api/pomodoro/get_last_active_session", view_pomodoro.get_last_active_session, name="pomodoro-get-last-active-session"),
 
     path("api/test_api", view_test.test_api, name="test-api")
 ]

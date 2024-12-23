@@ -15,7 +15,7 @@ class UserManager:
                 token.delete()
                 raise ValueError("Error: Authentication token expired")
             return token.userID.userID
-        except databases.UserDB.DoesNotExist:
+        except databases.AuthenticationTokenDB.DoesNotExist:
             raise ValueError("Error: Authentication token not found")
     
     def registerUser(self, username: str, email: str, password: str, avatarURL: str = None):
@@ -116,6 +116,24 @@ class TaskManager:
         except Exception as e:
             raise ValueError(f"An error occurred while fetching the todo item: {e}")
 
+    def getAllTodoItem(self, userID: int):
+        try:
+            items = databases.TodoItemDB.objects.filter(userID=userID)
+            return [item.get_data_object() for item in items]
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"User with ID {userID} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while fetching all the todo items: {e}")
+
+    def getAllProject(self, userID: int):
+        try:
+            items = databases.TodoItemDB.objects.filter(userID=userID, itemType=databases.TodoItemDB.ItemType.PROJECT)
+            return [item.get_data_object() for item in items]
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"User with ID {userID} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while fetching all the todo items: {e}")
+
     def addTaskAttributes(self, attrs: objects.TaskAttributes):
         try:
             taskAttributes_db = databases.TaskAttributesDB(
@@ -166,9 +184,10 @@ class TaskManager:
         except Exception as e:
             raise ValueError(f"An error occurred while toggling the task status: {e}")
 
-    def getTodayTaskList(self):
+    def getTodayTaskList(self, userID: int):
         try:
             tasks = databases.TaskAttributesDB.objects.filter(
+                taskID__userID__userID=userID,
                 inTodayDate__date=datetime.now().date()
             )
             return [task.get_data_object() for task in tasks]
@@ -196,32 +215,41 @@ class TaskManager:
         except Exception as e:
             raise ValueError(f"An error occurred while removing the task from today's list: {e}")
 
-    def suggestTodayTask(self):
+    def suggestTodayTask(self, userID: int):
         try:
             now = datetime.now()
 
             # 1. Overdue tasks
             overdue_tasks = databases.TaskAttributesDB.objects.filter(
+                taskID__userID__userID=userID,
                 status=databases.TaskAttributesDB.Status.PENDING,
                 dueDate__lt=now
+            ).exclude(
+                inTodayDate__date=now.date()
             ).order_by("priority", "dueDate")
 
             # 2. Tasks due today
             today_tasks = databases.TaskAttributesDB.objects.filter(
+                taskID__userID__userID=userID,
                 status=databases.TaskAttributesDB.Status.PENDING,
                 dueDate__date=now.date()
+            ).exclude(
+                inTodayDate__date=now.date()
             ).order_by("priority", "dueDate")
 
             # 3. Previously added to today's list but not completed
             in_today_tasks = databases.TaskAttributesDB.objects.filter(
+                taskID__userID__userID=userID,
                 status=databases.TaskAttributesDB.Status.PENDING,
-                inTodayDate__lt=now,
-                inTodayDate__date=now.date()
+                inTodayDate__date__lt=now.date()
             ).order_by("inTodayDate")
 
             # 4. Recently added tasks
             recently_added_tasks = databases.TaskAttributesDB.objects.filter(
+                taskID__userID__userID=userID,
                 status=databases.TaskAttributesDB.Status.PENDING
+            ).exclude(
+                inTodayDate__date=now.date()
             ).order_by("-taskID")
 
             # Combine the task lists in order of priority
@@ -419,8 +447,9 @@ class PomodoroManager:
         try:
             task = databases.TodoItemDB.objects.get(itemID = taskID)
             if (task):
-                if databases.PomodoroHistoryDB.objects.filter(taskID__itemID=taskID).exists():
-                    return databases.PomodoroHistoryDB.objects.get(taskID__itemID=taskID).get_data_object()
+                pomodoroList = databases.PomodoroHistoryDB.objects.filter(taskID__itemID=taskID).exclude(status=databases.PomodoroHistoryDB.Status.COMPLETED)
+                if pomodoroList.exists():
+                    return pomodoroList.first().get_data_object()
                 pomodoro = databases.PomodoroHistoryDB.objects.create(
                     taskID = task,
                     startTime = None,
@@ -547,10 +576,9 @@ class PomodoroManager:
                             run_time += overlap_end - overlap_start
                         else:
                             pause_time += overlap_end - overlap_start
-            return (run_time, pause_time)
+            return (run_time.total_seconds(), pause_time.total_seconds())
         except Exception as e:
-            print(e)
-            raise ValueError(f"An error occured while getting the hour stats for userID {userID} in hour {hour.isoformat()}")
+            raise ValueError(f"An error occured while getting the hour stats for userID {userID} in hour {hour.isoformat()}: {e}")
     def get_day_list(self, userID: int, date: datetime):
         date_start = date
         date_end = date + timedelta(days=1)
@@ -572,3 +600,25 @@ class PomodoroManager:
 
     def getStatus(self, pomodoroID: int):
         return self.status
+    
+    def getLastActiveSession(self, userID: int):
+        try:
+            pomodoros = databases.PomodoroHistoryDB.objects.filter(
+                taskID__userID__userID=userID,
+                status=databases.PomodoroHistoryDB.Status.RUNNING
+            )
+            if not pomodoros.exists():
+                pomodoros = databases.PomodoroHistoryDB.objects.filter(
+                    taskID__userID__userID=userID,
+                    status=databases.PomodoroHistoryDB.Status.PAUSED
+                ).order_by('-endTime')
+            
+            if pomodoros.exists():
+                return pomodoros.first().get_data_object()
+            return None
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"TodoItem with userID {userID} do not exist.")
+        except databases.UserDB.DoesNotExist:
+            raise ValueError(f"User ID {userID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while checking the userID {userID} for pomodoro")

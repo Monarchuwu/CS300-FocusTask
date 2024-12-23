@@ -86,10 +86,10 @@ def task_add(request):
             if parentID is None:
                 raise Exception('Parent ID cannot be None')
             parentItem = TaskManager().getTodoItem(parentID)
-            if parentItem.itemType != 'Section':
-                raise Exception('Parent item must be a section')
+            if parentItem.itemType == 'Project':
+                raise Exception('Parent item must not be a project')
             if parentItem.userID != userID:
-                raise Exception('User does not have permission to access this section')
+                raise Exception('User does not have permission to access this parent item')
 
             # Create a new todo item object
             todoItem = TodoItem(
@@ -207,7 +207,7 @@ def task_attributes_update(request):
             taskAttrs.priority = priority if (priority is not None) else taskAttrs.priority
             taskAttrs.status = status if (status is not None) else taskAttrs.status
             taskAttrs.description = description if (description is not None) else taskAttrs.description
-            taskAttrs.inTodayDate = inTodayDate if (inTodayDate is not None) else taskAttrs.inTodayDate
+            taskAttrs.inTodayDate = datetime.fromisoformat(inTodayDate) if (inTodayDate is not None) else taskAttrs.inTodayDate
 
             TaskManager().deteleTaskAttributes(taskID = taskID)
             TaskManager().addTaskAttributes(attrs=taskAttrs)
@@ -326,6 +326,44 @@ def todo_item_get_list(request):
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
+def todo_item_get_all(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+
+            userID = UserManager().getUserID(token)
+            itemList = TaskManager().getAllTodoItem(userID = userID)
+            itemList = [item.to_json_without_userID() for item in itemList]
+
+            return JsonResponse({'status': 'success', 'data': itemList})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def project_get_all(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+
+            userID = UserManager().getUserID(token)
+            projectList = TaskManager().getAllProject(userID = userID)
+            projectList = [item.to_json_without_userID() for item in projectList]
+
+            return JsonResponse({'status': 'success', 'data': projectList})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
 def task_get_today_list(request):
     if request.method == 'POST':
         try:
@@ -333,7 +371,7 @@ def task_get_today_list(request):
             token = data['authenticationToken']
 
             userID = UserManager().getUserID(token)
-            today_task_list = TaskManager().getTodayTaskList()
+            today_task_list = TaskManager().getTodayTaskList(userID=userID)
             today_list = []
 
             for attrs in today_task_list:
@@ -389,7 +427,7 @@ def task_suggest_today(request):
 
             userID = UserManager().getUserID(token)
             
-            suggest_today_tasks = TaskManager().suggestTodayTask()
+            suggest_today_tasks = TaskManager().suggestTodayTask(userID=userID)
             task_list = []
             for today_task in suggest_today_tasks:
                 taskID = today_task.taskID
