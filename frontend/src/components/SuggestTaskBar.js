@@ -32,7 +32,10 @@ function SuggestTaskBar({ setUpdateTaskAttrs, setSuggestTaskList }) {
             'http://localhost:8000/todolist/api/task/add_task_today',
             JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
         )
-            .then(() => setUpdateTaskAttrs(Math.random()))
+            .then(() => {
+                removeTaskFromTaskList(taskID);
+                setUpdateTaskAttrs(Math.random());
+            })
             .catch((e) => console.error(e));
     }
 
@@ -55,7 +58,7 @@ function SuggestTaskBar({ setUpdateTaskAttrs, setSuggestTaskList }) {
     // Apply the debounced status changes to the server
     const applyDebounceStatus = async (debounceStatus) => {
         const authToken = localStorage.getItem('authToken');
-        for (const taskID of Object.entries(debounceStatus)) {
+        for (const taskID of debounceStatus) {
             try {
                 await callAPITemplate(
                     'http://localhost:8000/todolist/api/task_attributes/update',

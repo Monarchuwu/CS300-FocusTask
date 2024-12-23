@@ -113,7 +113,10 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
                         />
                         {/* Name, Edit button, and Delete button */}
                         <strong>{task.name}</strong> ({task.itemType})
-                        <button onClick={() => setViewTaskDetailID(task.itemID)}>Edit</button>
+                        <button onClick={() => {
+                            setViewTaskDetailID(task.itemID);
+                            setSuggestTaskList(false);
+                        }}>Edit</button>
                         <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
                     </li>
                 ))}

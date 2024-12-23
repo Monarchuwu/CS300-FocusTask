@@ -95,7 +95,7 @@ function SideBar({ selectedProject, setSelectedProject }) {
                             className={selectedProject === project.itemID
                                 ? `${styles.project} ${styles.projectActive}`
                                 : styles.project}
-                            onClick={() => setSelectedProject(project.itemID)}
+                            onClick={() => { setSelectedProject(project.itemID); navigate('/'); }}
                         >{project.name}</button>
                     )
                 }</div>
