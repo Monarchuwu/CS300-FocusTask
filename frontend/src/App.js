@@ -152,6 +152,19 @@ function LayoutWithNavBar({
     suggestTaskList, setSuggestTaskList,
     taskPomodoro, setTaskPomodoro
 }) {
+    const [loading, setLoading] = React.useState(true);
+
+
+    // Call API functions
+    const callGetTodoItemAPI = async (taskID) => {
+        const authToken = localStorage.getItem('authToken');
+        const data = await callAPITemplate(
+            'http://localhost:8000/todolist/api/todo_item/get',
+            JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
+        );
+        return JSON.parse(data);
+    }
+    // Render children with props
     const renderChildrenWithProps = () => {
         switch (children.type) {
             case HomePage:
@@ -175,7 +188,31 @@ function LayoutWithNavBar({
         }
     }
 
-    return (
+
+    // Load the last active pomodoro session
+    React.useEffect(() => {
+        if (taskPomodoro !== null) {
+            return;
+        }
+        const loadPomodoro = async () => {
+            const authToken = localStorage.getItem('authToken');
+            const data = JSON.parse(await callAPITemplate(
+                'http://localhost:8000/todolist/api/pomodoro/get_last_active_session',
+                JSON.stringify({ "authenticationToken": authToken })
+            ));
+            if (data.haveActiveSession) {
+                const taskData = await callGetTodoItemAPI(data.pomodoro.taskID);
+                data.pomodoro.name = taskData.name;
+                setTaskPomodoro(data.pomodoro);
+            }
+            setLoading(false);
+        }
+        loadPomodoro();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+
+    return (loading ? <div>Loading...</div> :
         <div className={suggestTaskList || viewTaskDetailID ? styles.container_3Columns : styles.container_2Columns}>
             <SideBar selectedProject={selectedProject} setSelectedProject={setSelectedProject} />
             {renderChildrenWithProps()}

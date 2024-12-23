@@ -600,3 +600,25 @@ class PomodoroManager:
 
     def getStatus(self, pomodoroID: int):
         return self.status
+    
+    def getLastActiveSession(self, userID: int):
+        try:
+            pomodoros = databases.PomodoroHistoryDB.objects.filter(
+                taskID__userID__userID=userID,
+                status=databases.PomodoroHistoryDB.Status.RUNNING
+            )
+            if not pomodoros.exists():
+                pomodoros = databases.PomodoroHistoryDB.objects.filter(
+                    taskID__userID__userID=userID,
+                    status=databases.PomodoroHistoryDB.Status.PAUSED
+                ).order_by('-endTime')
+            
+            if pomodoros.exists():
+                return pomodoros.first().get_data_object()
+            return None
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"TodoItem with userID {userID} do not exist.")
+        except databases.UserDB.DoesNotExist:
+            raise ValueError(f"User ID {userID} do not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while checking the userID {userID} for pomodoro")

@@ -176,6 +176,7 @@ def get_history_hour(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
 @csrf_exempt
 def get_history_hour_fullday(request):
     if request.method == 'POST':
@@ -196,6 +197,7 @@ def get_history_hour_fullday(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
 @csrf_exempt
 def get_history_day(request):
     if request.method == 'POST':
@@ -214,3 +216,25 @@ def get_history_day(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
+@csrf_exempt
+def get_last_active_session(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            userID = UserManager().getUserID(token)
+            pomodoro = PomodoroManager().getLastActiveSession(userID)
+
+            if pomodoro is None:
+                return JsonResponse({'status': 'success', 'data': json.dumps({ 'haveActiveSession': False })})
+            
+            return JsonResponse({'status': 'success', 'data': json.dumps({
+                'haveActiveSession': True,
+                'pomodoro': json.loads(str(pomodoro))
+            })})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

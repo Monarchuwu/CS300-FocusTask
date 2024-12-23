@@ -38,6 +38,7 @@ urlpatterns = [
     path("api/pomodoro/get_history_hour", view_pomodoro.get_history_hour, name="pomodoro-get_history_hour"),
     path("api/pomodoro/get_history_hour_fullday", view_pomodoro.get_history_hour_fullday, name="pomodoro-get-history-hour-fullday"),
     path("api/pomodoro/get_history_day", view_pomodoro.get_history_day, name="pomodoro-get-history-day"),
+    path("api/pomodoro/get_last_active_session", view_pomodoro.get_last_active_session, name="pomodoro-get-last-active-session"),
 
     path("api/test_api", view_test.test_api, name="test-api")
 ]

@@ -87,6 +87,9 @@ function PomodoroPage({ taskPomodoro }) {
     }
     // Create a timer to update the remaining time
     const createTimer = () => {
+        if (timerID.current) {
+            return timerID.current;
+        }
         return setInterval(async () => {
             setRemainingTime((prev) => {
                 const remainingTime = prev - 1;
@@ -140,7 +143,11 @@ function PomodoroPage({ taskPomodoro }) {
     // Update the timer based on the state of the pomodoro on page load
     React.useEffect(() => {
         if (pomodoroStatus === "Running") {
-            timerID.current = createTimer();
+            const fetching = async () => {
+                await fetchRemainingTime();
+                timerID.current = createTimer();
+            }
+            fetching();
         }
         else if (pomodoroStatus === "Paused") {
             fetchRemainingTime();
@@ -149,11 +156,22 @@ function PomodoroPage({ taskPomodoro }) {
             clearInterval(timerID.current);
             timerID.current = null;
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     // Fetch statistic on page load
     React.useEffect(() => {
         fetchStatistic();
     }, []);
+    // Update the pomodoro status when the taskPomodoro changes
+    React.useEffect(() => {
+        if (taskPomodoro === null) {
+            setPomodoroStatus("Canceled");
+        }
+        else {
+            setPomodoroStatus(taskPomodoro.status);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [taskPomodoro?.status]);
 
 
     return (
