@@ -371,7 +371,7 @@ def task_get_today_list(request):
             token = data['authenticationToken']
 
             userID = UserManager().getUserID(token)
-            today_task_list = TaskManager().getTodayTaskList()
+            today_task_list = TaskManager().getTodayTaskList(userID=userID)
             today_list = []
 
             for attrs in today_task_list:
@@ -427,7 +427,7 @@ def task_suggest_today(request):
 
             userID = UserManager().getUserID(token)
             
-            suggest_today_tasks = TaskManager().suggestTodayTask()
+            suggest_today_tasks = TaskManager().suggestTodayTask(userID=userID)
             task_list = []
             for today_task in suggest_today_tasks:
                 taskID = today_task.taskID

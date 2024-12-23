@@ -103,7 +103,7 @@ def test_get_today_task_list(task_manager):
         mock_task = MagicMock()
         mock_task.get_data_object.return_value = "Mocked Task"
         mock_filter.return_value = [mock_task]
-        tasks = task_manager.getTodayTaskList()
+        tasks = task_manager.getTodayTaskList(1)
         mock_filter.assert_called_once()
         assert tasks == ["Mocked Task"]
 
@@ -242,7 +242,7 @@ def test_suggest_today_task_success(task_manager):
         # Ensure filter returns a queryset-like object for each filter call
         mock_filter.side_effect = [mock_queryset, mock_queryset, mock_queryset, mock_queryset]
 
-        tasks = task_manager.suggestTodayTask()
+        tasks = task_manager.suggestTodayTask(1)
 
         # Verify the returned tasks
         assert len(tasks) == 1
@@ -250,19 +250,22 @@ def test_suggest_today_task_success(task_manager):
 
         # Assert each filter call with matching arguments
         mock_filter.assert_any_call(
+            taskID__userID__userID=1,
             status=databases.TaskAttributesDB.Status.PENDING,
             dueDate__lt=fixed_now
         )
         mock_filter.assert_any_call(
+            taskID__userID__userID=1,
             status=databases.TaskAttributesDB.Status.PENDING,
             dueDate__date=fixed_now.date()
         )
         mock_filter.assert_any_call(
+            taskID__userID__userID=1,
             status=databases.TaskAttributesDB.Status.PENDING,
-            inTodayDate__lt=fixed_now,
-            inTodayDate__date=fixed_now.date()
+            inTodayDate__date__lt=fixed_now.date()
         )
         mock_filter.assert_any_call(
+            taskID__userID__userID=1,
             status=databases.TaskAttributesDB.Status.PENDING
         )
 
@@ -282,26 +285,29 @@ def test_suggest_today_task_no_tasks(task_manager):
         mock_queryset.order_by.return_value = []
         mock_filter.return_value = mock_queryset
 
-        tasks = task_manager.suggestTodayTask()
+        tasks = task_manager.suggestTodayTask(1)
 
         # Verify the returned tasks
         assert tasks == []
 
         # Assert filter calls
         mock_filter.assert_any_call(
+            taskID__userID__userID=1,
             status=databases.TaskAttributesDB.Status.PENDING,
             dueDate__lt=fixed_now
         )
         mock_filter.assert_any_call(
+            taskID__userID__userID=1,
             status=databases.TaskAttributesDB.Status.PENDING,
             dueDate__date=fixed_now.date()
         )
         mock_filter.assert_any_call(
+            taskID__userID__userID=1,
             status=databases.TaskAttributesDB.Status.PENDING,
-            inTodayDate__lt=fixed_now,
-            inTodayDate__date=fixed_now.date()
+            inTodayDate__date__lt=fixed_now.date()
         )
         mock_filter.assert_any_call(
+            taskID__userID__userID=1,
             status=databases.TaskAttributesDB.Status.PENDING
         )
 

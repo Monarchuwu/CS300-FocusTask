@@ -184,9 +184,10 @@ class TaskManager:
         except Exception as e:
             raise ValueError(f"An error occurred while toggling the task status: {e}")
 
-    def getTodayTaskList(self):
+    def getTodayTaskList(self, userID: int):
         try:
             tasks = databases.TaskAttributesDB.objects.filter(
+                taskID__userID__userID=userID,
                 inTodayDate__date=datetime.now().date()
             )
             return [task.get_data_object() for task in tasks]
@@ -214,32 +215,41 @@ class TaskManager:
         except Exception as e:
             raise ValueError(f"An error occurred while removing the task from today's list: {e}")
 
-    def suggestTodayTask(self):
+    def suggestTodayTask(self, userID: int):
         try:
             now = datetime.now()
 
             # 1. Overdue tasks
             overdue_tasks = databases.TaskAttributesDB.objects.filter(
+                taskID__userID__userID=userID,
                 status=databases.TaskAttributesDB.Status.PENDING,
                 dueDate__lt=now
+            ).exclude(
+                inTodayDate__date=now.date()
             ).order_by("priority", "dueDate")
 
             # 2. Tasks due today
             today_tasks = databases.TaskAttributesDB.objects.filter(
+                taskID__userID__userID=userID,
                 status=databases.TaskAttributesDB.Status.PENDING,
                 dueDate__date=now.date()
+            ).exclude(
+                inTodayDate__date=now.date()
             ).order_by("priority", "dueDate")
 
             # 3. Previously added to today's list but not completed
             in_today_tasks = databases.TaskAttributesDB.objects.filter(
+                taskID__userID__userID=userID,
                 status=databases.TaskAttributesDB.Status.PENDING,
-                inTodayDate__lt=now,
-                inTodayDate__date=now.date()
+                inTodayDate__date__lt=now.date()
             ).order_by("inTodayDate")
 
             # 4. Recently added tasks
             recently_added_tasks = databases.TaskAttributesDB.objects.filter(
+                taskID__userID__userID=userID,
                 status=databases.TaskAttributesDB.Status.PENDING
+            ).exclude(
+                inTodayDate__date=now.date()
             ).order_by("-taskID")
 
             # Combine the task lists in order of priority
