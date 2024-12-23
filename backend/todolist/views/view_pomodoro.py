@@ -169,7 +169,7 @@ def get_history_hour(request):
             userID = UserManager().getUserID(token)
             
             run_time, pause_time = PomodoroManager().get_hour_list(userID, time)
-            return JsonResponse({'status': 'success', 'data': [run_time.total_seconds(), pause_time.total_seconds()]})
+            return JsonResponse({'status': 'success', 'data': [run_time, pause_time]})
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
         except Exception as e:
