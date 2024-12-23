@@ -182,7 +182,7 @@ def get_history_hour_fullday(request):
         try:
             data = json.loads(request.body)
             token = data['authenticationToken']
-            time = datetime.fromisoformat(data['hour']).date()
+            time = datetime.fromisoformat(data['date']).replace(hour=0, minute=0, second=0, microsecond=0)
             userID = UserManager().getUserID(token)
             result = []
             for hour in range(24):

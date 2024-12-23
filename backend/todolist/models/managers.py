@@ -576,10 +576,9 @@ class PomodoroManager:
                             run_time += overlap_end - overlap_start
                         else:
                             pause_time += overlap_end - overlap_start
-            return (run_time, pause_time)
+            return (run_time.total_seconds(), pause_time.total_seconds())
         except Exception as e:
-            print(e)
-            raise ValueError(f"An error occured while getting the hour stats for userID {userID} in hour {hour.isoformat()}")
+            raise ValueError(f"An error occured while getting the hour stats for userID {userID} in hour {hour.isoformat()}: {e}")
     def get_day_list(self, userID: int, date: datetime):
         date_start = date
         date_end = date + timedelta(days=1)

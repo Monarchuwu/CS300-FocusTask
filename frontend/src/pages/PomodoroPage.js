@@ -1,19 +1,17 @@
 import styles from './PomodoroPage.module.css';
 
+import BarChart24 from '../components/BarChart24';
+
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
 
 function PomodoroPage({ taskPomodoro }) {
-    // test pomodoro data
-    const [statistic, setStatistic] = React.useState([
-        {
-            "usetime": 1000,
-            "pausetime": 60,
-        }
-    ]);
+    // statistic pomodoro
+    const [statistic, setStatistic] = React.useState(null);
     const total = React.useMemo(() => {
-        return 10000;
+        if (!statistic) return 0;
+        return parseInt(statistic.reduce((acc, cur) => acc + cur[0], 0));
     }, [statistic]);
     // State variable to edit the length of the pomodoro
     const [pomodoroLength, setPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 0);
@@ -81,15 +79,6 @@ function PomodoroPage({ taskPomodoro }) {
         seconds %= 60;
         return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
-    // Fetch statistic
-    const fetchStatistic = async () => {
-        const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
-            'http://localhost:8000/todolist/api/pomodoro/get_history_hour_fullday',
-            JSON.stringify({ "authenticationToken": authToken, "date": new Date().toISOString() }),
-            (data) => setStatistic(data)
-        )
-    }
     // Update the remaining time
     const fetchRemainingTime = async () => {
         const remainingTime = await callGetRemainingTimeAPI();
@@ -137,6 +126,17 @@ function PomodoroPage({ taskPomodoro }) {
         timerID.current = null;
     }
 
+    // Fetch statistic
+    const fetchStatistic = async () => {
+        const authToken = localStorage.getItem('authToken');
+        callAPITemplate(
+            'http://localhost:8000/todolist/api/pomodoro/get_history_hour_fullday',
+            JSON.stringify({ "authenticationToken": authToken, "date": new Date().toISOString() }),
+            (data) => setStatistic(data)
+        )
+    }
+
+
     // Update the timer based on the state of the pomodoro on page load
     React.useEffect(() => {
         if (pomodoroStatus === "Running") {
@@ -150,15 +150,19 @@ function PomodoroPage({ taskPomodoro }) {
             timerID.current = null;
         }
     }, []);
+    // Fetch statistic on page load
+    React.useEffect(() => {
+        fetchStatistic();
+    }, []);
 
 
     return (
         <div>
             <h1>Pomodoro Page</h1>
-            {!taskPomodoro
-                ? <div>No Pomodoro</div>
-                : <div className={styles.container}>
-                    <div className={styles.pomodoro}>
+            <div className={styles.container}>
+                {!taskPomodoro
+                    ? <div>No Pomodoro</div>
+                    : <div className={styles.pomodoro}>
                         {/* Name of task */}
                         <h2 className={styles.pomodoroTitle}>{taskPomodoro.name}</h2>
                         {/* Set a new length for the pomodoro session */}
@@ -205,18 +209,18 @@ function PomodoroPage({ taskPomodoro }) {
                             }
                         </div>
                     </div>
-                    <div className={styles.statistic}>
-                        <button onClick={() => fetchStatistic()}>Load Statistic</button>
-                        {!statistic
-                            ? <div>No Statistic</div>
-                            : <div>
-                                <h2>Statistic</h2>
-                            </div>
-                        }
-                        <p>Today's focus: {displaySeconds(total)}</p>
-                    </div>
+                }
+                <div className={styles.statistic}>
+                    <button onClick={() => fetchStatistic()}>Load Statistic</button>
+                    {!statistic
+                        ? <div>No Statistic</div>
+                        : <div>
+                            <BarChart24 data={statistic} />
+                        </div>
+                    }
+                    <p>Today's focus: {displaySeconds(total)}</p>
                 </div>
-            }
+            </div>
         </div>
     );
 }
