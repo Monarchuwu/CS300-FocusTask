@@ -22,7 +22,7 @@ export const callAPITemplate = async (
     }
 
     try {
-        const response = await fetch(url, {
+        const response = await fetch('https://cs300-focustask.onrender.com/' + url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -19,7 +19,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
         const authToken = localStorage.getItem('authToken');
         try {
             const data = await callAPITemplate(
-                'http://localhost:8000/todolist/api/task_attributes/get',
+                'todolist/api/task_attributes/get',
                 JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
             );
             return JSON.parse(data);
@@ -31,7 +31,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
     const callUpdateInTodayDateAPI = async (taskID, inTodayDate) => {
         const authToken = localStorage.getItem('authToken');
         await callAPITemplate(
-            'http://localhost:8000/todolist/api/task_attributes/update',
+            'todolist/api/task_attributes/update',
             JSON.stringify({ "authenticationToken": authToken, "taskID": taskID, "inTodayDate": inTodayDate }),
         )
         setUpdateTaskAttrs(Math.random());
@@ -40,7 +40,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
         const authToken = localStorage.getItem('authToken');
         try {
             const data = await callAPITemplate(
-                'http://localhost:8000/todolist/api/todo_item/get',
+                'todolist/api/todo_item/get',
                 JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
             );
             return JSON.parse(data);
@@ -86,7 +86,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
         for (const [taskID, status] of Object.entries(debounceStatus)) {
             try {
                 await callAPITemplate(
-                    'http://localhost:8000/todolist/api/task_attributes/update',
+                    'todolist/api/task_attributes/update',
                     JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": status })
                 );
             }
@@ -100,7 +100,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
     const startPomodoro = () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/pomodoro/set_task',
+            'todolist/api/pomodoro/set_task',
             JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
             (data) => {
                 setTaskPomodoro({ ...JSON.parse(data), name: taskDetails.name });

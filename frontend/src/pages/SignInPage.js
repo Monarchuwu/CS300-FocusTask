@@ -11,7 +11,7 @@ function SignInPage() {
 
     const callSignInAPI = (email, password) => {
         callAPITemplate(
-            'http://localhost:8000/todolist/api/user/signin',
+            'todolist/api/user/signin',
             JSON.stringify({ "email": email, "password": password }),
             (data) => {
                 const authToken = data.authenticationToken;

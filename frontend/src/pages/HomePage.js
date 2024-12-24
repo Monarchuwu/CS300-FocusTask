@@ -22,7 +22,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
     const callAddSectionAPI = async (name, parentID) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/section/add',
+            'todolist/api/section/add',
             JSON.stringify({ "authenticationToken": authToken, "name": name, "parentID": parentID }),
             (data) => {
                 setIsAddingSection(false);
@@ -47,7 +47,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
             Object.entries(payload).filter(([_, value]) => value !== null)
         );
         callAPITemplate(
-            'http://localhost:8000/todolist/api/task/add',
+            'todolist/api/task/add',
             JSON.stringify(payload),
             (data) => {
                 setAddingTaskID(null);
@@ -60,7 +60,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
     const callDeleteTodoItemAPI = async (itemID) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/todo_item/delete',
+            'todolist/api/todo_item/delete',
             JSON.stringify({ "authenticationToken": authToken, "itemID": itemID }),
             (data) => fetchTodoList(selectedProject)
         )
@@ -96,7 +96,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
         const authToken = localStorage.getItem('authToken');
         try {
             const dataItem = await callAPITemplate(
-                'http://localhost:8000/todolist/api/todo_item/get_list',
+                'todolist/api/todo_item/get_list',
                 JSON.stringify({ "authenticationToken": authToken, "itemID": projectID }),
             );
             const items = dataItem.map(item => JSON.parse(item)).filter(item => item.itemID !== projectID);
@@ -104,7 +104,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
 
             const taskIDs = items.filter(item => item.itemType === 'Task').map(task => task.itemID);
             const dataAttributes = await callAPITemplate(
-                'http://localhost:8000/todolist/api/task_attributes/get_list',
+                'todolist/api/task_attributes/get_list',
                 JSON.stringify({ "authenticationToken": authToken, "itemIDs": taskIDs }),
             );
             const attrsList = dataAttributes.map(attr => JSON.parse(attr));
@@ -179,7 +179,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
         for (const [taskID, status] of Object.entries(debounceStatus)) {
             try {
                 await callAPITemplate(
-                    'http://localhost:8000/todolist/api/task_attributes/update',
+                    'todolist/api/task_attributes/update',
                     JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": status })
                 );
             }

@@ -27,35 +27,35 @@ function PomodoroPage({ taskPomodoro }) {
     const callStartPomodoroAPI = () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/pomodoro/start',
+            'todolist/api/pomodoro/start',
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
     const callPausePomodoroAPI = () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/pomodoro/pause',
+            'todolist/api/pomodoro/pause',
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
     const callContinuePomodoroAPI = () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/pomodoro/continue',
+            'todolist/api/pomodoro/continue',
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
     const callEndPomodoroAPI = () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/pomodoro/end',
+            'todolist/api/pomodoro/end',
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
     const callSetPomodoroLengthAPI = (length) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/pomodoro/set_length',
+            'todolist/api/pomodoro/set_length',
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID, "length": length }),
             (data) => setPomodoroLength(length)
         )
@@ -63,7 +63,7 @@ function PomodoroPage({ taskPomodoro }) {
     const callGetRemainingTimeAPI = async () => {
         const authToken = localStorage.getItem('authToken');
         const currentTime = await callAPITemplate(
-            'http://localhost:8000/todolist/api/pomodoro/get_time',
+            'todolist/api/pomodoro/get_time',
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID }),
         )
         return parseInt(currentTime);
@@ -133,7 +133,7 @@ function PomodoroPage({ taskPomodoro }) {
     const fetchStatistic = async () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/pomodoro/get_history_hour_fullday',
+            'todolist/api/pomodoro/get_history_hour_fullday',
             JSON.stringify({ "authenticationToken": authToken, "date": new Date().toISOString() }),
             (data) => setStatistic(data)
         )

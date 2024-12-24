@@ -14,7 +14,7 @@ function RegisterPage() {
 
     const callRegisterAPI = (username, email, password) => {
         callAPITemplate(
-            'http://localhost:8000/todolist/api/user/register',
+            'todolist/api/user/register',
             JSON.stringify({ "username": username, "email": email, "password": password }),
             (data) => setMessage('User registered successfully!'),
             (message) => setMessage(message || 'An error occurred'),
