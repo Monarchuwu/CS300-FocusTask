@@ -16,6 +16,8 @@ import { callAPITemplate } from './utils';
 import React from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 
+console.log(process.env.REACT_APP_API_URL);
+
 function App() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -197,7 +199,7 @@ function LayoutWithNavBar({
         const loadPomodoro = async () => {
             const authToken = localStorage.getItem('authToken');
             const data = JSON.parse(await callAPITemplate(
-                `http://localhost:8000/todolist/api/pomodoro/get_last_active_session`,
+                `${process.env.REACT_APP_API_URL}/pomodoro/get_last_active_session`,
                 JSON.stringify({ "authenticationToken": authToken })
             ));
             if (data.haveActiveSession) {

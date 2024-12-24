@@ -23,6 +23,13 @@ DJANGO_ENV=development
 Set the DATABASE_PASSWORD to a password of your choice.
 If you're in our team, you can get the file from this [link](https://drive.google.com/file/d/1Powqoi92qATvAI0RD-x41aYPqAz1yOiJ/view?usp=drive_link).
 
+Add another `.env` in `frontend` folder with following constants:
+```bash
+REACT_APP_API_URL=http://localhost:8000/todolist/api 
+```
+
+Replace the `REACT_APP_API_URL` to match your backend API URL.
+
 ### 4. Build and run
 Go to the root directory of the project and run the following commands:
 ```bash
