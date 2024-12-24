@@ -28,7 +28,7 @@ SECRET_KEY = "django-insecure-%ric$-@s=)x)hufowu$\
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["cs300-focustask.onrender.com"]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
