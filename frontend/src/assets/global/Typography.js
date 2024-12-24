@@ -1,5 +1,3 @@
-import { capitalize } from "@mui/material";
-
 const typography = {
     fontFamily: 'Plus Jakarta Sans, Arial, sans-serif', // Replace "Poppins" with your chosen font
     body1: {
@@ -47,7 +45,7 @@ const typography = {
         fontWeight: 500,
         fontSize: 14,
         textTransform: "uppercase",
-        color: "#D3D2DC",
+        color: "#9896A3",
     }
 };
 

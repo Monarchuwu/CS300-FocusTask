@@ -15,6 +15,7 @@ import { callAPITemplate } from './utils';
 
 import React from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { CircularProgress, Box } from '@mui/material';
 
 console.log(process.env.REACT_APP_API_URL);
 
@@ -24,7 +25,7 @@ function App() {
     // State variable for DOM to wait while checking validation status  
     const [isLoading, setIsLoading] = React.useState(true);
     // State variable for selected project
-    const [selectedProject, setSelectedProject] = React.useState(null);
+    const [selectedProject, setSelectedProject] = React.useState('Inbox');
     // State variables for task detail
     const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
     const [updateTaskAttrs, setUpdateTaskAttrs] = React.useState(0);
@@ -88,7 +89,9 @@ function App() {
 
 
     return (isLoading
-        ? <div>Loading...</div>
+        ? <Box justifyContent='center' alignItems='center' display='flex' height='100vh'>
+            <CircularProgress />
+        </Box>
         : <div className={styles.App}>
             <Routes>
                 <Route path='/' element={
@@ -108,7 +111,7 @@ function App() {
                 } />
                 <Route path='/today' element={
                     <LayoutWithNavBar
-                        selectedProject={selectedProject}
+                        selectedProject={'Today'}
                         setSelectedProject={setSelectedProject}
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
@@ -123,7 +126,7 @@ function App() {
                 } />
                 <Route path='/pomodoro' element={
                     <LayoutWithNavBar
-                        selectedProject={selectedProject}
+                        selectedProject={'Pomodoro'}
                         setSelectedProject={setSelectedProject}
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}

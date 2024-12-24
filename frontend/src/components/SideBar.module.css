@@ -6,14 +6,20 @@
     list-style: none;
 }
 
-.navbarItem {
-    text-decoration: none;
-    color: black;
+ListItemButton.navbarItem {
+    background-color: #FFF;
 }
 
-.navbarItemActive {
+ListItemIcon.navbarItem {
+    color: #9896A3;
+}
+
+ListItemButton.navbarItemActive {
+    border-radius: 10px;
+    background-color: #000B58;
+}
+ListItemIcon.navbarItemActive {
     color: white;
-    background-color: black;
 }
 
 .projectContent {}

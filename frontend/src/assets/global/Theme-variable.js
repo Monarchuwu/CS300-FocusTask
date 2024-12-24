@@ -14,10 +14,8 @@ const TopbarHeight = 70;
 const baseTheme = createTheme({
   direction: "ltr",
   palette: {
-    primary_fade: {
-        main: "#c7cdff",
-        dark: "#adb6ff",
-        contrastText: "#000B58",
+    gray: {
+        main: "#9896A3",
     },
     primary: {
       main: "#000B58",

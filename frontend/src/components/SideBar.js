@@ -1,11 +1,11 @@
 import styles from './SideBar.module.css';
 
-import React from 'react';
-import { useNavigate, NavLink, UNSAFE_decodeViaTurboStream } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, NavLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import { Button, Fab } from '@mui/material';
+import { IconButton } from '@mui/material';
 import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
@@ -13,24 +13,29 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
-import AddIcon from '@mui/icons-material/Add';
+
+import { Home, Calendar, TimeCircle, TickSquare, Delete, Plus } from 'react-iconly';
 
 import LogoText from '../components/LogoText';
 import { callAPITemplate } from '../utils'; 
 
 const drawerWidth = 260;
 
+const items = [
+    { text: 'Inbox', icon: <Home set="bulk" />, url: '/' },
+    { text: 'Today', icon: <Calendar set="bulk" />, url: '/today' },
+    { text: 'Pomodoro', icon: <TimeCircle set="bulk" />, url: '/pomodoro' },
+    { text: 'Completed', icon: <TickSquare set="bulk" />, url: '/completed' },
+    { text: 'Trash', icon: <Delete set="bulk" />, url: '/trash' },
+];
 
-function SideBar({ selectedProject, setSelectedProject }) {
+function SideBar({ selectedProject, setSelectedProject}) {
     const navigate = useNavigate();
     // State variables for adding new project
     const [isAddingProject, setIsAddingProject] = React.useState(false);
     const [newProjectName, setNewProjectName] = React.useState("");
     // State variable for displaying all projects
     const [projects, setProjects] = React.useState([]);
-
 
     // API call functions
     const callAddProjectAPI = async (name) => {
@@ -66,9 +71,6 @@ function SideBar({ selectedProject, setSelectedProject }) {
         const items = dataItems.map(item => JSON.parse(item));
         setProjects(items);
     }
-    // handle className for navbar items
-    const handleNavLinkClassName = ({ isActive }) => isActive ?
-        `${styles.navbarItem} ${styles.navbarItemActive}` : styles.navbarItem
 
 
     // Get all projects
@@ -98,14 +100,33 @@ function SideBar({ selectedProject, setSelectedProject }) {
                 <li><NavLink className={handleNavLinkClassName} to='/today'>Today</NavLink></li>
                 <li><NavLink className={handleNavLinkClassName} to='/pomodoro'>Pomodoro</NavLink></li>
             </nav> */}
-            <List>
-                {['Inbox', 'Today', 'Pomodoro', 'Completed', 'Trash'].map((text, index) => (
-                    <ListItem key={text} disablePadding>
-                        <ListItemButton>
-                            <ListItemIcon>
-                                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+            <List component="nav" aria-label="main mailbox folders">
+                {items.map((item) => (
+                    <ListItem key={item.text} disablePadding>
+                        <ListItemButton
+                            component={NavLink}
+                            to={item.url}
+                            onClick={() => setSelectedProject(item.text)}
+                            sx={{
+                                backgroundColor: selectedProject === item.text ? 'primary.main' : 'inherit',
+                                color: selectedProject === item.text ? 'white' : 'gray.main',
+                                '&:hover': {
+                                    backgroundColor: selectedProject === item.text ? 'primary.main' : 'primary.light',
+                                    color: 'white',
+                                },
+                                borderRadius: '10px',
+                                marginBottom: '5px',
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: selectedProject === item.text ? 'white' : 'gray.main' }}>
+                                {item.icon}
                             </ListItemIcon>
-                            <ListItemText primary={text} />
+                            <ListItemText primary={item.text} 
+                                slotProps={{ primary: {
+                                    color: selectedProject === item.text ? 'white' : 'gray.main', 
+                                    fontWeight: 500} 
+                                }} 
+                            />
                         </ListItemButton>
                     </ListItem>
                 ))}
@@ -118,15 +139,14 @@ function SideBar({ selectedProject, setSelectedProject }) {
                     <Typography variant='drawer'>Projects</Typography>
 
                     {/* add project button and its logic */}
-                    <Fab aria-label="add"
-                            color="primary_fade"
+                    <IconButton aria-label="add"
+                            color="primary"
                             onClick={() => setIsAddingProject(true)}
                             size="small"
-                            float="right" style={{ transform: 'scale(0.5)' }}
-                            variant="extended"
-                            sx={{ boxShadow: 0 }}>
-                        <AddIcon/>
-                    </Fab>
+                            float="right"
+                            disableFocusRipple={true}>
+                        <Plus set="bulk"/>
+                    </IconButton>
                 </Box>
                 {isAddingProject && (
                     <div>
