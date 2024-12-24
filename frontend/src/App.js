@@ -2,9 +2,11 @@ import styles from './App.module.css';
 
 import SideBar from './components/SideBar';
 import TaskDetailBar from './components/TaskDetailBar';
+import SuggestTaskBar from './components/SuggestTaskBar';
 
 import HomePage from './pages/HomePage';
 import TodayPage from './pages/TodayPage';
+import PomodoroPage from './pages/PomodoroPage';
 import SignInPage from './pages/SignInPage';
 import RegisterPage from './pages/RegisterPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -19,10 +21,15 @@ function App() {
     const location = useLocation();
     // State variable for DOM to wait while checking validation status  
     const [isLoading, setIsLoading] = React.useState(true);
-    // State variables for selected project and task detail
+    // State variable for selected project
     const [selectedProject, setSelectedProject] = React.useState(null);
+    // State variables for task detail
     const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
     const [updateTaskAttrs, setUpdateTaskAttrs] = React.useState(0);
+    // State variable for selected suggested task list
+    const [suggestTaskList, setSuggestTaskList] = React.useState(false);
+    // State variable for PomodoroPage
+    const [taskPomodoro, setTaskPomodoro] = React.useState(null);
 
 
     // Check if the authentication token is still valid
@@ -89,7 +96,11 @@ function App() {
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
-                        setUpdateTaskAttrs={setUpdateTaskAttrs}>
+                        setUpdateTaskAttrs={setUpdateTaskAttrs}
+                        suggestTaskList={suggestTaskList}
+                        setSuggestTaskList={setSuggestTaskList}
+                        taskPomodoro={taskPomodoro}
+                        setTaskPomodoro={setTaskPomodoro}>
                         <HomePage />
                     </LayoutWithNavBar>
                 } />
@@ -100,8 +111,27 @@ function App() {
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
-                        setUpdateTaskAttrs={setUpdateTaskAttrs}>
+                        setUpdateTaskAttrs={setUpdateTaskAttrs}
+                        suggestTaskList={suggestTaskList}
+                        setSuggestTaskList={setSuggestTaskList}
+                        taskPomodoro={taskPomodoro}
+                        setTaskPomodoro={setTaskPomodoro}>
                         <TodayPage />
+                    </LayoutWithNavBar>
+                } />
+                <Route path='/pomodoro' element={
+                    <LayoutWithNavBar
+                        selectedProject={selectedProject}
+                        setSelectedProject={setSelectedProject}
+                        viewTaskDetailID={viewTaskDetailID}
+                        setViewTaskDetailID={setViewTaskDetailID}
+                        updateTaskAttrs={updateTaskAttrs}
+                        setUpdateTaskAttrs={setUpdateTaskAttrs}
+                        suggestTaskList={suggestTaskList}
+                        setSuggestTaskList={setSuggestTaskList}
+                        taskPomodoro={taskPomodoro}
+                        setTaskPomodoro={setTaskPomodoro}>
+                        <PomodoroPage />
                     </LayoutWithNavBar>
                 } />
                 <Route path='/signin' element={<SignInPage />} />
@@ -118,21 +148,86 @@ function LayoutWithNavBar({
     children,
     selectedProject, setSelectedProject,
     viewTaskDetailID, setViewTaskDetailID,
-    updateTaskAttrs, setUpdateTaskAttrs
+    updateTaskAttrs, setUpdateTaskAttrs,
+    suggestTaskList, setSuggestTaskList,
+    taskPomodoro, setTaskPomodoro
 }) {
-    return (
-        <div className={viewTaskDetailID ? styles.container_3Columns : styles.container_2Columns}>
-            <SideBar selectedProject={selectedProject} setSelectedProject={setSelectedProject} />
-            {children.type === HomePage
-                ? React.cloneElement(children, { selectedProject, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs })
-                : React.cloneElement(children, { setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs })
+    const [loading, setLoading] = React.useState(true);
+
+
+    // Call API functions
+    const callGetTodoItemAPI = async (taskID) => {
+        const authToken = localStorage.getItem('authToken');
+        const data = await callAPITemplate(
+            'http://localhost:8000/todolist/api/todo_item/get',
+            JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
+        );
+        return JSON.parse(data);
+    }
+    // Render children with props
+    const renderChildrenWithProps = () => {
+        switch (children.type) {
+            case HomePage:
+                return React.cloneElement(children, {
+                    selectedProject,
+                    setViewTaskDetailID,
+                    updateTaskAttrs, setUpdateTaskAttrs
+                });
+            case TodayPage:
+                return React.cloneElement(children, {
+                    setViewTaskDetailID,
+                    updateTaskAttrs, setUpdateTaskAttrs,
+                    setSuggestTaskList
+                });
+            case PomodoroPage:
+                return React.cloneElement(children, {
+                    taskPomodoro,
+                });
+            default:
+                return children;
+        }
+    }
+
+
+    // Load the last active pomodoro session
+    React.useEffect(() => {
+        if (taskPomodoro !== null) {
+            return;
+        }
+        const loadPomodoro = async () => {
+            const authToken = localStorage.getItem('authToken');
+            const data = JSON.parse(await callAPITemplate(
+                'http://localhost:8000/todolist/api/pomodoro/get_last_active_session',
+                JSON.stringify({ "authenticationToken": authToken })
+            ));
+            if (data.haveActiveSession) {
+                const taskData = await callGetTodoItemAPI(data.pomodoro.taskID);
+                data.pomodoro.name = taskData.name;
+                setTaskPomodoro(data.pomodoro);
             }
-            {viewTaskDetailID && <TaskDetailBar
-                taskID={viewTaskDetailID}
-                setTaskID={setViewTaskDetailID}
-                updateTaskAttrs={updateTaskAttrs}
-                setUpdateTaskAttrs={setUpdateTaskAttrs}
-            />}
+            setLoading(false);
+        }
+        loadPomodoro();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+
+    return (loading ? <div>Loading...</div> :
+        <div className={suggestTaskList || viewTaskDetailID ? styles.container_3Columns : styles.container_2Columns}>
+            <SideBar selectedProject={selectedProject} setSelectedProject={setSelectedProject} />
+            {renderChildrenWithProps()}
+            {suggestTaskList ?
+                <SuggestTaskBar
+                    setUpdateTaskAttrs={setUpdateTaskAttrs}
+                    setSuggestTaskList={setSuggestTaskList}
+                />
+                : viewTaskDetailID && <TaskDetailBar
+                    taskID={viewTaskDetailID}
+                    setTaskID={setViewTaskDetailID}
+                    updateTaskAttrs={updateTaskAttrs}
+                    setUpdateTaskAttrs={setUpdateTaskAttrs}
+                    setTaskPomodoro={setTaskPomodoro}
+                />}
         </div>
     );
 }

@@ -3,8 +3,10 @@ import styles from './TaskDetailBar.module.css';
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs }) {
+function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPomodoro }) {
+    const navigate = useNavigate();
     // State variable for viewing task details
     const [taskDetails, setTaskDetails] = React.useState(null);
     // State variable for debouncing status (checkbox) changes
@@ -94,6 +96,18 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs 
         };
         setUpdateTaskAttrs(Math.random());
     }
+    // Start Pomodoro function
+    const startPomodoro = () => {
+        const authToken = localStorage.getItem('authToken');
+        callAPITemplate(
+            'http://localhost:8000/todolist/api/pomodoro/set_task',
+            JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
+            (data) => {
+                setTaskPomodoro({ ...JSON.parse(data), name: taskDetails.name });
+                navigate('/pomodoro');
+            }
+        );
+    }
 
 
     // Fetch task details when taskID changes
@@ -118,6 +132,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs 
         <div className={styles.container}>
             <h1>TaskDetail</h1>
             <button onClick={() => setTaskID(null)}>Close</button>
+            <button onClick={() => startPomodoro()}>Start Pomodoro</button>
 
             {/* View Task Detail */}
             {taskDetails && (

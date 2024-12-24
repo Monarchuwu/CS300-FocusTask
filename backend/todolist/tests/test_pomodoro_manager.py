@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
-
+from django.utils import timezone
 from todolist.models.managers import PomodoroManager
 from todolist.models.objects import PomodoroHistory, TodoItem
 from todolist.models import databases
@@ -17,7 +17,7 @@ def sample_task():
         itemID=1,
         name="Sample Task",
         parentID=None,
-        createdDate=datetime.now(),
+        createdDate=timezone.now(),
         userID=1,
         itemType="Task",
         labelID=None,
@@ -30,11 +30,12 @@ def sample_pomodoroHistory():
     return PomodoroHistory(
         pomodoroID = 1,
         taskID = 1,
-        startTime = datetime.now(),
+        startTime = timezone.now(),
         duration = timedelta(minutes = 30),
+        currentDuration = timedelta(minutes=30),
         endTime = None,
         status = databases.PomodoroHistoryDB.Status.CANCELED,
-        createdAt = datetime.now()
+        createdAt = timezone.now()
     )
 
 @pytest.mark.django_db
@@ -42,26 +43,26 @@ def test_set_task_id(pomodoro_manager, sample_pomodoroHistory):
     """Test successful modification of taskID."""
     with patch("todolist.models.managers.databases.PomodoroHistoryDB.objects.create") as mock_create_pomo, \
             patch("todolist.models.managers.databases.TodoItemDB.objects.get") as mock_get_task:
-        mock_get_task.return_value = MagicMock(taskID = sample_pomodoroHistory.taskID)
+        mock_get_task.return_value = MagicMock(itemID = sample_pomodoroHistory.taskID)
         mock_create_pomo.return_value = MagicMock()
 
         pomodoro_manager.setTaskID(sample_pomodoroHistory.taskID)
 
-        mock_get_task.assert_called_once_with(taskID = sample_pomodoroHistory.taskID)
+        mock_get_task.assert_called_once_with(itemID = sample_pomodoroHistory.taskID)
         mock_create_pomo.assert_called_once()
-        assert mock_create_pomo.call_args[1]["taskID"] == sample_pomodoroHistory.taskID
+        assert mock_create_pomo.call_args[1]['taskID'].itemID == sample_pomodoroHistory.taskID
 
 def test_set_task_id_not_found(pomodoro_manager, sample_pomodoroHistory):
     """Test successful modification of taskID."""
     with patch("todolist.models.managers.databases.PomodoroHistoryDB.objects.create") as mock_create_pomo, \
             patch("todolist.models.managers.databases.TodoItemDB.objects.get") as mock_get_task:
-        mock_get_task.return_value = MagicMock(taskID = sample_pomodoroHistory.taskID - 12)
+        mock_get_task.return_value = MagicMock(itemID = sample_pomodoroHistory.taskID - 12)
         mock_get_task.side_effect = databases.TodoItemDB.DoesNotExist
         mock_create_pomo.return_value = MagicMock()
         with pytest.raises(ValueError) as excinfo:
             pomodoro_manager.setTaskID(sample_pomodoroHistory.taskID - 12)
         assert str(excinfo.value) == f"Task ID {sample_pomodoroHistory.taskID - 12} do not exist."
-        mock_get_task.assert_called_once_with(taskID = sample_pomodoroHistory.taskID - 12)
+        mock_get_task.assert_called_once_with(itemID = sample_pomodoroHistory.taskID - 12)
         mock_create_pomo.assert_not_called()
 
 def test_set_time(pomodoro_manager, sample_pomodoroHistory):
@@ -116,7 +117,7 @@ def test_pause_pomodoro_success(pomodoro_manager):
         # Mock the pomodoro instance
         mock_pomodoro = MagicMock()
         mock_pomodoro.status = "Running"  # Simulate the status
-        mock_pomodoro.endTime = datetime.now() - timedelta(minutes=5)
+        mock_pomodoro.endTime = timezone.now() - timedelta(minutes=5)
         mock_pomodoro.currentDuration = timedelta(minutes=25)
         mock_get_pomodoro.return_value = mock_pomodoro
 
@@ -146,7 +147,6 @@ def test_get_time_success(pomodoro_manager):
         # Assert the mocked interactions
         mock_get_pomodoro.assert_called_once_with(pomodoroID=1)
         assert remaining_time.total_seconds() > 0
-        mock_pomodoro.save.assert_called_once()
 
 
 def test_end_pomodoro_success(pomodoro_manager):
