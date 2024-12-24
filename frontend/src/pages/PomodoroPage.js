@@ -27,7 +27,7 @@ function PomodoroPage({ taskPomodoro }) {
     const callStartPomodoroAPI = () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/pomodoro/start',
+            `${process.env.REACT_APP_API_URL}/pomodoro/start`,
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }

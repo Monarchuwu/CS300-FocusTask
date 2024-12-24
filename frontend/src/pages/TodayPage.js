@@ -16,7 +16,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
     const callDeleteTodoItemAPI = async (itemID) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/todo_item/delete',
+            `${process.env.REACT_APP_API_URL}/todo_item/delete`,
             JSON.stringify({ "authenticationToken": authToken, "itemID": itemID }),
             (data) => fetchTodoList()
         )
@@ -31,7 +31,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
         const authToken = localStorage.getItem('authToken');
         try {
             const dataTasks = await callAPITemplate(
-                'http://localhost:8000/todolist/api/task/get_today_list',
+                `${process.env.REACT_APP_API_URL}/task/get_today_list`,
                 JSON.stringify({ "authenticationToken": authToken }),
             );
             const tasks = dataTasks.map(task => JSON.parse(task));
@@ -39,7 +39,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
 
             const taskIDs = tasks.map(task => task.itemID);
             const dataAttributes = await callAPITemplate(
-                'http://localhost:8000/todolist/api/task_attributes/get_list',
+                `${process.env.REACT_APP_API_URL}/task_attributes/get_list`,
                 JSON.stringify({ "authenticationToken": authToken, "itemIDs": taskIDs }),
             );
             const attrsList = dataAttributes.map(attr => JSON.parse(attr));
@@ -56,7 +56,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
         for (const [taskID, status] of Object.entries(debounceStatus)) {
             try {
                 await callAPITemplate(
-                    'http://localhost:8000/todolist/api/task_attributes/update',
+                    `${process.env.REACT_APP_API_URL}/task_attributes/update`,
                     JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": status })
                 );
             }

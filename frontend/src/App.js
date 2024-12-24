@@ -43,7 +43,7 @@ function App() {
                 if (isSignInPages) {
                     if (authToken !== null) {
                         await callAPITemplate(
-                            'http://localhost:8000/todolist/api/authentication/status',
+                            `${process.env.REACT_APP_API_URL}/authentication/status`,
                             JSON.stringify({ "authenticationToken": authToken }),
                             (data) => {
                                 if (data.status) {
@@ -59,7 +59,7 @@ function App() {
                     }
                     else {
                         await callAPITemplate(
-                            'http://localhost:8000/todolist/api/authentication/status',
+                            `${process.env.REACT_APP_API_URL}/authentication/status`,
                             JSON.stringify({ "authenticationToken": authToken }),
                             (data) => {
                                 if (!data.status) {
@@ -159,7 +159,7 @@ function LayoutWithNavBar({
     const callGetTodoItemAPI = async (taskID) => {
         const authToken = localStorage.getItem('authToken');
         const data = await callAPITemplate(
-            'http://localhost:8000/todolist/api/todo_item/get',
+            `${process.env.REACT_APP_API_URL}/todo_item/get`,
             JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
         );
         return JSON.parse(data);
@@ -197,7 +197,7 @@ function LayoutWithNavBar({
         const loadPomodoro = async () => {
             const authToken = localStorage.getItem('authToken');
             const data = JSON.parse(await callAPITemplate(
-                'http://localhost:8000/todolist/api/pomodoro/get_last_active_session',
+                `http://localhost:8000/todolist/api/pomodoro/get_last_active_session`,
                 JSON.stringify({ "authenticationToken": authToken })
             ));
             if (data.haveActiveSession) {
