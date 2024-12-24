@@ -371,7 +371,7 @@ def task_get_today_list(request):
             token = data['authenticationToken']
 
             userID = UserManager().getUserID(token)
-            today_task_list = TaskManager().getTodayTaskList()
+            today_task_list = TaskManager().getTodayTaskList(userID=userID)
             today_list = []
 
             for attrs in today_task_list:
@@ -411,6 +411,74 @@ def task_attributes_get_list(request):
                 task_attributes_list.append(str(taskAttrs))
 
             return JsonResponse({'status': 'success', 'data': task_attributes_list})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def task_suggest_today(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+
+            userID = UserManager().getUserID(token)
+            
+            suggest_today_tasks = TaskManager().suggestTodayTask(userID=userID)
+            task_list = []
+            for today_task in suggest_today_tasks:
+                taskID = today_task.taskID
+                task = TaskManager().getTodoItem(taskID)
+                if task.userID == userID:
+                    task_list.append(task.to_json_without_userID())
+
+            return JsonResponse({'status': 'success', 'data': task_list})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+@csrf_exempt
+def task_add_task_today(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            taskID = data['taskID']
+            userID = UserManager().getUserID(token)
+            item = TaskManager().getTodoItem(taskID)
+            if item.userID != userID:
+                return JsonResponse({"status": 'error', 'message': 'User is unauthorized to modify this item'}, status = 401)
+            
+            taskAttrs = TaskManager().addTaskToToday(taskID)
+
+            return JsonResponse({'status': 'success', 'data': str(taskAttrs) })
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def task_remove_from_today(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            taskID = data['taskID']
+            userID = UserManager().getUserID(token)
+            item = TaskManager().getTodoItem(taskID)
+            if item.userID != userID:
+                return JsonResponse({"status": 'error', 'message': 'User is unauthorized to modify this item'}, status = 401)
+            
+            TaskManager().removeTaskFromToday(taskID)
+
+            return JsonResponse({'status': 'success'})
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
         except Exception as e:

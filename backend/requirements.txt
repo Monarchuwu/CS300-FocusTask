@@ -1,6 +1,7 @@
 Django==5.1
 flake8
 pytest
+time_machine
 pytest-django
 bcrypt
 djangorestframework==3.14

@@ -531,7 +531,7 @@ def test_api_project_get_all(client, authenticationToken):
 
 @pytest.mark.django_db
 def test_api_task_get_today_list(client, authenticationToken):
-        # Set up
+    # Set up
     url = "/todolist/api/project/add"
     response = client.post(url, content_type='application/json', data=json.dumps({
         "authenticationToken": authenticationToken,

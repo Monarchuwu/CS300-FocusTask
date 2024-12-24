@@ -24,6 +24,21 @@ urlpatterns = [
     path("api/project/get_all", view_task.project_get_all, name="project-get-all"),
     path("api/task/get_today_list", view_task.task_get_today_list, name="task-get-today-list"),
     path("api/task_attributes/get_list", view_task.task_attributes_get_list, name="task-attributes-get-list"),
+    path("api/task/suggest_today", view_task.task_suggest_today, name="task-suggest-today"),
+    path("api/task/add_task_today", view_task.task_add_task_today, name="task-add-task-today"),
+    path("api/task/remove_from_today", view_task.task_remove_from_today, name="task-remove-from-today"),
+
+    path("api/pomodoro/start", view_pomodoro.pomodoro_start, name="pomodoro-start"),
+    path("api/pomodoro/pause", view_pomodoro.pomodoro_pause, name="pomodoro-pause"),
+    path("api/pomodoro/continue", view_pomodoro.pomodoro_continue, name="pomodoro-continue"),
+    path("api/pomodoro/end", view_pomodoro.pomodoro_end, name="pomodoro-end"),
+    path("api/pomodoro/set_task", view_pomodoro.pomodoro_set_task, name="pomodoro-set-task"),
+    path("api/pomodoro/set_length", view_pomodoro.pomodoro_set_length, name="pomodoro-set-length"),
+    path("api/pomodoro/get_time", view_pomodoro.pomodoro_get_time, name="pomodoro-get-time"),
+    path("api/pomodoro/get_history_hour", view_pomodoro.get_history_hour, name="pomodoro-get_history_hour"),
+    path("api/pomodoro/get_history_hour_fullday", view_pomodoro.get_history_hour_fullday, name="pomodoro-get-history-hour-fullday"),
+    path("api/pomodoro/get_history_day", view_pomodoro.get_history_day, name="pomodoro-get-history-day"),
+    path("api/pomodoro/get_last_active_session", view_pomodoro.get_last_active_session, name="pomodoro-get-last-active-session"),
 
     path("api/test_api", view_test.test_api, name="test-api")
 ]

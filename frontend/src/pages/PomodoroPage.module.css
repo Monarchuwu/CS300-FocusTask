@@ -1,0 +1,13 @@
+.container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+}
+
+.pomodoro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.pomodoroTitle {}

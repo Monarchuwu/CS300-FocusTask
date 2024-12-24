@@ -4,7 +4,7 @@ import { callAPITemplate } from '../utils';
 
 import React from 'react';
 
-function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
+function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, setSuggestTaskList }) {
     // State variables for rendering the tree
     const [taskList, setTaskList] = React.useState([]); // a list of tasks that will be rendered
     const [taskStatusMap, setTaskStatusMap] = React.useState({}); // Checkbox status of tasks
@@ -84,11 +84,20 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs })
         return () => clearTimeout(timeout);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debounceStatus]);
+    // Cleanup function
+    React.useEffect(() => {
+        return () => {
+            setViewTaskDetailID(null);
+            setSuggestTaskList(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
 
     return (
         <div>
             <h1>Today</h1>
+            <button onClick={() => setSuggestTaskList(true)}>Suggestions</button>
             {/* Render Task List */}
             <ul className={styles.taskList}>
                 {taskList.map(task => (
@@ -104,7 +113,10 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs })
                         />
                         {/* Name, Edit button, and Delete button */}
                         <strong>{task.name}</strong> ({task.itemType})
-                        <button onClick={() => setViewTaskDetailID(task.itemID)}>Edit</button>
+                        <button onClick={() => {
+                            setViewTaskDetailID(task.itemID);
+                            setSuggestTaskList(false);
+                        }}>Edit</button>
                         <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
                     </li>
                 ))}

@@ -65,8 +65,8 @@ function SideBar({ selectedProject, setSelectedProject }) {
             <nav className={styles.navbar}>
                 <li><NavLink className={handleNavLinkClassName} to='/'>Inbox</NavLink></li>
                 <li><NavLink className={handleNavLinkClassName} to='/today'>Today</NavLink></li>
+                <li><NavLink className={handleNavLinkClassName} to='/pomodoro'>Pomodoro</NavLink></li>
             </nav>
-            <p>Pomodoro</p>
 
             <button onClick={() => callSignOutAPI()}>Sign Out</button>
 
@@ -95,7 +95,7 @@ function SideBar({ selectedProject, setSelectedProject }) {
                             className={selectedProject === project.itemID
                                 ? `${styles.project} ${styles.projectActive}`
                                 : styles.project}
-                            onClick={() => setSelectedProject(project.itemID)}
+                            onClick={() => { setSelectedProject(project.itemID); navigate('/'); }}
                         >{project.name}</button>
                     )
                 }</div>
