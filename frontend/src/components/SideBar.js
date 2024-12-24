@@ -1,9 +1,27 @@
 import styles from './SideBar.module.css';
 
-import { callAPITemplate } from '../utils';
-
 import React from 'react';
-import { useNavigate, NavLink } from 'react-router-dom';
+import { useNavigate, NavLink, UNSAFE_decodeViaTurboStream } from 'react-router-dom';
+
+import Box from '@mui/material/Box';
+import Drawer from '@mui/material/Drawer';
+import { Button, Fab } from '@mui/material';
+import List from '@mui/material/List';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import InboxIcon from '@mui/icons-material/MoveToInbox';
+import MailIcon from '@mui/icons-material/Mail';
+import AddIcon from '@mui/icons-material/Add';
+
+import LogoText from '../components/LogoText';
+import { callAPITemplate } from '../utils'; 
+
+const drawerWidth = 260;
+
 
 function SideBar({ selectedProject, setSelectedProject }) {
     const navigate = useNavigate();
@@ -60,21 +78,56 @@ function SideBar({ selectedProject, setSelectedProject }) {
 
 
     return (
-        <div className={styles.container}>
-            <h1>SideBar</h1>
-            <nav className={styles.navbar}>
+        <Drawer 
+            sx={{
+                width: drawerWidth,
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                    width: drawerWidth,
+                    boxSizing: 'border-box',
+                    px: '25px',
+                    py: '30px',
+                },
+            }}
+            variant="permanent"
+            anchor="left"
+        >
+            <LogoText />
+            {/* <nav className={styles.navbar}>
                 <li><NavLink className={handleNavLinkClassName} to='/'>Inbox</NavLink></li>
                 <li><NavLink className={handleNavLinkClassName} to='/today'>Today</NavLink></li>
                 <li><NavLink className={handleNavLinkClassName} to='/pomodoro'>Pomodoro</NavLink></li>
-            </nav>
+            </nav> */}
+            <List>
+                {['Inbox', 'Today', 'Pomodoro', 'Completed', 'Trash'].map((text, index) => (
+                    <ListItem key={text} disablePadding>
+                        <ListItemButton>
+                            <ListItemIcon>
+                                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                            </ListItemIcon>
+                            <ListItemText primary={text} />
+                        </ListItemButton>
+                    </ListItem>
+                ))}
+            </List>
 
-            <button onClick={() => callSignOutAPI()}>Sign Out</button>
+            <Divider />
 
-            <div className={styles.projectContent}>
-                <h2 className={styles.projectTitle}>Projects</h2>
+            <Box className={styles.projectContent}>
+                <Box flexDirection={'row'} display={'flex'} justifyContent={'space-between'} alignItems={'center'}>
+                    <Typography variant='drawer'>Projects</Typography>
 
-                {/* add project button and its logic */}
-                <button onClick={() => setIsAddingProject(true)}>Add project</button>
+                    {/* add project button and its logic */}
+                    <Fab aria-label="add"
+                            color="primary_fade"
+                            onClick={() => setIsAddingProject(true)}
+                            size="small"
+                            float="right" style={{ transform: 'scale(0.5)' }}
+                            variant="extended"
+                            sx={{ boxShadow: 0 }}>
+                        <AddIcon/>
+                    </Fab>
+                </Box>
                 {isAddingProject && (
                     <div>
                         <input
@@ -99,8 +152,9 @@ function SideBar({ selectedProject, setSelectedProject }) {
                         >{project.name}</button>
                     )
                 }</div>
-            </div>
-        </div>
+            </Box>
+            <button onClick={() => callSignOutAPI()} className={styles.user}>Sign Out</button>
+        </Drawer>
     );
 }
 

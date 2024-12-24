@@ -1,4 +1,6 @@
-.container {}
+.container {
+    padding: 30px 25px 30px 25px;
+}
 
 .navbar {
     list-style: none;
@@ -28,4 +30,10 @@
 .projectActive {
     color: white;
     background-color: black;
+}
+
+.user {
+    position: absolute;
+    bottom: 10px;
+    float: right;
 }

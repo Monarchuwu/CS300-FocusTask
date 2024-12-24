@@ -13,5 +13,9 @@ code {
     height: 100vh; 
 }
 
+#root {
+    background-color: #F9F8FF;
+}
+
 
 
