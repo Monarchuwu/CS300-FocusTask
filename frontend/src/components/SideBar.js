@@ -18,7 +18,7 @@ function SideBar({ selectedProject, setSelectedProject }) {
     const callAddProjectAPI = async (name) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/project/add',
+            `${process.env.REACT_APP_API_URL}/project/add`,
             JSON.stringify({ "authenticationToken": authToken, "name": name }),
             (data) => {
                 setIsAddingProject(false);
@@ -42,7 +42,7 @@ function SideBar({ selectedProject, setSelectedProject }) {
     const fetchProjectList = async () => {
         const authToken = localStorage.getItem('authToken');
         const dataItems = await callAPITemplate(
-            'http://localhost:8000/todolist/api/project/get_all',
+            `${process.env.REACT_APP_API_URL}/project/get_all`,
             JSON.stringify({ "authenticationToken": authToken }),
         );
         const items = dataItems.map(item => JSON.parse(item));
