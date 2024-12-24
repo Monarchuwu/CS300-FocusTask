@@ -276,6 +276,13 @@ class WebsiteBlockingManager:
         except Exception as e:
             print(f"Error fetching block list: {e}")
             return []
+        
+    def getBlockingURLs(self, userID: int):
+        try:
+            records = databases.WebsiteBlockingDB.objects.filter(UserID=userID, isBlocking=True)
+            return [record.URL for record in records]
+        except Exception as e:
+            print(f"Error fetching block URLs: {e}")
 
     def addToBlockList(self, userID: int, URL: str):
         try:
