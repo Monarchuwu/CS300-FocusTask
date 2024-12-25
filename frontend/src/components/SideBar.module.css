@@ -2,42 +2,6 @@
     padding: 30px 25px 30px 25px;
 }
 
-.navbar {
-    list-style: none;
-}
-
-ListItemButton.navbarItem {
-    background-color: #FFF;
-}
-
-ListItemIcon.navbarItem {
-    color: #9896A3;
-}
-
-ListItemButton.navbarItemActive {
-    border-radius: 10px;
-    background-color: #000B58;
-}
-ListItemIcon.navbarItemActive {
-    color: white;
-}
-
-.projectContent {}
-
-.projectTitle {}
-
-.projectList {
-    display: flex;
-    flex-direction: column;
-}
-
-.project {}
-
-.projectActive {
-    color: white;
-    background-color: black;
-}
-
 .user {
     position: absolute;
     bottom: 10px;

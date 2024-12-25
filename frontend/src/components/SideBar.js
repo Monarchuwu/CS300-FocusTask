@@ -1,11 +1,11 @@
 import styles from './SideBar.module.css';
 
-import React, { useState } from 'react';
+import React, {useRef} from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import { IconButton } from '@mui/material';
+import { IconButton, TextField } from '@mui/material';
 import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
@@ -14,7 +14,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 
-import { Home, Calendar, TimeCircle, TickSquare, Delete, Plus } from 'react-iconly';
+import { Home, Calendar, TimeCircle, TickSquare, ArrowRightSquare, Plus } from 'react-iconly';
 
 import LogoText from '../components/LogoText';
 import { callAPITemplate } from '../utils'; 
@@ -24,9 +24,9 @@ const drawerWidth = 260;
 const items = [
     { text: 'Inbox', icon: <Home set="bulk" />, url: '/' },
     { text: 'Today', icon: <Calendar set="bulk" />, url: '/today' },
+    { text: 'Upcoming', icon: <ArrowRightSquare set="bulk" />, url: '/upcoming' },
     { text: 'Pomodoro', icon: <TimeCircle set="bulk" />, url: '/pomodoro' },
-    { text: 'Completed', icon: <TickSquare set="bulk" />, url: '/completed' },
-    { text: 'Trash', icon: <Delete set="bulk" />, url: '/trash' },
+    { text: 'Completed', icon: <TickSquare set="bulk" />, url: '/completed' }, 
 ];
 
 function SideBar({ selectedProject, setSelectedProject}) {
@@ -36,6 +36,7 @@ function SideBar({ selectedProject, setSelectedProject}) {
     const [newProjectName, setNewProjectName] = React.useState("");
     // State variable for displaying all projects
     const [projects, setProjects] = React.useState([]);
+    const textFieldRef = useRef(null);
 
     // API call functions
     const callAddProjectAPI = async (name) => {
@@ -78,6 +79,29 @@ function SideBar({ selectedProject, setSelectedProject}) {
         fetchProjectList();
     }, []);
 
+    React.useEffect(() => {
+        if (isAddingProject && textFieldRef.current) {
+            textFieldRef.current.focus();
+        }
+
+        const handleClickOutside = (event) => {
+            if (textFieldRef.current && !textFieldRef.current.contains(event.target)) {
+                setIsAddingProject(false);
+                setNewProjectName('');
+            }
+        };
+
+        if (isAddingProject) {
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isAddingProject]);
+
 
     return (
         <Drawer 
@@ -94,13 +118,8 @@ function SideBar({ selectedProject, setSelectedProject}) {
             variant="permanent"
             anchor="left"
         >
-            <LogoText />
-            {/* <nav className={styles.navbar}>
-                <li><NavLink className={handleNavLinkClassName} to='/'>Inbox</NavLink></li>
-                <li><NavLink className={handleNavLinkClassName} to='/today'>Today</NavLink></li>
-                <li><NavLink className={handleNavLinkClassName} to='/pomodoro'>Pomodoro</NavLink></li>
-            </nav> */}
-            <List component="nav" aria-label="main mailbox folders">
+            <LogoText style={{ marginBottom: "15px" }}/>
+            <List component="nav">
                 {items.map((item) => (
                     <ListItem key={item.text} disablePadding>
                         <ListItemButton
@@ -112,20 +131,17 @@ function SideBar({ selectedProject, setSelectedProject}) {
                                 color: selectedProject === item.text ? 'white' : 'gray.main',
                                 '&:hover': {
                                     backgroundColor: selectedProject === item.text ? 'primary.main' : 'primary.light',
-                                    color: 'white',
+                                    color: selectedProject === item.text ? 'white' : 'gray.main',
                                 },
                                 borderRadius: '10px',
-                                marginBottom: '5px',
+                                marginBottom: '2px',
                             }}
                         >
                             <ListItemIcon sx={{ color: selectedProject === item.text ? 'white' : 'gray.main' }}>
                                 {item.icon}
                             </ListItemIcon>
                             <ListItemText primary={item.text} 
-                                slotProps={{ primary: {
-                                    color: selectedProject === item.text ? 'white' : 'gray.main', 
-                                    fontWeight: 500} 
-                                }} 
+                                slotProps={{ primary: {fontWeight: 500} }} 
                             />
                         </ListItemButton>
                     </ListItem>
@@ -134,7 +150,7 @@ function SideBar({ selectedProject, setSelectedProject}) {
 
             <Divider />
 
-            <Box className={styles.projectContent}>
+            <Box id="ProjectList">
                 <Box flexDirection={'row'} display={'flex'} justifyContent={'space-between'} alignItems={'center'}>
                     <Typography variant='drawer'>Projects</Typography>
 
@@ -149,29 +165,52 @@ function SideBar({ selectedProject, setSelectedProject}) {
                     </IconButton>
                 </Box>
                 {isAddingProject && (
-                    <div>
-                        <input
+                    <Box>
+                        <TextField
+                            label="Project name" 
+                            variant="outlined"
+                            size="small"
                             type="text"
                             value={newProjectName}
                             onChange={(e) => setNewProjectName(e.target.value)}
+                            onKeyUp={(e) => {
+                                if (e.key === 'Enter' && newProjectName.trim() !== '') {
+                                    callAddProjectAPI(newProjectName);
+                                } else if (e.key === 'Escape') {
+                                    setIsAddingProject(false);
+                                    setNewProjectName("");
+                                }
+                            }}
+                            inputRef={textFieldRef}
+                            sx = {{ marginTop: '5px'}}
                         />
-                        <button onClick={() => { setIsAddingProject(false); setNewProjectName(""); }}>Cancel</button>
-                        <button onClick={() => callAddProjectAPI(newProjectName)}>Add</button>
-                    </div>
+                    </Box>
                 )}
 
                 {/* project list */}
-                <div className={styles.projectList}>{
-                    projects.map(project =>
-                        <button
+                <List className={styles.projectList}>
+                    {projects.map(project => (
+                        <ListItem
                             key={project.itemID}
-                            className={selectedProject === project.itemID
-                                ? `${styles.project} ${styles.projectActive}`
-                                : styles.project}
+                            button
+                            selected={selectedProject === project.itemID}
                             onClick={() => { setSelectedProject(project.itemID); navigate('/'); }}
-                        >{project.name}</button>
-                    )
-                }</div>
+                            sx={{
+                                backgroundColor: selectedProject === project.itemID ? 'primary.main' : 'inherit',
+                                color: selectedProject === project.itemID ? 'white' : 'gray.main',
+                                '&:hover': {
+                                    backgroundColor: selectedProject === project.itemID ? 'primary.main' : 'primary.light',
+                                    color: selectedProject === project.itemID ? 'white' : 'gray.main',
+                                },
+                                borderRadius: '10px',
+                                marginBottom: '2px',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            <ListItemText primary={project.name} slotProps={{ primary: {fontWeight: 500} }} />
+                        </ListItem>
+                    ))}
+                </List>
             </Box>
             <button onClick={() => callSignOutAPI()} className={styles.user}>Sign Out</button>
         </Drawer>
