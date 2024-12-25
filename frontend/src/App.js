@@ -217,7 +217,7 @@ function LayoutWithNavBar({
     }, []);
 
 
-    return (loading ? <div> <CircularProgress /> </div> :
+    return (loading ? <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box> :
         <div className={suggestTaskList || viewTaskDetailID ? styles.container_3Columns : styles.container_2Columns}>
             <SideBar selectedProject={selectedProject} setSelectedProject={setSelectedProject} />
             {renderChildrenWithProps()}

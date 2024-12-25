@@ -237,7 +237,6 @@ function SideBar({ selectedProject, setSelectedProject}) {
                     alignItems={'center'}
                     sx = {{
                         marginTop: '10px',
-                        marginBottom: '10px',
                         display: 'flex',
                         justifyContent: 'center',
                         borderRadius: '10px',
