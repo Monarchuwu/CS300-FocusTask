@@ -5,7 +5,7 @@ import { useNavigate, NavLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import { IconButton, TextField } from '@mui/material';
+import { IconButton, TextField, Menu, MenuItem } from '@mui/material';
 import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
@@ -13,8 +13,11 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import Avatar from '@mui/material/Avatar';
 
-import { Home, Calendar, TimeCircle, TickSquare, ArrowRightSquare, Plus } from 'react-iconly';
+import { Home, Calendar, TimeCircle, 
+        TickSquare, ArrowRightSquare, 
+        Plus, Setting, User, Logout, MoreSquare } from 'react-iconly';
 
 import LogoText from '../components/LogoText';
 import { callAPITemplate } from '../utils'; 
@@ -37,6 +40,8 @@ function SideBar({ selectedProject, setSelectedProject}) {
     // State variable for displaying all projects
     const [projects, setProjects] = React.useState([]);
     const textFieldRef = useRef(null);
+    const [anchorEl, setAnchorEl] = React.useState(null);
+    const open = Boolean(anchorEl);
 
     // API call functions
     const callAddProjectAPI = async (name) => {
@@ -54,7 +59,7 @@ function SideBar({ selectedProject, setSelectedProject}) {
     const callSignOutAPI = async () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/user/signout',
+            `${process.env.REACT_APP_API_URL}/user/signout`,
             JSON.stringify({ "authenticationToken": authToken }),
             (data) => {
                 localStorage.removeItem('authToken');
@@ -102,6 +107,17 @@ function SideBar({ selectedProject, setSelectedProject}) {
         };
     }, [isAddingProject]);
 
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = (event) => {
+        setAnchorEl(null);
+        if (event.currentTarget.id === 'logout') {
+            callSignOutAPI();
+            console.log('Logging out');
+        }
+    };
+
 
     return (
         <Drawer 
@@ -113,13 +129,14 @@ function SideBar({ selectedProject, setSelectedProject}) {
                     boxSizing: 'border-box',
                     px: '25px',
                     py: '30px',
+                    borderColor: 'border.main',   
                 },
             }}
             variant="permanent"
             anchor="left"
         >
             <LogoText style={{ marginBottom: "15px" }}/>
-            <List component="nav">
+            <List component="nav" id="MainList">
                 {items.map((item) => (
                     <ListItem key={item.text} disablePadding>
                         <ListItemButton
@@ -133,8 +150,7 @@ function SideBar({ selectedProject, setSelectedProject}) {
                                     backgroundColor: selectedProject === item.text ? 'primary.main' : 'primary.light',
                                     color: selectedProject === item.text ? 'white' : 'gray.main',
                                 },
-                                borderRadius: '10px',
-                                marginBottom: '2px',
+                                borderRadius: '10px'
                             }}
                         >
                             <ListItemIcon sx={{ color: selectedProject === item.text ? 'white' : 'gray.main' }}>
@@ -151,7 +167,9 @@ function SideBar({ selectedProject, setSelectedProject}) {
             <Divider />
 
             <Box id="ProjectList">
-                <Box flexDirection={'row'} display={'flex'} justifyContent={'space-between'} alignItems={'center'}>
+                <Box flexDirection={'row'} display={'flex'} 
+                        justifyContent={'space-between'} alignItems={'center'}
+                        sx={{ marginTop: '10px' }}>
                     <Typography variant='drawer'>Projects</Typography>
 
                     {/* add project button and its logic */}
@@ -203,7 +221,6 @@ function SideBar({ selectedProject, setSelectedProject}) {
                                     color: selectedProject === project.itemID ? 'white' : 'gray.main',
                                 },
                                 borderRadius: '10px',
-                                marginBottom: '2px',
                                 cursor: 'pointer',
                             }}
                         >
@@ -212,7 +229,67 @@ function SideBar({ selectedProject, setSelectedProject}) {
                     ))}
                 </List>
             </Box>
-            <button onClick={() => callSignOutAPI()} className={styles.user}>Sign Out</button>
+            <Box flexGrow={1} />
+            <Box id="User"
+                    flexDirection={'row'} display={'flex'}
+                    justifyContent={'space-between'} 
+                    gap="8px"
+                    alignItems={'center'}
+                    sx = {{
+                        marginTop: '10px',
+                        marginBottom: '10px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        borderRadius: '10px',
+                        border: '1px solid',
+                        borderColor: 'border.main',
+                        padding: '8px',
+                        marginBottom: 0,
+                    }}>
+                <Avatar sx={{ 
+                    bgcolor: 'primary.light', 
+                    color: 'primary.main',
+                    borderRadius: '5px', 
+                    width: 48, 
+                    height: 48  
+                    }}>
+                    <User set="bulk" width={30} height={30} />
+                </Avatar>
+                <Typography variant='body2' id="UserName" 
+                    flexGrow={1}
+                    color="#53515B"
+                    >Username</Typography>
+                <IconButton onClick={handleClick}
+                        float="right"
+                        aria-controls={open ? 'account-menu' : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={open ? 'true' : undefined}
+                >
+                    <MoreSquare set="bulk"/>
+                </IconButton>
+                <Menu
+                    anchorEl={anchorEl}
+                    id="account-menu"
+                    open={open}
+                    onClose={handleClose}
+                    onClick={handleClose}
+                    transformOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+                    anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
+                >
+                    <MenuItem onClick={handleClose} id="settings">
+                        <ListItemIcon><Setting set="bulk" /></ListItemIcon>
+                        <Typography variant="body2">
+                            Settings
+                        </Typography>
+                    </MenuItem>
+                    <MenuItem onClick={handleClose} id="logout">
+                        <ListItemIcon><Logout set="bulk" /></ListItemIcon>
+                        <Typography variant="body2">
+                            Log out
+                        </Typography>
+                    </MenuItem>
+                </Menu>
+            </Box>
         </Drawer>
     );
 }

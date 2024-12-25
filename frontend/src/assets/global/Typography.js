@@ -1,7 +1,12 @@
 const typography = {
     fontFamily: 'Plus Jakarta Sans, Arial, sans-serif', // Replace "Poppins" with your chosen font
     body1: {
-        fontWeight: 400, // or 'bold'
+        fontWeight: 500, // or 'bold'
+        fontSize: 16,
+    },
+    body2: {
+        fontWeight: 500, // or 'bold'
+        fontSize: 14,
     },
     h1: {
         fontWeight: 900,

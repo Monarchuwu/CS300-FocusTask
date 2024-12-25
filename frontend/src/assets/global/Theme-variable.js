@@ -15,7 +15,10 @@ const baseTheme = createTheme({
   direction: "ltr",
   palette: {
     gray: {
-        main: "#9896A3",
+        main: "#888793",
+    },
+    border: {
+        main: "#E6E4F0",
     },
     primary: {
       main: "#000B58",
@@ -51,6 +54,13 @@ const baseTheme = createTheme({
   },
 
   components: {
+    MuiDivider: {
+        styleOverrides: {
+            root: {
+                borderColor: "#E6E4F0",
+            },
+        },
+    },
     MuiCssBaseline: {
       styleOverrides: {
         "*": {
