@@ -442,7 +442,7 @@ def test_api_todo_item_get_list(client, authenticationToken):
     jsonData = response.json()
     assert jsonData['status']=="success"
 
-    itemList = [projectID, sectionID, itemID]
+    itemList = [projectID, projectID+1, sectionID, itemID]
 
     jsonDatas = jsonData['data']
     # print(jsonDatas)
@@ -481,8 +481,10 @@ def test_api_todo_item_get_all(client, authenticationToken):
     jsonData = response.json()
     assert jsonData['status'] == "success"
 
-    itemList = [projectID1, projectID2]
-    nameList = ['testproject1', 'testproject2']
+    # projectID1-2 is the empty project of the user
+    # projectID1-1 is the empty section of the empty project
+    itemList = [projectID1-2, projectID1-1, projectID1, projectID1+1, projectID2, projectID2+1]
+    nameList = ['', 'testproject1', 'testproject2']
     jsonDatas = jsonData['data']
     assert len(jsonDatas) == len(itemList)
     for jsondata in jsonDatas:
@@ -520,8 +522,9 @@ def test_api_project_get_all(client, authenticationToken):
     jsonData = response.json()
     assert jsonData['status'] == "success"
 
-    projectList = [projectID1, projectID2]
-    nameList = ['testproject1', 'testproject2']
+    # projectID1-2 is the empty project of the user
+    projectList = [projectID1-2, projectID1, projectID2]
+    nameList = ['', 'testproject1', 'testproject2']
     jsonDatas = jsonData['data']
     assert len(jsonDatas) == len(projectList)
     for jsondata in jsonDatas:

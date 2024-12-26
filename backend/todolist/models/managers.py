@@ -78,7 +78,6 @@ class TaskManager:
                 itemType=todoItem.itemType,
                 labelID=None if todoItem.labelID is None else databases.LabelDB.objects.get(labelID=todoItem.labelID)
             )
-            item.full_clean()
             item.save()
             return item.get_data_object()
         except databases.UserDB.DoesNotExist:
@@ -151,7 +150,6 @@ class TaskManager:
                 description=attrs.description,
                 inTodayDate=attrs.inTodayDate
             )
-            taskAttributes_db.full_clean()
             taskAttributes_db.save()
             return taskAttributes_db.get_data_object()
         except databases.TodoItemDB.DoesNotExist:

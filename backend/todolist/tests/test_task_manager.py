@@ -60,7 +60,8 @@ def test_add_todo_item_success(task_manager, sample_task):
 
         # Assert the mocked calls
         mock_get_user.assert_called_once_with(userID=sample_task.userID)
-        mock_save.assert_called_once()
+        mock_save.assert_called()
+        assert mock_save.call_count == 2
         #assert mock_create.call_args[1]["name"] == "Sample Task"
 
 
