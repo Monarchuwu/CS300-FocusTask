@@ -292,6 +292,27 @@ def task_attributes_get(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
+# Helper function
+# BFS to get all todo items in the subtree of itemID
+def get_all_todoitem_in_subtree(userID, itemID):
+    queue = Queue() 
+    queue.put(itemID)
+
+    item_list = []
+    while not queue.empty():
+        tmpID = queue.get()
+
+        todoItem = TaskManager().getTodoItem(itemID = tmpID)
+        item_list.append(todoItem.to_json_without_userID())
+        if (userID != todoItem.userID):
+            raise Exception('User does not have permission to access this item') 
+
+        taskLists = TaskManager().getTaskList(projectID=tmpID)
+        for task in taskLists:
+            queue.put(task.itemID)
+
+    return item_list
+
 @csrf_exempt
 def todo_item_get_list(request):
     if request.method == 'POST':
@@ -301,21 +322,7 @@ def todo_item_get_list(request):
             itemID = data['itemID']
 
             userID = UserManager().getUserID(token)
-            queue = Queue() 
-            queue.put(itemID)
-
-            item_list = []
-            while not queue.empty():
-                tmpID = queue.get()
-
-                todoItem = TaskManager().getTodoItem(itemID = tmpID)
-                item_list.append(todoItem.to_json_without_userID())
-                if (userID != todoItem.userID):
-                    raise Exception('User does not have permission to access this item') 
-
-                taskLists = TaskManager().getTaskList(projectID=tmpID)
-                for task in taskLists:
-                    queue.put(task.itemID)
+            item_list = get_all_todoitem_in_subtree(userID, itemID)
 
             return JsonResponse({'status': 'success', 'data': item_list})
         except json.JSONDecodeError:
@@ -324,6 +331,27 @@ def todo_item_get_list(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+@ csrf_exempt    
+def todo_item_get_project_list(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            projectName = data['projectName']
+            userID = UserManager().getUserID(token)
+
+            itemID = TaskManager().getProjectByName(userID, projectName).itemID
+            item_list = get_all_todoitem_in_subtree(userID, itemID)
+
+            return JsonResponse({'status': 'success', 'data': item_list})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
 
 @csrf_exempt
 def todo_item_get_all(request):

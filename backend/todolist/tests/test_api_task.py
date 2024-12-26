@@ -452,6 +452,62 @@ def test_api_todo_item_get_list(client, authenticationToken):
 
 
 @pytest.mark.django_db
+def test_api_todo_item_get_project_list(client, authenticationToken):
+    # Set up
+    url = "/todolist/api/project/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testproject",
+    }))
+    project = json.loads(response.json()['data'])
+    projectID = project["itemID"]
+
+    url = "/todolist/api/section/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testsection",
+        "parentID":projectID,
+    }))
+    data = json.loads(response.json()['data'])
+    sectionID = data["itemID"]
+
+    url = "/todolist/api/task/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testtask",
+        "parentID": sectionID,
+        "priority": "High",
+        "description": "Nothing here",
+    }))
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
+
+    # Test the api
+    url = "/todolist/api/todo_item/get_project_list"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "projectName": "testproject",
+    }))
+
+    # Check the response status
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert response.headers["Content-Type"] == "application/json", \
+        f"Expected content-type 'application/json', but got {response.headers['Content-Type']}"
+
+    # Check the response data
+    jsonData = response.json()
+    assert jsonData['status']=="success"
+
+    itemList = [projectID, projectID+1, sectionID, itemID]
+
+    jsonDatas = jsonData['data']
+    # print(jsonDatas)
+    assert len(jsonDatas) == len(itemList)
+    for jsondata in jsonDatas:
+        assert json.loads(jsondata)['itemID'] in itemList
+
+
+@pytest.mark.django_db
 def test_api_todo_item_get_all(client, authenticationToken):
     # Set up project
     url = "/todolist/api/project/add"

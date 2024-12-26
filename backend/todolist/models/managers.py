@@ -130,6 +130,15 @@ class TaskManager:
             raise ValueError(f"User with ID {userID} does not exist.")
         except Exception as e:
             raise ValueError(f"An error occurred while fetching all the todo items: {e}")
+        
+    def getProjectByName(self, userID: int, projectName: str):
+        try:
+            project = databases.TodoItemDB.objects.get(userID=userID, name=projectName, itemType=databases.TodoItemDB.ItemType.PROJECT)
+            return project.get_data_object()
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"Project with name {projectName} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while fetching the project: {e}")
 
     def getAllProject(self, userID: int):
         try:
