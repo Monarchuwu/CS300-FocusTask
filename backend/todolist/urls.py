@@ -19,6 +19,7 @@ urlpatterns = [
     path("api/task_attributes/update", view_task.task_attributes_update, name="task-attributes-update"),
     path("api/todo_item/get_project", view_task.todo_item_get_project, name="todo-item-get-project"),
     path("api/todo_item/get", view_task.todo_item_get, name="todo-item-get"),
+    path("api/project/get_by_name", view_task.project_get_by_name, name="project-get-by-name"),
     path("api/task_attributes/get", view_task.task_attributes_get, name="task-attributes-get"),
     path("api/todo_item/get_list", view_task.todo_item_get_list, name="todo-item-get-list"),
     path("api/todo_item/get_project_list", view_task.todo_item_get_project_list, name="todo-item-get-project-list"),

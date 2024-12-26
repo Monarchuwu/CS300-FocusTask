@@ -238,9 +238,6 @@ def todo_item_get_project(request):
                 if (userID != todoItem.userID):
                     raise Exception('User does not have permission to access this item') 
 
-            
-         
-
             return JsonResponse({'status': 'success', 'data': todoItem.to_json_without_userID()})
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
@@ -263,6 +260,25 @@ def todo_item_get(request):
                 raise Exception('User does not have permission to access this item')
             
             return JsonResponse({'status': 'success', 'data': todoItem.to_json_without_userID()})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def project_get_by_name(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            projectName = data['projectName']
+
+            userID = UserManager().getUserID(token)
+            project = TaskManager().getProjectByName(userID, projectName)
+
+            return JsonResponse({'status': 'success', 'data': project.to_json_without_userID()})
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
         except Exception as e:
