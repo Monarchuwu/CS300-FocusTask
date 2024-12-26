@@ -4,6 +4,8 @@ import { callAPITemplate } from '../utils';
 
 import React from 'react';
 
+import { CircularProgress, Box } from '@mui/material';
+
 function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, setSuggestTaskList }) {
     // State variables for adding new task
     const [newTaskName, setNewTaskName] = React.useState("");
@@ -11,7 +13,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
     const [projectDefaultID, setProjectDefaultID] = React.useState(null); // projectID of projectName is '' (default project)
     const [sectionDefaultID, setSectionDefaultID] = React.useState(null); // sectionID of sectionName is '' (default section)
     // State variables for rendering the tree
-    const [taskList, setTaskList] = React.useState([]); // a list of tasks that will be rendered
+    const [taskList, setTaskList] = React.useState(null); // a list of tasks that will be rendered
     const [taskStatusMap, setTaskStatusMap] = React.useState({}); // Checkbox status of tasks
     // State variable for debouncing status (checkbox) changes
     const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
@@ -177,28 +179,30 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
             {/* Suggest Task List button */}
             <button onClick={() => setSuggestTaskList(true)}>Suggestions</button>
             {/* Render Task List */}
-            <ul className={styles.taskList}>
-                {taskList.map(task => (
-                    <li key={task.itemID} className={styles.taskItem}>
-                        {/* Checkbox for Task */}
-                        <input
-                            type="checkbox"
-                            checked={taskStatusMap[task.itemID] === 'Completed'}
-                            onChange={(e) => {
-                                const status = e.target.checked ? 'Completed' : 'Pending';
-                                handleStatusChange(task.itemID, status);
-                            }}
-                        />
-                        {/* Name, Edit button, and Delete button */}
-                        <strong>{task.name}</strong> ({task.itemType})
-                        <button onClick={() => {
-                            setViewTaskDetailID(task.itemID);
-                            setSuggestTaskList(false);
-                        }}>Edit</button>
-                        <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
-                    </li>
-                ))}
-            </ul>
+            {!taskList ? <Box justifyContent='center' alignItems='center' display='flex' height='25vh'> <CircularProgress /> </Box> :
+                <ul className={styles.taskList}>
+                    {taskList.map(task => (
+                        <li key={task.itemID} className={styles.taskItem}>
+                            {/* Checkbox for Task */}
+                            <input
+                                type="checkbox"
+                                checked={taskStatusMap[task.itemID] === 'Completed'}
+                                onChange={(e) => {
+                                    const status = e.target.checked ? 'Completed' : 'Pending';
+                                    handleStatusChange(task.itemID, status);
+                                }}
+                            />
+                            {/* Name, Edit button, and Delete button */}
+                            <strong>{task.name}</strong> ({task.itemType})
+                            <button onClick={() => {
+                                setViewTaskDetailID(task.itemID);
+                                setSuggestTaskList(false);
+                            }}>Edit</button>
+                            <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
+                        </li>
+                    ))}
+                </ul>
+            }
         </div>
     )
 }
