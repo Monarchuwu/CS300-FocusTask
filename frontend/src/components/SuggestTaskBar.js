@@ -29,7 +29,7 @@ function SuggestTaskBar({ setUpdateTaskAttrs, setSuggestTaskList }) {
     const addTaskIntoToday = (taskID) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/task/add_task_today',
+            `${process.env.REACT_APP_API_URL}/task/add_task_today`,
             JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
         )
             .then(() => {
@@ -45,7 +45,7 @@ function SuggestTaskBar({ setUpdateTaskAttrs, setSuggestTaskList }) {
         const authToken = localStorage.getItem('authToken');
         try {
             const dataTasks = await callAPITemplate(
-                'http://localhost:8000/todolist/api/task/suggest_today',
+                `${process.env.REACT_APP_API_URL}/task/suggest_today`,
                 JSON.stringify({ "authenticationToken": authToken }),
             );
             const tasks = dataTasks.map(task => JSON.parse(task));
@@ -61,7 +61,7 @@ function SuggestTaskBar({ setUpdateTaskAttrs, setSuggestTaskList }) {
         for (const taskID of debounceStatus) {
             try {
                 await callAPITemplate(
-                    'http://localhost:8000/todolist/api/task_attributes/update',
+                    `${process.env.REACT_APP_API_URL}/task_attributes/update`,
                     JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": 'Completed' })
                 );
             }

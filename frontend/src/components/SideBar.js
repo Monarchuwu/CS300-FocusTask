@@ -46,6 +46,8 @@ function SideBar() {
     const textFieldRef = React.useRef(null);
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
+    // State variable for username
+    const [username, setUsername] = React.useState('Username');
 
     // API call functions
     const callAddProjectAPI = async (name) => {
@@ -112,6 +114,17 @@ function SideBar() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [isAddingProject]);
+
+    React.useEffect(() => {
+        const loadUsername = async () => {
+            const authToken = localStorage.getItem('authToken');
+            callAPITemplate(
+                `${process.env.REACT_APP_API_URL}/user/get_username`,
+                JSON.stringify({ "authenticationToken": authToken }),
+            ).then(data => setUsername(data));
+        }
+        loadUsername();
+    }, []);
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -267,7 +280,7 @@ function SideBar() {
                 <Typography variant='body2' id="UserName"
                     flexGrow={1}
                     color="#53515B"
-                >Username</Typography>
+                >{username}</Typography>
                 <IconButton onClick={handleClick}
                     float="right"
                     aria-controls={open ? 'account-menu' : undefined}
