@@ -148,10 +148,17 @@ class TodoItemDB(MyDB):
                 raise ValidationError("A Task must have a parent.")
             if self.parentID.itemType != self.ItemType.SECTION:
                 raise ValidationError("A Task must have a Section parent.")
+            if self.name == "":
+                raise ValidationError("A Task must have a name.")
     
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.name == "" and not kwargs.get('cascade_delete', False):
+            raise ValueError("Direct deletion of TodoItemDB named \"\" is not allowed.")
+        super().delete(*args, **kwargs)
 
     def get_data_object(self):
         return objects.TodoItem(

@@ -149,7 +149,9 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                     {node.itemType === 'Task' &&
                         <button onClick={() => setViewTaskDetailID(node.itemID)}>Edit</button>
                     }
-                    <button onClick={() => callDeleteTodoItemAPI(node.itemID)}>Delete</button>
+                    {node.name !== '' &&
+                        <button onClick={() => callDeleteTodoItemAPI(node.itemID)}>Delete</button>
+                    }
                     {/* Add Task button and input boxes */}
                     {node.itemType === 'Section' &&
                         <>
