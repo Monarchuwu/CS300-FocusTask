@@ -11,15 +11,18 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [selectedProject, setSelectedProject] = React.useState(null);
-    // State variables for adding new section, task
+    // State variables for adding new section
     const [isAddingSection, setIsAddingSection] = React.useState(false);
     const [newSectionName, setNewSectionName] = React.useState("");
-    const [addingTaskID, setAddingTaskID] = React.useState(null);
+    // State variables for adding new task
+    const [addingSectionID, setAddingSectionID] = React.useState(null);
     const [newTaskName, setNewTaskName] = React.useState("");
     const [newTaskDescription, setNewTaskDescription] = React.useState("");
     // State variables for rendering the tree
     const [tree, setTree] = React.useState({}); // Forest of items that will be rendered
     const [taskStatusMap, setTaskStatusMap] = React.useState({}); // Checkbox status of tasks
+    const sectionList = React.useRef({}); // Mapping from sectionID to sectionName
+    const sectionDefaultID = React.useRef(null); // sectionID of sectionName is '' (default section)
     // State variable for debouncing status (checkbox) changes
     const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
 
@@ -63,7 +66,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
             `${process.env.REACT_APP_API_URL}/task/add`,
             JSON.stringify(payload),
             (data) => {
-                setAddingTaskID(null);
+                setAddingSectionID(null);
                 setNewTaskName("");
                 setNewTaskDescription("");
                 fetchTodoList(selectedProject);
@@ -108,6 +111,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
         if (!projectID) return;
         const authToken = localStorage.getItem('authToken');
         try {
+            // Fetch todo items and task attributes
             const dataItem = await callAPITemplate(
                 `${process.env.REACT_APP_API_URL}/todo_item/get_list`,
                 JSON.stringify({ "authenticationToken": authToken, "itemID": projectID }),
@@ -115,6 +119,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
             const items = dataItem.map(item => JSON.parse(item)).filter(item => item.itemID !== projectID);
             setTree(buildForest(items, projectID));
 
+            // Fetch checkbox status of tasks
             const taskIDs = items.filter(item => item.itemType === 'Task').map(task => task.itemID);
             const dataAttributes = await callAPITemplate(
                 `${process.env.REACT_APP_API_URL}/task_attributes/get_list`,
@@ -123,6 +128,13 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
             const attrsList = dataAttributes.map(attr => JSON.parse(attr));
             const taskStatusMap = Object.fromEntries(attrsList.map(attr => [attr.taskID, attr.status]));
             setTaskStatusMap(taskStatusMap);
+
+            // Fetch section list
+            const sectionItems = items.filter(item => item.itemType === 'Section');
+            sectionList.current = Object.fromEntries(sectionItems.map(section => [section.itemID, section.name]));
+            const defaultSection = sectionItems.find(section => section.name === '');
+            sectionDefaultID.current = defaultSection ? defaultSection.itemID : null;
+            setAddingSectionID(sectionDefaultID.current);
         }
         catch (e) {
             console.error(e);
@@ -151,32 +163,6 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                     }
                     {node.name !== '' &&
                         <button onClick={() => callDeleteTodoItemAPI(node.itemID)}>Delete</button>
-                    }
-                    {/* Add Task button and input boxes */}
-                    {node.itemType === 'Section' &&
-                        <>
-                            <button onClick={() => setAddingTaskID(node.itemID)}>Add Task</button>
-                            {addingTaskID === node.itemID && (
-                                <div>
-                                    <label>Name</label>
-                                    <input
-                                        type="text"
-                                        value={newTaskName}
-                                        onChange={(e) => setNewTaskName(e.target.value)}
-                                    />
-                                    <br />
-                                    <label>Description</label>
-                                    <input
-                                        type="text"
-                                        value={newTaskDescription}
-                                        onChange={(e) => setNewTaskDescription(e.target.value)}
-                                    />
-                                    <br />
-                                    <button onClick={() => { setAddingTaskID(null); setNewTaskName(""); setNewTaskDescription(""); }}>Cancel</button>
-                                    <button onClick={() => callAddTaskAPI(newTaskName, node.itemID, undefined, undefined, undefined, newTaskDescription)}>Add</button>
-                                </div>
-                            )}
-                        </>
                     }
                     {/* Render children */}
                     {node.children && node.children.length > 0 && (
@@ -244,9 +230,42 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
     return (
         <div>
             <h1>Welcome to the Home Page</h1>
-            {/* Add Section */}
+            {/* Add Task and add Section */}
             {selectedProject &&
                 <>
+                    {/* Add Task */}
+                    {addingSectionID && (
+                        <div>
+                            <label>Name</label>
+                            <input
+                                type="text"
+                                value={newTaskName}
+                                onChange={(e) => setNewTaskName(e.target.value)}
+                            />
+                            <br />
+                            <label>Description</label>
+                            <input
+                                type="text"
+                                value={newTaskDescription}
+                                onChange={(e) => setNewTaskDescription(e.target.value)}
+                            />
+                            <div>
+                                <label>Choose Section</label>
+                                {
+                                    Object.entries(sectionList.current).map(([sectionID, sectionName]) => (
+                                        <button
+                                            key={sectionID}
+                                            onClick={() => setAddingSectionID(parseInt(sectionID))}
+                                            style={{ backgroundColor: addingSectionID === parseInt(sectionID) ? 'lightblue' : 'white' }}
+                                        >{sectionName === '' ? '---' : sectionName}</button>
+                                    ))
+                                }
+                            </div>
+                            <button onClick={() => { setAddingSectionID(sectionDefaultID.current); setNewTaskName(""); setNewTaskDescription(""); }}>Cancel</button>
+                            <button onClick={() => callAddTaskAPI(newTaskName, addingSectionID ? addingSectionID : sectionDefaultID.current, undefined, undefined, undefined, newTaskDescription)}>Add</button>
+                        </div>
+                    )}
+                    {/* Add Section */}
                     <button onClick={() => setIsAddingSection(true)}>Add Section</button>
                     {isAddingSection && (
                         <div>
