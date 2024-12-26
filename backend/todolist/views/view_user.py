@@ -58,6 +58,23 @@ def user_signout(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
+
+@csrf_exempt
+def get_username(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            username = UserManager().getUsername(token)
+
+            return JsonResponse({'status': 'success', 'data': username})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
 @csrf_exempt
 def authentication_status(request):
     if request.method == 'POST':

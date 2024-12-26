@@ -8,6 +8,7 @@ urlpatterns = [
     path("api/user/register", view_user.user_register, name="user-register"),
     path("api/user/signin", view_user.user_signin, name="user-signin"),
     path("api/user/signout", view_user.user_signout, name="user-signout"),
+    path("api/user/get_username", view_user.get_username, name="get-username"),
     path("api/authentication/status", view_user.authentication_status, name="authentication-status"),
 
     path("api/project/add", view_task.project_add, name="project-add"),

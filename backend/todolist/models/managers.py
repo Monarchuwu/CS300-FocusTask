@@ -49,6 +49,13 @@ class UserManager:
             return "User signed out successfully"
         except databases.AuthenticationTokenDB.DoesNotExist:
             raise ValueError("Error: Authentication token not found")
+        
+    def getUsername(self, authenticationToken: str):
+        try:
+            token = databases.AuthenticationTokenDB.objects.get(tokenValue=authenticationToken)
+            return token.userID.username
+        except databases.AuthenticationTokenDB.DoesNotExist:
+            raise ValueError("Error: Authentication token not found")
 
 
 class TaskManager:
