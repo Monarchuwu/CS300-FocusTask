@@ -1,7 +1,7 @@
 import styles from './SideBar.module.css';
 
-import React, {useRef} from 'react';
-import { useNavigate, NavLink } from 'react-router-dom';
+import React from 'react';
+import { useNavigate, NavLink, useLocation, useSearchParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
@@ -15,12 +15,14 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Avatar from '@mui/material/Avatar';
 
-import { Home, Calendar, TimeCircle, 
-        TickSquare, ArrowRightSquare, 
-        Plus, Setting, User, Logout, MoreSquare } from 'react-iconly';
+import {
+    Home, Calendar, TimeCircle,
+    TickSquare, ArrowRightSquare,
+    Plus, Setting, User, Logout, MoreSquare
+} from 'react-iconly';
 
 import LogoText from '../components/LogoText';
-import { callAPITemplate } from '../utils'; 
+import { callAPITemplate } from '../utils';
 
 const drawerWidth = 260;
 
@@ -29,17 +31,19 @@ const items = [
     { text: 'Today', icon: <Calendar set="bulk" />, url: '/today' },
     { text: 'Upcoming', icon: <ArrowRightSquare set="bulk" />, url: '/upcoming' },
     { text: 'Pomodoro', icon: <TimeCircle set="bulk" />, url: '/pomodoro' },
-    { text: 'Completed', icon: <TickSquare set="bulk" />, url: '/completed' }, 
+    { text: 'Completed', icon: <TickSquare set="bulk" />, url: '/completed' },
 ];
 
-function SideBar({ selectedProject, setSelectedProject}) {
+function SideBar() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
     // State variables for adding new project
     const [isAddingProject, setIsAddingProject] = React.useState(false);
     const [newProjectName, setNewProjectName] = React.useState("");
     // State variable for displaying all projects
     const [projects, setProjects] = React.useState([]);
-    const textFieldRef = useRef(null);
+    const textFieldRef = React.useRef(null);
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
 
@@ -74,7 +78,9 @@ function SideBar({ selectedProject, setSelectedProject}) {
             `${process.env.REACT_APP_API_URL}/project/get_all`,
             JSON.stringify({ "authenticationToken": authToken }),
         );
-        const items = dataItems.map(item => JSON.parse(item));
+        const items = dataItems
+            .map(item => JSON.parse(item))
+            .filter(item => item.name !== '');
         setProjects(items);
     }
 
@@ -120,7 +126,7 @@ function SideBar({ selectedProject, setSelectedProject}) {
 
 
     return (
-        <Drawer 
+        <Drawer
             sx={{
                 width: drawerWidth,
                 flexShrink: 0,
@@ -129,35 +135,34 @@ function SideBar({ selectedProject, setSelectedProject}) {
                     boxSizing: 'border-box',
                     px: '25px',
                     py: '30px',
-                    borderColor: 'border.main',   
+                    borderColor: 'border.main',
                 },
             }}
             variant="permanent"
             anchor="left"
         >
-            <LogoText style={{ marginBottom: "15px" }}/>
+            <LogoText style={{ marginBottom: "15px" }} />
             <List component="nav" id="MainList">
                 {items.map((item) => (
                     <ListItem key={item.text} disablePadding>
                         <ListItemButton
                             component={NavLink}
                             to={item.url}
-                            onClick={() => setSelectedProject(item.text)}
                             sx={{
-                                backgroundColor: selectedProject === item.text ? 'primary.main' : 'inherit',
-                                color: selectedProject === item.text ? 'white' : 'gray.main',
+                                backgroundColor: location.pathname === item.url ? 'primary.main' : 'inherit',
+                                color: location.pathname === item.url ? 'white' : 'gray.main',
                                 '&:hover': {
-                                    backgroundColor: selectedProject === item.text ? 'primary.main' : 'primary.light',
-                                    color: selectedProject === item.text ? 'white' : 'gray.main',
+                                    backgroundColor: location.pathname === item.url ? 'primary.main' : 'primary.light',
+                                    color: location.pathname === item.url ? 'white' : 'gray.main',
                                 },
                                 borderRadius: '10px'
                             }}
                         >
-                            <ListItemIcon sx={{ color: selectedProject === item.text ? 'white' : 'gray.main' }}>
+                            <ListItemIcon sx={{ color: location.pathname === item.url ? 'white' : 'gray.main' }}>
                                 {item.icon}
                             </ListItemIcon>
-                            <ListItemText primary={item.text} 
-                                slotProps={{ primary: {fontWeight: 500} }} 
+                            <ListItemText primary={item.text}
+                                slotProps={{ primary: { fontWeight: 500 } }}
                             />
                         </ListItemButton>
                     </ListItem>
@@ -167,25 +172,25 @@ function SideBar({ selectedProject, setSelectedProject}) {
             <Divider />
 
             <Box id="ProjectList">
-                <Box flexDirection={'row'} display={'flex'} 
-                        justifyContent={'space-between'} alignItems={'center'}
-                        sx={{ marginTop: '10px' }}>
+                <Box flexDirection={'row'} display={'flex'}
+                    justifyContent={'space-between'} alignItems={'center'}
+                    sx={{ marginTop: '10px' }}>
                     <Typography variant='drawer'>Projects</Typography>
 
                     {/* add project button and its logic */}
                     <IconButton aria-label="add"
-                            color="primary"
-                            onClick={() => setIsAddingProject(true)}
-                            size="small"
-                            float="right"
-                            disableFocusRipple={true}>
-                        <Plus set="bulk"/>
+                        color="primary"
+                        onClick={() => setIsAddingProject(true)}
+                        size="small"
+                        float="right"
+                        disableFocusRipple={true}>
+                        <Plus set="bulk" />
                     </IconButton>
                 </Box>
                 {isAddingProject && (
                     <Box>
                         <TextField
-                            label="Project name" 
+                            label="Project name"
                             variant="outlined"
                             size="small"
                             type="text"
@@ -200,7 +205,7 @@ function SideBar({ selectedProject, setSelectedProject}) {
                                 }
                             }}
                             inputRef={textFieldRef}
-                            sx = {{ marginTop: '5px'}}
+                            sx={{ marginTop: '5px' }}
                         />
                     </Box>
                 )}
@@ -211,60 +216,65 @@ function SideBar({ selectedProject, setSelectedProject}) {
                         <ListItem
                             key={project.itemID}
                             button
-                            selected={selectedProject === project.itemID}
-                            onClick={() => { setSelectedProject(project.itemID); navigate('/'); }}
+                            selected={searchParams.get('project') === project.name}
+                            onClick={() => {
+                                navigate({
+                                    pathname: '/',
+                                    search: `?project=${project.name}`,
+                                });
+                            }}
                             sx={{
-                                backgroundColor: selectedProject === project.itemID ? 'primary.main' : 'inherit',
-                                color: selectedProject === project.itemID ? 'white' : 'gray.main',
+                                backgroundColor: searchParams.get('project') === project.name ? 'primary.main' : 'inherit',
+                                color: searchParams.get('project') === project.name ? 'white' : 'gray.main',
                                 '&:hover': {
-                                    backgroundColor: selectedProject === project.itemID ? 'primary.main' : 'primary.light',
-                                    color: selectedProject === project.itemID ? 'white' : 'gray.main',
+                                    backgroundColor: searchParams.get('project') === project.name ? 'primary.main' : 'primary.light',
+                                    color: searchParams.get('project') === project.name ? 'white' : 'gray.main',
                                 },
                                 borderRadius: '10px',
                                 cursor: 'pointer',
                             }}
                         >
-                            <ListItemText primary={project.name} slotProps={{ primary: {fontWeight: 500} }} />
+                            <ListItemText primary={project.name} slotProps={{ primary: { fontWeight: 500 } }} />
                         </ListItem>
                     ))}
                 </List>
             </Box>
             <Box flexGrow={1} />
             <Box id="User"
-                    flexDirection={'row'} display={'flex'}
-                    justifyContent={'space-between'} 
-                    gap="8px"
-                    alignItems={'center'}
-                    sx = {{
-                        marginTop: '10px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        borderRadius: '10px',
-                        border: '1px solid',
-                        borderColor: 'border.main',
-                        padding: '8px',
-                        marginBottom: 0,
-                    }}>
-                <Avatar sx={{ 
-                    bgcolor: 'primary.light', 
+                flexDirection={'row'} display={'flex'}
+                justifyContent={'space-between'}
+                gap="8px"
+                alignItems={'center'}
+                sx={{
+                    marginTop: '10px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    borderRadius: '10px',
+                    border: '1px solid',
+                    borderColor: 'border.main',
+                    padding: '8px',
+                    marginBottom: 0,
+                }}>
+                <Avatar sx={{
+                    bgcolor: 'primary.light',
                     color: 'primary.main',
-                    borderRadius: '5px', 
-                    width: 48, 
-                    height: 48  
-                    }}>
+                    borderRadius: '5px',
+                    width: 48,
+                    height: 48
+                }}>
                     <User set="bulk" width={30} height={30} />
                 </Avatar>
-                <Typography variant='body2' id="UserName" 
+                <Typography variant='body2' id="UserName"
                     flexGrow={1}
                     color="#53515B"
-                    >Username</Typography>
+                >Username</Typography>
                 <IconButton onClick={handleClick}
-                        float="right"
-                        aria-controls={open ? 'account-menu' : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={open ? 'true' : undefined}
+                    float="right"
+                    aria-controls={open ? 'account-menu' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? 'true' : undefined}
                 >
-                    <MoreSquare set="bulk"/>
+                    <MoreSquare set="bulk" />
                 </IconButton>
                 <Menu
                     anchorEl={anchorEl}

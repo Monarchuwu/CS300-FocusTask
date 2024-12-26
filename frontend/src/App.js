@@ -9,12 +9,11 @@ import TodayPage from './pages/TodayPage';
 import PomodoroPage from './pages/PomodoroPage';
 import SignInPage from './pages/SignInPage';
 import RegisterPage from './pages/RegisterPage';
-import NotFoundPage from './pages/NotFoundPage';
 
 import { callAPITemplate } from './utils';
 
 import React from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 
 console.log(process.env.REACT_APP_API_URL);
@@ -24,8 +23,6 @@ function App() {
     const location = useLocation();
     // State variable for DOM to wait while checking validation status  
     const [isLoading, setIsLoading] = React.useState(true);
-    // State variable for selected project
-    const [selectedProject, setSelectedProject] = React.useState('Inbox');
     // State variables for task detail
     const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
     const [updateTaskAttrs, setUpdateTaskAttrs] = React.useState(0);
@@ -96,8 +93,6 @@ function App() {
             <Routes>
                 <Route path='/' element={
                     <LayoutWithNavBar
-                        selectedProject={selectedProject}
-                        setSelectedProject={setSelectedProject}
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
@@ -111,8 +106,6 @@ function App() {
                 } />
                 <Route path='/today' element={
                     <LayoutWithNavBar
-                        selectedProject={'Today'}
-                        setSelectedProject={setSelectedProject}
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
@@ -126,8 +119,6 @@ function App() {
                 } />
                 <Route path='/pomodoro' element={
                     <LayoutWithNavBar
-                        selectedProject={'Pomodoro'}
-                        setSelectedProject={setSelectedProject}
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
@@ -141,7 +132,7 @@ function App() {
                 } />
                 <Route path='/signin' element={<SignInPage />} />
                 <Route path='/register' element={<RegisterPage />} />
-                <Route path='/*' element={<NotFoundPage />} />
+                <Route path="/*" element={<Navigate to="/" replace />} />
             </Routes>
         </div>
     );
@@ -151,7 +142,6 @@ export default App;
 
 function LayoutWithNavBar({
     children,
-    selectedProject, setSelectedProject,
     viewTaskDetailID, setViewTaskDetailID,
     updateTaskAttrs, setUpdateTaskAttrs,
     suggestTaskList, setSuggestTaskList,
@@ -174,7 +164,6 @@ function LayoutWithNavBar({
         switch (children.type) {
             case HomePage:
                 return React.cloneElement(children, {
-                    selectedProject,
                     setViewTaskDetailID,
                     updateTaskAttrs, setUpdateTaskAttrs
                 });
@@ -219,7 +208,7 @@ function LayoutWithNavBar({
 
     return (loading ? <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box> :
         <div className={suggestTaskList || viewTaskDetailID ? styles.container_3Columns : styles.container_2Columns}>
-            <SideBar selectedProject={selectedProject} setSelectedProject={setSelectedProject} />
+            <SideBar />
             {renderChildrenWithProps()}
             {suggestTaskList ?
                 <SuggestTaskBar

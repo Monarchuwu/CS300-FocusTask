@@ -3,8 +3,14 @@ import styles from './HomePage.module.css';
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
+import { CircularProgress, Box } from '@mui/material';
+
+function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const [selectedProject, setSelectedProject] = React.useState(null);
     // State variables for adding new section, task
     const [isAddingSection, setIsAddingSection] = React.useState(false);
     const [newSectionName, setNewSectionName] = React.useState("");
@@ -19,6 +25,13 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
 
 
     // API call functions
+    const callGetProjectByNameAPI = async (name) => {
+        const authToken = localStorage.getItem('authToken');
+        return await callAPITemplate(
+            `${process.env.REACT_APP_API_URL}/project/get_by_name`,
+            JSON.stringify({ "authenticationToken": authToken, "projectName": name }),
+        )
+    };
     const callAddSectionAPI = async (name, parentID) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
@@ -197,6 +210,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
         fetchTodoList(selectedProject);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedProject, updateTaskAttrs]);
+
     // Update checkbox status smoothly with debouncing (50ms)
     React.useEffect(() => {
         const timeout = setTimeout(() => {
@@ -208,6 +222,16 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
         return () => clearTimeout(timeout);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debounceStatus]);
+
+    // Update when searchParams changes
+    React.useEffect(() => {
+        const projectName = searchParams.get('project') ?? '';
+        callGetProjectByNameAPI(projectName)
+            .then(data => setSelectedProject(JSON.parse(data).itemID))
+            .catch(e => navigate('/'));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
     // Cleanup function
     React.useEffect(() => {
         return () => setViewTaskDetailID(null)
@@ -240,7 +264,7 @@ function HomePage({ selectedProject, setViewTaskDetailID, updateTaskAttrs, setUp
                 {Object.values(tree).length > 0 ? (
                     Object.values(tree).map(root => renderTree(root, taskStatusMap))
                 ) : (
-                    <p>No data available</p>
+                    <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box>
                 )}
             </div>
         </div>
