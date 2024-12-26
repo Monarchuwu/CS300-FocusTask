@@ -380,6 +380,41 @@ def test_api_project_get_by_name(client, authenticationToken):
 
 
 @pytest.mark.django_db
+def test_api_section_get_by_name(client, authenticationToken):
+    # Setup
+    url = "/todolist/api/project/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testproject",
+    }))
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
+
+    # Test the API
+    url = "/todolist/api/section/get_by_name"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "projectID": itemID,
+        "sectionName": "",
+    }))
+
+    # Check the response status
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert response.headers["Content-Type"] == "application/json", \
+        f"Expected content-type 'application/json', but got {response.headers['Content-Type']}"
+    
+    # Check the response data
+    jsonData = response.json()
+    assert jsonData['status'] == 'success'
+
+    data = json.loads(jsonData['data'])
+    expectedKeys = ['itemID', 'name', 'parentID', 'createdDate', 'itemType', 'labelID']
+    assert all(key in data for key in expectedKeys)
+    assert 'userID' not in data
+    assert data['itemID'] == itemID+1
+
+
+@pytest.mark.django_db
 def test_api_task_attributes_get(client, authenticationToken):
     # Setup project
     url = "/todolist/api/project/add"

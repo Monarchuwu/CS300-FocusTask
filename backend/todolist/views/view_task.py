@@ -285,6 +285,26 @@ def project_get_by_name(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+    
+@csrf_exempt
+def section_get_by_name(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data['authenticationToken']
+            projectID = data['projectID']
+            sectionName = data['sectionName']
+
+            userID = UserManager().getUserID(token)
+            section = TaskManager().getSectionByName(userID, projectID, sectionName)
+
+            return JsonResponse({'status': 'success', 'data': section.to_json_without_userID()})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def task_attributes_get(request):
