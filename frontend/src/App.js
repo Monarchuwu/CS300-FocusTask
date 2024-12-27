@@ -87,14 +87,6 @@ function App() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoading]);
 
-    React.useEffect(() => {
-        const validPaths = ['/', '/today', '/pomodoro', '/signin', '/register'];
-        if (!validPaths.includes(location.pathname)) {
-            setIsLoading(true);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.pathname]);
-
 
     return (isLoading
         ? <Box justifyContent='center' alignItems='center' display='flex' height='100vh'>
@@ -197,7 +189,7 @@ function LayoutWithNavBar({
     // Load the last active pomodoro session
     React.useEffect(() => {
         if (taskPomodoro !== null) {
-            return;
+            setLoading(false);
         }
         const loadPomodoro = async () => {
             const authToken = localStorage.getItem('authToken');
