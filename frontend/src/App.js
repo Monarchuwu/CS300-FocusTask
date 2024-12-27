@@ -87,14 +87,19 @@ function App() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoading]);
 
+    React.useEffect(() => {
+        const validPaths = ['/', '/today', '/pomodoro', '/signin', '/register'];
+        if (!validPaths.includes(location.pathname)) {
+            setIsLoading(true);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.pathname]);
+
 
     return (isLoading
-        ? <>
-            {setIsLoading(true) /* This is to prevent infinite loop */}
-            <Box justifyContent='center' alignItems='center' display='flex' height='100vh'>
-                <CircularProgress />
-            </Box>
-        </>
+        ? <Box justifyContent='center' alignItems='center' display='flex' height='100vh'>
+            <CircularProgress />
+        </Box>
         : <div className={styles.App}>
             <Routes>
                 <Route path='/' element={
