@@ -27,10 +27,35 @@ function RegisterPage() {
     const [message, setMessage] = React.useState('');
 
     const callRegisterAPI = (username, email, password) => {
+        return new Promise((resolve, reject) => {
+            callAPITemplate(
+                `${process.env.REACT_APP_API_URL}/user/register`,
+                JSON.stringify({ "username": username, "email": email, "password": password }),
+                (data) => {
+                    setMessage('User registered successfully!');
+                    resolve('User registered successfully!');
+                },
+                (message) => {
+                    setMessage(message || 'An error occurred');
+                    reject(message);
+                },
+                (e) => {
+                    setMessage('Error: ' + e.message);
+                    reject(e.message);
+                }
+            );
+        });
+    }
+
+    const callSignInAPI = (email, password) => {
         callAPITemplate(
-            `${process.env.REACT_APP_API_URL}/user/register`,
-            JSON.stringify({ "username": username, "email": email, "password": password }),
-            (data) => setMessage('User registered successfully!'),
+            `${process.env.REACT_APP_API_URL}/user/signin`,
+            JSON.stringify({ "email": email, "password": password }),
+            (data) => {
+                const authToken = data.authenticationToken;
+                localStorage.setItem('authToken', authToken);
+                navigate('/');
+            },
             (message) => setMessage(message || 'An error occurred'),
             (e) => setMessage('Error: ' + e.message)
         )
@@ -45,7 +70,14 @@ function RegisterPage() {
             setMessage('Email is invalid!');
             return;
         }
-        callRegisterAPI(username, email, password);
+        callRegisterAPI(username, email, password).then((message) => {
+            if (message === 'User registered successfully!') {
+                console.log(email + ' User registered successfully!');
+                callSignInAPI(email, password);
+            }
+        }, (error) => {
+            console.log(email + ' ' + error);
+        });
     }
     return (
         <div>
