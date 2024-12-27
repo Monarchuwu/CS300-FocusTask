@@ -12,6 +12,7 @@ import RegisterPage from './pages/RegisterPage';
 
 import { callAPITemplate } from './utils';
 
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import React from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
@@ -90,6 +91,8 @@ function App() {
             <CircularProgress />
         </Box>
         : <div className={styles.App}>
+            {/* Add SpeedInsights here for global coverage */}
+            <SpeedInsights />
             <Routes>
                 <Route path='/' element={
                     <LayoutWithNavBar
