@@ -16,7 +16,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Avatar from '@mui/material/Avatar';
 
 import {
-    Home, Calendar, TimeCircle,
+    Message, Calendar, TimeCircle,
     TickSquare, ArrowRightSquare,
     Plus, Setting, User, Logout, MoreSquare
 } from 'react-iconly';
@@ -27,7 +27,7 @@ import { callAPITemplate } from '../utils';
 const drawerWidth = 260;
 
 const items = [
-    { text: 'Inbox', icon: <Home set="bulk" />, url: '/' },
+    { text: 'Inbox', icon: <Message set="bulk" />, url: '/' },
     { text: 'Today', icon: <Calendar set="bulk" />, url: '/today' },
     { text: 'Upcoming', icon: <ArrowRightSquare set="bulk" />, url: '/upcoming' },
     { text: 'Pomodoro', icon: <TimeCircle set="bulk" />, url: '/pomodoro' },
@@ -137,6 +137,10 @@ function SideBar() {
         }
     };
 
+    const isSelected = (item) => {
+        return location.pathname === item.url && (location.pathname !== '/' || location.search === '');
+    }
+
 
     return (
         <Drawer
@@ -162,16 +166,16 @@ function SideBar() {
                             component={NavLink}
                             to={item.url}
                             sx={{
-                                backgroundColor: location.pathname === item.url ? 'primary.main' : 'inherit',
-                                color: location.pathname === item.url ? 'white' : 'gray.main',
+                                backgroundColor: isSelected(item) ? 'primary.main' : 'inherit',
+                                color: isSelected(item) ? 'white' : 'gray.main',
                                 '&:hover': {
-                                    backgroundColor: location.pathname === item.url ? 'primary.main' : 'primary.light',
-                                    color: location.pathname === item.url ? 'white' : 'gray.main',
+                                    backgroundColor: isSelected(item) ? 'primary.main' : 'primary.light',
+                                    color: isSelected(item) ? 'white' : 'gray.main',
                                 },
                                 borderRadius: '10px'
                             }}
                         >
-                            <ListItemIcon sx={{ color: location.pathname === item.url ? 'white' : 'gray.main' }}>
+                            <ListItemIcon sx={{ color: isSelected(item) ? 'white' : 'gray.main' }}>
                                 {item.icon}
                             </ListItemIcon>
                             <ListItemText primary={item.text}
@@ -224,30 +228,28 @@ function SideBar() {
                 )}
 
                 {/* project list */}
-                <List className={styles.projectList}>
+                <List id="ProjectListItems">
                     {projects.map(project => (
-                        <ListItem
-                            key={project.itemID}
-                            button
-                            selected={searchParams.get('project') === project.name}
-                            onClick={() => {
-                                navigate({
-                                    pathname: '/',
-                                    search: `?project=${project.name}`,
-                                });
-                            }}
-                            sx={{
-                                backgroundColor: searchParams.get('project') === project.name ? 'primary.main' : 'inherit',
-                                color: searchParams.get('project') === project.name ? 'white' : 'gray.main',
-                                '&:hover': {
-                                    backgroundColor: searchParams.get('project') === project.name ? 'primary.main' : 'primary.light',
+                        <ListItem disablePadding key={project.itemID}>
+                            <ListItemButton
+                                onClick={() => {
+                                    navigate({
+                                        pathname: '/',
+                                        search: `?project=${project.name}`,
+                                    });
+                                }}
+                                sx={{
+                                    backgroundColor: searchParams.get('project') === project.name ? 'primary.main' : 'inherit',
                                     color: searchParams.get('project') === project.name ? 'white' : 'gray.main',
-                                },
-                                borderRadius: '10px',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            <ListItemText primary={project.name} slotProps={{ primary: { fontWeight: 500 } }} />
+                                    '&:hover': {
+                                        backgroundColor: searchParams.get('project') === project.name ? 'primary.main' : 'primary.light',
+                                        color: searchParams.get('project') === project.name ? 'white' : 'gray.main',
+                                    },
+                                    borderRadius: '10px'
+                                }}
+                            >
+                                <ListItemText primary={project.name} slotProps={{ primary: { fontWeight: 500 } }} />
+                            </ListItemButton>
                         </ListItem>
                     ))}
                 </List>
