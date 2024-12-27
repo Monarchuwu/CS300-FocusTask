@@ -18,7 +18,7 @@ def add_empty_name_project_section(apps, schema_editor):
     for projectItem in TodoItemDBModel.objects.filter(itemType=TodoItemDB.ItemType.PROJECT):
         # check if the project has a name-empty section
         if not TodoItemDBModel.objects.filter(name="", userID=projectItem.userID, parentID=projectItem, itemType=TodoItemDB.ItemType.SECTION).exists():
-            TodoItemDB.objects.create(
+            TodoItemDBModel.objects.create(
                 name="",
                 userID=projectItem.userID,
                 parentID=projectItem,
