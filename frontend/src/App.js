@@ -35,6 +35,9 @@ function App() {
     // Check if the authentication token is still valid
     // when the app is loaded
     React.useEffect(() => {
+        if (!isLoading) {
+            return;
+        }
         const checkToken = async () => {
             const isSignInPages = location.pathname === '/signin' || location.pathname === '/register';
             const authToken = localStorage.getItem('authToken');
@@ -82,13 +85,16 @@ function App() {
         }
         checkToken();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [isLoading]);
 
 
     return (isLoading
-        ? <Box justifyContent='center' alignItems='center' display='flex' height='100vh'>
-            <CircularProgress />
-        </Box>
+        ? <>
+            {setIsLoading(true) /* This is to prevent infinite loop */}
+            <Box justifyContent='center' alignItems='center' display='flex' height='100vh'>
+                <CircularProgress />
+            </Box>
+        </>
         : <div className={styles.App}>
             <Routes>
                 <Route path='/' element={
