@@ -279,14 +279,21 @@ class WebsiteBlockingManager:
         
     def getBlockingURLs(self, userID: int):
         try:
-            records = databases.WebsiteBlockingDB.objects.filter(UserID=userID, isBlocking=True)
+            pomodoro = PomodoroManager().getLastActiveSession(userID)
+            if pomodoro is not None:
+                records = databases.WebsiteBlockingDB.objects.filter(UserID=userID, isBlocking=True)
+            else:
+                records = []
             return [record.URL for record in records]
         except Exception as e:
             print(f"Error fetching block URLs: {e}")
 
     def addToBlockList(self, userID: int, URL: str):
         try:
-            new_block = databases.WebsiteBlockingDB(URL=URL, UserID=userID)
+            # first the user with the given ID
+            user = databases.UserDB.objects.get(userID=userID)
+            # then create a new block list entry
+            new_block = databases.WebsiteBlockingDB(UserID=user, URL=URL)
             new_block.save()
             return f"Website '{URL}' added to block list."
         except IntegrityError:
@@ -296,7 +303,8 @@ class WebsiteBlockingManager:
 
     def deleteFromBlockList(self, userID: int, blockID: int):
         try:
-            databases.WebsiteBlockingDB.objects.filter(blockID=blockID, UserID=userID).delete()
+            user = databases.UserDB.objects.get(userID=userID)
+            databases.WebsiteBlockingDB.objects.filter(blockID=blockID, UserID=user).delete()
             return f"BlockID {blockID} removed from block list."
         except Exception as e:
             raise ValueError(f"Error deleting from block list: {e}")
@@ -304,7 +312,8 @@ class WebsiteBlockingManager:
     # toggle website blocking status
     def toggleBlock(self, userID: int, blockID: int):
         try:
-            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=userID)
+            user = databases.UserDB.objects.get(userID=userID)
+            block_entry = databases.WebsiteBlockingDB.objects.get(blockID=blockID, UserID=user)
             block_entry.isBlocking = not block_entry.isBlocking
             block_entry.save()
             return f"BlockID {blockID} toggled to {'blocking' if block_entry.isBlocking else 'not blocking'}."
