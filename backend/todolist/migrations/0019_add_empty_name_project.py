@@ -26,6 +26,12 @@ def add_empty_name_project_section(apps, schema_editor):
             )
 
 
+def remove_empty_name_project_section(apps, schema_editor):
+    TodoItemDBModel = apps.get_model("todolist", "TodoItemDB")
+    TodoItemDBModel.objects.filter(
+        name="", itemType=TodoItemDB.ItemType.PROJECT).delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -33,5 +39,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_empty_name_project_section),
+        migrations.RunPython(code=add_empty_name_project_section,
+                             reverse_code=remove_empty_name_project_section),
     ]
