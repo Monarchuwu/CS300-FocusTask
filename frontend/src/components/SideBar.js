@@ -179,7 +179,7 @@ function SideBar() {
                                 {item.icon}
                             </ListItemIcon>
                             <ListItemText primary={item.text}
-                                slotProps={{ primary: { fontWeight: 500 } }}
+                                slotProps={{ primary: { fontWeight: 500, fontSize: '16px' } }}
                             />
                         </ListItemButton>
                     </ListItem>
@@ -248,7 +248,8 @@ function SideBar() {
                                     borderRadius: '10px'
                                 }}
                             >
-                                <ListItemText primary={project.name} slotProps={{ primary: { fontWeight: 500 } }} />
+                                <ListItemText primary={project.name} 
+                                    slotProps={{ primary: { fontWeight: 500, fontSize: '16px' } }} />
                             </ListItemButton>
                         </ListItem>
                     ))}

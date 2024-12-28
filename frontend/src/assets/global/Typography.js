@@ -39,6 +39,21 @@ const typography = {
         fontSize: 22,
         letterSpacing: "-0.05px",
     },
+    h7: {
+        fontWeight: 500,
+        fontSize: 18,
+        letterSpacing: "-0.05px",
+    },
+    section: {
+        fontWeight: 600,
+        fontSize: 16,
+        color: "#3C3B40",
+    },
+    task: {
+        fontWeight: 500,
+        fontSize: 16,
+        color: "#3C3B40",
+    },
     buttons: {
         textTransform: "none",
     },
@@ -48,10 +63,10 @@ const typography = {
     },
     drawer: {
         fontWeight: 500,
-        fontSize: 14,
+        fontSize: 16,
         textTransform: "uppercase",
         color: "#9896A3",
-    }
+    },
 };
 
 export default typography;

@@ -16,6 +16,7 @@ const baseTheme = createTheme({
   palette: {
     gray: {
         main: "#888793",
+        light: "#F9F8FF",
     },
     border: {
         main: "#E6E4F0",

@@ -5,7 +5,7 @@ import { callAPITemplate } from '../utils';
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { CircularProgress, Box } from '@mui/material';
+import { CircularProgress, Box, Typography } from '@mui/material';
 
 function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     const navigate = useNavigate();
@@ -143,35 +143,42 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
     // Render the todoitem tree recursively
     const renderTree = (node, taskStatusMap) => {
         return (
-            <ul key={node.itemID}>
-                <li>
-                    {/* Checkbox for Task */}
-                    {node.itemType === 'Task' && (
-                        <input
-                            type="checkbox"
-                            checked={taskStatusMap[node.itemID] === 'Completed'}
-                            onChange={(e) => {
-                                const status = e.target.checked ? 'Completed' : 'Pending';
-                                handleStatusChange(node.itemID, status);
-                            }}
-                        />
-                    )}
-                    {/* Name, Edit button (Task only), and Delete button */}
-                    <strong>{node.name}</strong> ({node.itemType})
-                    {node.itemType === 'Task' &&
-                        <button onClick={() => setViewTaskDetailID(node.itemID)}>Edit</button>
-                    }
-                    {node.name !== '' &&
-                        <button onClick={() => callDeleteTodoItemAPI(node.itemID)}>Delete</button>
-                    }
-                    {/* Render children */}
-                    {node.children && node.children.length > 0 && (
-                        <ul>
-                            {node.children.map(child => renderTree(child, taskStatusMap))}
-                        </ul>
-                    )}
-                </li>
-            </ul>
+            <Box key={node.itemID}
+                sx = {{
+                    border: '1px solid',
+                    borderColor: 'border.main',
+                    borderRadius: '5px',
+                    padding: node.itemType === 'Section' ? '15px' : '8px',
+                    margin: node.itemType === 'Section' ? '15px' : '5px',
+                    backgroundColor: node.itemType !== 'Section' ? 'gray.light' : 'white',
+                }}>
+                {/* Checkbox for Task */}
+                {node.itemType === 'Task' && (
+                    <input
+                        type="checkbox"
+                        checked={taskStatusMap[node.itemID] === 'Completed'}
+                        onChange={(e) => {
+                            const status = e.target.checked ? 'Completed' : 'Pending';
+                            handleStatusChange(node.itemID, status);
+                        }}
+                    />
+                )}
+                {/* Name, Edit button (Task only), and Delete button */}
+                <Typography variant={node.itemType === 'Section' ? 'section' : 'task'}
+                    >{node.name} ({node.itemType})</Typography> 
+                {node.itemType === 'Task' &&
+                    <button onClick={() => setViewTaskDetailID(node.itemID)}>Edit</button>
+                }
+                {node.name !== '' &&
+                    <button onClick={() => callDeleteTodoItemAPI(node.itemID)}>Delete</button>
+                }
+                {/* Render children */}
+                {node.children && node.children.length > 0 && (
+                    <Box>
+                        {node.children.map(child => renderTree(child, taskStatusMap))}
+                    </Box>
+                )}
+            </Box>
         );
     };
     // Apply the debounced status changes to the server
@@ -229,7 +236,6 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
 
     return (
         <div>
-            <h1>Welcome to the Home Page</h1>
             {/* Add Task and add Section */}
             {selectedProject &&
                 <>
