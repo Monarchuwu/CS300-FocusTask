@@ -35,6 +35,9 @@ function App() {
     // Check if the authentication token is still valid
     // when the app is loaded
     React.useEffect(() => {
+        if (!isLoading) {
+            return;
+        }
         const checkToken = async () => {
             const isSignInPages = location.pathname === '/signin' || location.pathname === '/register';
             const authToken = localStorage.getItem('authToken');
@@ -82,7 +85,7 @@ function App() {
         }
         checkToken();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [isLoading]);
 
 
     return (isLoading
@@ -186,7 +189,7 @@ function LayoutWithNavBar({
     // Load the last active pomodoro session
     React.useEffect(() => {
         if (taskPomodoro !== null) {
-            return;
+            setLoading(false);
         }
         const loadPomodoro = async () => {
             const authToken = localStorage.getItem('authToken');

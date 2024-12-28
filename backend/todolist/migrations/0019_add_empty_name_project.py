@@ -4,29 +4,26 @@ from ..models.databases import TodoItemDB
 # for all old users, we will add a new project with an empty name
 
 
-def add_empty_name_project(apps, schema_editor):
+def add_empty_name_project_section(apps, schema_editor):
     UserDBModel = apps.get_model("todolist", "UserDB")
     TodoItemDBModel = apps.get_model("todolist", "TodoItemDB")
     for user in UserDBModel.objects.all():
         # check if the user has a name-empty project
-        instance = TodoItemDBModel.objects.create(
-            name="",
-            userID=user,
-            itemType=TodoItemDB.ItemType.PROJECT
-        )
-        TodoItemDB.objects.create(
-            name="",
-            userID=instance.userID,
-            parentID=instance,
-            itemType=TodoItemDB.ItemType.SECTION
-        )
-
-
-# reverse 0019
-def remove_empty_name_projects(apps, schema_editor):
-    TodoItemDBModel = apps.get_model("todolist", "TodoItemDB")
-    for project in TodoItemDBModel.objects.filter(name=""):
-        project.delete()
+        if not TodoItemDBModel.objects.filter(name="", userID=user, itemType=TodoItemDB.ItemType.PROJECT).exists():
+            TodoItemDBModel.objects.create(
+                name="",
+                userID=user,
+                itemType=TodoItemDB.ItemType.PROJECT
+            )
+    for projectItem in TodoItemDBModel.objects.filter(itemType=TodoItemDB.ItemType.PROJECT):
+        # check if the project has a name-empty section
+        if not TodoItemDBModel.objects.filter(name="", userID=projectItem.userID, parentID=projectItem, itemType=TodoItemDB.ItemType.SECTION).exists():
+            TodoItemDBModel.objects.create(
+                name="",
+                userID=projectItem.userID,
+                parentID=projectItem,
+                itemType=TodoItemDB.ItemType.SECTION
+            )
 
 
 class Migration(migrations.Migration):
@@ -36,6 +33,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_empty_name_project,
-                             remove_empty_name_projects),
+        migrations.RunPython(add_empty_name_project_section),
     ]

@@ -2,6 +2,8 @@ import './index.css';
 
 import App from './App';
 
+import { SpeedInsights } from "@vercel/speed-insights/react"
+import { Analytics } from "@vercel/analytics/react"
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -18,6 +20,8 @@ root.render(
     <React.StrictMode>
         <BrowserRouter>
             <ThemeProvider theme={baseTheme}>
+                <SpeedInsights />
+                <Analytics />
                 <CssBaseline />
                 <App />
             </ThemeProvider>
