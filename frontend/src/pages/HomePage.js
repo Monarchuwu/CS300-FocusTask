@@ -11,6 +11,8 @@ import { CircularProgress, Box, Typography,
         IconButton} from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ReadMoreRoundedIcon from '@mui/icons-material/ReadMoreRounded';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import { Helmet } from 'react-helmet';
 
 function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     const navigate = useNavigate();
@@ -30,7 +32,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     const sectionDefaultID = React.useRef(null); // sectionID of sectionName is '' (default section)
     // State variable for debouncing status (checkbox) changes
     const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
-
 
     // API call functions
     const callGetProjectByNameAPI = async (name) => {
@@ -257,9 +258,11 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                         size='small' color="text.secondary" sx={{ width: '34px', height: '34px' }}>
                         <ReadMoreRoundedIcon />
                     </IconButton>
-                    {/* {task.name !== '' &&
-                        <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
-                    } */}
+                    {task.name !== '' &&                 
+                    <IconButton onClick={() => callDeleteTodoItemAPI(task.itemID)} color="danger"
+                        size='small' sx={{ width: '34px', height: '34px' }}>
+                        <DeleteRoundedIcon/>
+                    </IconButton>}
                     {taskAttrMap[task.itemID]?.dueDate && 
                         <Typography variant={'taskAttr'} sx={{ color: 'text.secondary' }}>
                             {taskAttrMap[task.itemID]?.dueDate}
@@ -342,6 +345,9 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     return (
         <div>
+            <Helmet>
+                <title>Inbox - FocusTask</title>
+            </Helmet>
             {/* Add Task and add Section */}
             {selectedProject &&
                 <>
