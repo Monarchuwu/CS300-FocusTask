@@ -7,8 +7,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { CircularProgress, Box, Typography, 
         Checkbox, Accordion, AccordionDetails, 
-        AccordionSummary } from '@mui/material';
+        AccordionSummary, 
+        IconButton} from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ReadMoreRoundedIcon from '@mui/icons-material/ReadMoreRounded';
 
 function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     const navigate = useNavigate();
@@ -210,7 +212,8 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     const Task = ({ task, taskAttrMap }) => {
         return (
-                <Box key={task.itemID}
+            <Box key={task.itemID}
+                className = {task.itemID === viewTaskDetailID ? styles.selectedTask : ''}
                 sx = {{
                     boxSizing: 'border-box',
                     border: '1px solid',
@@ -223,7 +226,13 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                         backgroundColor: 'white',
                         boxShadow: '0px 2px 5px 0px rgba(0,0,0,0.2)',
                         transition: 'background-color 0.1s ease, box-shadow 0.1s ease',
+                        "& button": {
+                            display: 'inline',
+                        }
                     },
+                    "& button": {
+                        display: 'none',
+                    }
                 }}>
                 <Box alignItems='center' display={'block'}>
                     {/* Checkbox for Task */}
@@ -244,14 +253,17 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     {/* Name, Edit button (Task only), and Delete button */}
                     <Typography variant={'task'}>{task.name}</Typography>
                     <Priority priority={taskAttrMap[task.itemID]?.priority} />
+                    <IconButton onClick={() => setViewTaskDetailID(task.itemID)} 
+                        size='small' color="text.secondary" sx={{ width: '34px', height: '34px' }}>
+                        <ReadMoreRoundedIcon />
+                    </IconButton>
+                    {/* {task.name !== '' &&
+                        <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
+                    } */}
                     {taskAttrMap[task.itemID]?.dueDate && 
                         <Typography variant={'taskAttr'} sx={{ color: 'text.secondary' }}>
                             {taskAttrMap[task.itemID]?.dueDate}
                         </Typography>}
-                    <button onClick={() => setViewTaskDetailID(task.itemID)} className='HoverDisplay'>Edit</button>
-                    {task.name !== '' &&
-                        <button onClick={() => callDeleteTodoItemAPI(task.itemID)} className='HoverDisplay'>Delete</button>
-                    }
                     {/* Render children */}
                     {task.children && task.children.length > 0 && (
                         <Box>
