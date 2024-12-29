@@ -299,6 +299,7 @@ function PomodoroPage({ taskPomodoro }) {
                         placeholder="Add a website URL"
                     />
                     <button onClick={() => addWebsite()}>Add</button>
+                    <p>Example: facebook.com</p>
                 </div>
             </div>
         </div>
