@@ -40,5 +40,11 @@ urlpatterns = [
     path("api/pomodoro/get_history_day", view_pomodoro.get_history_day, name="pomodoro-get-history-day"),
     path("api/pomodoro/get_last_active_session", view_pomodoro.get_last_active_session, name="pomodoro-get-last-active-session"),
 
+    path("api/website_block/get_block_list", view_website_block.website_block_get_block_list, name="website-block-get-block-list"),
+    path("api/website_block/get_urls", view_website_block.website_block_get_urls, name="website-block-get-urls"),
+    path("api/website_block/add_url", view_website_block.add_url, name="website-block-add-url"),
+    path("api/website_block/delete_url", view_website_block.delete_url, name="website-block-delete-url"),
+    path("api/website_block/set_block_status", view_website_block.set_block_status, name="website-block-set-block-status"),
+
     path("api/test_api", view_test.test_api, name="test-api")
 ]

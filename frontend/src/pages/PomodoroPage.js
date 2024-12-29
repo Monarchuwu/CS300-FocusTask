@@ -21,6 +21,8 @@ function PomodoroPage({ taskPomodoro }) {
     // Variables to store the timer ID (running state)
     const timerID = React.useRef(null);
     const [remainingTime, setRemainingTime] = React.useState(0);
+    const [blockList, setBlockList] = React.useState([]);
+    const [newWebsite, setNewWebsite] = React.useState('');
 
 
     // API call functions
@@ -139,6 +141,45 @@ function PomodoroPage({ taskPomodoro }) {
         )
     }
 
+    // Fetch the block list
+    const fetchBlockList = async () => {
+        const authToken = localStorage.getItem('authToken');
+        try {
+            console.log("Fetching block list");
+            console.log(authToken);
+            const dataBlockItems = await callAPITemplate(
+                'http://localhost:8000/todolist/api/website_block/get_block_list',
+                JSON.stringify({ authenticationToken: authToken }),
+            );
+            const blockItems = dataBlockItems.map(item => JSON.parse(item));
+            setBlockList(blockItems);
+        }
+        catch (e) {
+            console.error(e);
+        }
+    };
+
+    // Add a website to the block list
+    const addWebsite = async () => {
+        const authToken = localStorage.getItem('authToken');
+        callAPITemplate(
+            'http://localhost:8000/todolist/api/website_block/add_url',
+            JSON.stringify({ authenticationToken: authToken, URL: newWebsite }),
+            () => fetchBlockList(),
+            setNewWebsite('')
+        );
+    };
+
+    // Delete a website from the block list
+    const deleteWebsite = async (blockID) => {
+        const authToken = localStorage.getItem('authToken');
+        callAPITemplate(
+            'http://localhost:8000/todolist/api/website_block/delete_url',
+            JSON.stringify({ authenticationToken: authToken, blockID: blockID }),
+            () => fetchBlockList()
+        );
+    };
+
 
     // Update the timer based on the state of the pomodoro on page load
     React.useEffect(() => {
@@ -172,6 +213,9 @@ function PomodoroPage({ taskPomodoro }) {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskPomodoro?.status]);
+    React.useEffect(() => {
+        fetchBlockList();
+    }, []);
 
 
     return (
@@ -237,6 +281,25 @@ function PomodoroPage({ taskPomodoro }) {
                         </div>
                     }
                     <p>Today's focus: {displaySeconds(total)}</p>
+                </div>
+                <div className={styles.blockList}>
+                    <h2>Website Block List</h2>
+                    <ul>
+                        {blockList.map((blockItem) => (
+                            <li key={blockItem.blockID}>
+                                {blockItem.URL}
+                                <button onClick={() => deleteWebsite(blockItem.blockID)}>Delete</button>
+                            </li>
+                        ))}
+                    </ul>
+                    <input
+                        type="text"
+                        value={newWebsite}
+                        onChange={(e) => setNewWebsite(e.target.value)}
+                        placeholder="Add a website URL"
+                    />
+                    <button onClick={() => addWebsite()}>Add</button>
+                    <p>Example: facebook.com</p>
                 </div>
             </div>
         </div>

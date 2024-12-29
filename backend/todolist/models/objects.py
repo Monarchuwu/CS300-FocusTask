@@ -60,6 +60,14 @@ class WebsiteBlocking:
         self.UserID = UserID
         self.createdAt = createdAt
         self.isBlocking = isBlocking
+    def to_json_without_userID(self):
+        json_data = {
+            "blockID": self.blockID,
+            "URL": self.URL,
+            "createdAt": self.createdAt.isoformat(),
+            "isBlocking": self.isBlocking
+        }
+        return json.dumps(json_data)
 
 class Preferences:
     def __init__(self,
