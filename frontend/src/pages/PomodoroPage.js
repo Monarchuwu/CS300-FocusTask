@@ -141,43 +141,6 @@ function PomodoroPage({ taskPomodoro }) {
         )
     }
 
-
-    // Update the timer based on the state of the pomodoro on page load
-    React.useEffect(() => {
-        if (pomodoroStatus === "Running") {
-            const fetching = async () => {
-                await fetchRemainingTime();
-                timerID.current = createTimer();
-            }
-            fetching();
-        }
-        else if (pomodoroStatus === "Paused") {
-            fetchRemainingTime();
-        }
-        return () => {
-            clearInterval(timerID.current);
-            timerID.current = null;
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-    // Fetch statistic on page load
-    React.useEffect(() => {
-        fetchStatistic();
-    }, []);
-    // Update the pomodoro status when the taskPomodoro changes
-    React.useEffect(() => {
-        if (taskPomodoro === null) {
-            setPomodoroStatus("Canceled");
-        }
-        else {
-            setPomodoroStatus(taskPomodoro.status);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [taskPomodoro?.status]);
-    React.useEffect(() => {
-        fetchBlockList();
-    }, []);
-
     // Fetch the block list
     const fetchBlockList = async () => {
         const authToken = localStorage.getItem('authToken');
@@ -216,6 +179,43 @@ function PomodoroPage({ taskPomodoro }) {
             () => fetchBlockList()
         );
     };
+
+
+    // Update the timer based on the state of the pomodoro on page load
+    React.useEffect(() => {
+        if (pomodoroStatus === "Running") {
+            const fetching = async () => {
+                await fetchRemainingTime();
+                timerID.current = createTimer();
+            }
+            fetching();
+        }
+        else if (pomodoroStatus === "Paused") {
+            fetchRemainingTime();
+        }
+        return () => {
+            clearInterval(timerID.current);
+            timerID.current = null;
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    // Fetch statistic on page load
+    React.useEffect(() => {
+        fetchStatistic();
+    }, []);
+    // Update the pomodoro status when the taskPomodoro changes
+    React.useEffect(() => {
+        if (taskPomodoro === null) {
+            setPomodoroStatus("Canceled");
+        }
+        else {
+            setPomodoroStatus(taskPomodoro.status);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [taskPomodoro?.status]);
+    React.useEffect(() => {
+        fetchBlockList();
+    }, []);
 
 
     return (
