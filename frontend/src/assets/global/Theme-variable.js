@@ -50,7 +50,8 @@ const baseTheme = createTheme({
       contrastText: "#ffffff",
     },
     danger: {
-      main: "#fc4b6c",
+        main: "#fc4b6c",
+        contrastText: "#ffffff",
     },
     error: {
       main: "#fc4b6c",

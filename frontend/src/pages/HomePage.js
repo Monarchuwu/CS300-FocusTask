@@ -13,6 +13,8 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ReadMoreRoundedIcon from '@mui/icons-material/ReadMoreRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import { Helmet } from 'react-helmet';
+import { Dialog, DialogActions, DialogContent, 
+    DialogContentText, DialogTitle, Button } from '@mui/material';
 
 function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     const navigate = useNavigate();
@@ -32,6 +34,23 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     const sectionDefaultID = React.useRef(null); // sectionID of sectionName is '' (default section)
     // State variable for debouncing status (checkbox) changes
     const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
+    const [openDialog, setOpenDialog] = React.useState(false);
+    const [taskToDelete, setTaskToDelete] = React.useState(null);
+
+    const handleOpenDialog = (taskID) => {
+        setTaskToDelete(taskID);
+        setOpenDialog(true);
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+        setTaskToDelete(null);
+    };
+
+    const handleConfirmDelete = () => {
+        callDeleteTodoItemAPI(taskToDelete);
+        handleCloseDialog();
+    };
 
     // API call functions
     const callGetProjectByNameAPI = async (name) => {
@@ -213,6 +232,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     const Task = ({ task, taskAttrMap }) => {
         return (
+            <React.Fragment>
             <Box key={task.itemID}
                 className = {task.itemID === viewTaskDetailID ? styles.selectedTask : ''}
                 sx = {{
@@ -259,7 +279,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                         <ReadMoreRoundedIcon />
                     </IconButton>
                     {task.name !== '' &&                 
-                    <IconButton onClick={() => callDeleteTodoItemAPI(task.itemID)} color="danger"
+                    <IconButton onClick={() => handleOpenDialog(task.itemID)} color="danger"
                         size='small' sx={{ width: '34px', height: '34px' }}>
                         <DeleteRoundedIcon/>
                     </IconButton>}
@@ -275,6 +295,28 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     )}
                 </Box>
             </Box>
+            <Dialog
+                open={openDialog}
+                onClose={handleCloseDialog}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Are you sure you want to delete this task?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary" variant="outlined">
+                        CANCEL
+                    </Button>
+                    <Button onClick={handleConfirmDelete} color="danger" autoFocus variant='contained'>
+                        CONFIRM
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            </React.Fragment>
         );
     };
 
