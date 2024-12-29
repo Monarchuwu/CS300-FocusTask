@@ -167,6 +167,7 @@ function LayoutWithNavBar({
         switch (children.type) {
             case HomePage:
                 return React.cloneElement(children, {
+                    viewTaskDetailID,
                     setViewTaskDetailID,
                     updateTaskAttrs, setUpdateTaskAttrs
                 });

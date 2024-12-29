@@ -10,7 +10,7 @@ import { CircularProgress, Box, Typography,
         AccordionSummary } from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
-function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
+function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [selectedProject, setSelectedProject] = React.useState(null);
@@ -212,12 +212,18 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
         return (
                 <Box key={task.itemID}
                 sx = {{
+                    boxSizing: 'border-box',
                     border: '1px solid',
                     borderColor: 'border.main',
                     borderRadius: '5px',
                     padding: '2px',
                     margin: '5px',
                     backgroundColor: 'gray.light',
+                    "&:hover": {
+                        backgroundColor: 'white',
+                        boxShadow: '0px 2px 5px 0px rgba(0,0,0,0.2)',
+                        transition: 'background-color 0.1s ease, box-shadow 0.1s ease',
+                    },
                 }}>
                 <Box alignItems='center' display={'block'}>
                     {/* Checkbox for Task */}
@@ -242,9 +248,9 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                         <Typography variant={'taskAttr'} sx={{ color: 'text.secondary' }}>
                             {taskAttrMap[task.itemID]?.dueDate}
                         </Typography>}
-                    <button onClick={() => setViewTaskDetailID(task.itemID)}>Edit</button>
+                    <button onClick={() => setViewTaskDetailID(task.itemID)} className='HoverDisplay'>Edit</button>
                     {task.name !== '' &&
-                        <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
+                        <button onClick={() => callDeleteTodoItemAPI(task.itemID)} className='HoverDisplay'>Delete</button>
                     }
                     {/* Render children */}
                     {task.children && task.children.length > 0 && (
