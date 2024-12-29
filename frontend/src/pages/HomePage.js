@@ -155,7 +155,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                     color: priority === 'High' ? 'priority.high' : priority === 'Medium' ? 'priority.medium' : 'priority.low',
                     backgroundColor: priority === 'High' ? 'priority.highBackground' : priority === 'Medium' ? 'priority.mediumBackground' : 'priority.lowBackground',
                 }}>
-                <Typography variant='priority'>{priority}</Typography>
+                <Typography variant='taskAttr'>{priority}</Typography>
             </Box>
         );
     };
@@ -238,6 +238,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                     {/* Name, Edit button (Task only), and Delete button */}
                     <Typography variant={'task'}>{task.name}</Typography>
                     <Priority priority={taskAttrMap[task.itemID]?.priority} />
+                    {taskAttrMap[task.itemID]?.dueDate && <Typography variant={'task'}>{taskAttrMap[task.itemID]?.dueDate}</Typography>}
                     <button onClick={() => setViewTaskDetailID(task.itemID)}>Edit</button>
                     {task.name !== '' &&
                         <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>

@@ -67,7 +67,7 @@ const typography = {
         textTransform: "uppercase",
         color: "#9896A3",
     },
-    priority: {
+    taskAttr: {
         fontWeight: 600,
         fontSize: 12,
     },
