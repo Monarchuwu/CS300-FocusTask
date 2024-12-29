@@ -46,12 +46,12 @@ const typography = {
     },
     section: {
         fontWeight: 600,
-        fontSize: 16,
+        fontSize: 14,
         color: "#3C3B40",
     },
     task: {
         fontWeight: 500,
-        fontSize: 16,
+        fontSize: 14,
         color: "#3C3B40",
     },
     buttons: {

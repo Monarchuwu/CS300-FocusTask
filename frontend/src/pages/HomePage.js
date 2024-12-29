@@ -5,7 +5,10 @@ import { callAPITemplate } from '../utils';
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { CircularProgress, Box, Typography } from '@mui/material';
+import { CircularProgress, Box, Typography, 
+        Checkbox, Accordion, AccordionDetails, 
+        AccordionSummary } from '@mui/material';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     const navigate = useNavigate();
@@ -140,43 +143,108 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
             console.error(e);
         }
     }
-    // Render the todoitem tree recursively
-    const renderTree = (node, taskStatusMap) => {
+    const Section = ({ section, taskStatusMap }) => {
         return (
-            <Box key={node.itemID}
+            <Accordion sx = {{
+                    border: '1px solid',
+                    borderColor: 'border.main',
+                    borderRadius: '5px',
+                    margin: '15px',
+                    boxShadow: 'none',
+                    backgroundColor: 'white',
+                    '&.MuiAccordion-root.Mui-expanded': {
+                        margin: '15px',
+                        marginBottom: '15px',
+                        marginTop: '15px',
+                    }
+                }} defaultExpanded disableGutters={true}>
+                {section.name !== '' && 
+                    <AccordionSummary expandIcon={<ArrowDropDownIcon size="small" stroke="bold" />} 
+                        aria-controls="panel1a-content" id="panel1a-header"
+                        alignItems='center'
+                        justifyContent='center'
+                        sx = {{ 
+                            margin: '0px',
+                            '.MuiAccordionSummary-content': {
+                                transition: 'margin 0.3s ease',
+                            },
+                            '&.Mui-expanded': {
+                                minHeight: '30px',
+                                
+                                '.MuiAccordionSummary-content': {
+                                    marginBottom: '2px',
+                                    transition: 'margin 0.3s ease',
+                                } 
+                            } 
+                        }}>
+                        <Typography variant='section'>{section.name}</Typography>
+                    </AccordionSummary>}
+                <AccordionDetails disablePadding sx = {{ padding: section.name !== '' ? '0px 10px 10px 10px' : '10px' }}>
+                    {/* Render children */}
+                    {section.children && section.children.length > 0 && (
+                        <Box>
+                            {section.children.map(child => renderTree(child, taskStatusMap))}
+                        </Box>
+                    )}
+                </AccordionDetails>
+            </Accordion>
+        );
+    };
+
+    const Task = ({ task, taskStatusMap }) => {
+        return (
+                <Box key={task.itemID}
                 sx = {{
                     border: '1px solid',
                     borderColor: 'border.main',
                     borderRadius: '5px',
-                    padding: node.itemType === 'Section' ? '15px' : '8px',
-                    margin: node.itemType === 'Section' ? '15px' : '5px',
-                    backgroundColor: node.itemType !== 'Section' ? 'gray.light' : 'white',
+                    padding: '2px',
+                    margin: '5px',
+                    backgroundColor: 'gray.light',
                 }}>
                 {/* Checkbox for Task */}
-                {node.itemType === 'Task' && (
-                    <input
-                        type="checkbox"
-                        checked={taskStatusMap[node.itemID] === 'Completed'}
-                        onChange={(e) => {
-                            const status = e.target.checked ? 'Completed' : 'Pending';
-                            handleStatusChange(node.itemID, status);
-                        }}
-                    />
-                )}
-                {/* Name, Edit button (Task only), and Delete button */}
-                <Typography variant={node.itemType === 'Section' ? 'section' : 'task'}
-                    >{node.name} ({node.itemType})</Typography> 
-                {node.itemType === 'Task' &&
-                    <button onClick={() => setViewTaskDetailID(node.itemID)}>Edit</button>
-                }
-                {node.name !== '' &&
-                    <button onClick={() => callDeleteTodoItemAPI(node.itemID)}>Delete</button>
-                }
-                {/* Render children */}
-                {node.children && node.children.length > 0 && (
-                    <Box>
-                        {node.children.map(child => renderTree(child, taskStatusMap))}
-                    </Box>
+                <Box alignItems='center' display={'block'}>
+                    {task.itemType === 'Task' && (
+                        <Checkbox
+                            checked={taskStatusMap[task.itemID] === 'Completed'}
+                            onChange={(e) => {
+                                const status = e.target.checked ? 'Completed' : 'Pending';
+                                handleStatusChange(task.itemID, status);
+                            }}
+                            sx={{
+                                color: "#BBBBBE",
+                                '&.Mui-checked': {
+                                    color: "primary.main",
+                                },
+                            }}
+                            size="small"
+                        />
+                    )}
+                    {/* Name, Edit button (Task only), and Delete button */}
+                    <Typography variant={'task'}>{task.name}</Typography>
+                    <button onClick={() => setViewTaskDetailID(task.itemID)}>Edit</button>
+                    {task.name !== '' &&
+                        <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
+                    }
+                    {/* Render children */}
+                    {task.children && task.children.length > 0 && (
+                        <Box>
+                            {task.children.map(child => renderTree(child, taskStatusMap))}
+                        </Box>
+                    )}
+                </Box>
+            </Box>
+        );
+    };
+
+    // Render the todoitem tree recursively
+    const renderTree = (node, taskStatusMap) => {
+        return (
+            <Box key={node.itemID}>
+                {node.itemType === 'Section' ? (
+                    <Section section={node} taskStatusMap={taskStatusMap} />
+                ) : (
+                    <Task task={node} taskStatusMap={taskStatusMap} />
                 )}
             </Box>
         );
