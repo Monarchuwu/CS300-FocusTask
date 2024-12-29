@@ -23,7 +23,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
     const [newTaskDescription, setNewTaskDescription] = React.useState("");
     // State variables for rendering the tree
     const [tree, setTree] = React.useState({}); // Forest of items that will be rendered
-    const [taskStatusMap, setTaskStatusMap] = React.useState({}); // Checkbox status of tasks
+    const [taskAttrMap, setTaskAttrMap] = React.useState({}); // Mapping from taskID to task attributes
     const sectionList = React.useRef({}); // Mapping from sectionID to sectionName
     const sectionDefaultID = React.useRef(null); // sectionID of sectionName is '' (default section)
     // State variable for debouncing status (checkbox) changes
@@ -86,8 +86,8 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
     }
     // Handle checkbox status change (add to the debounce queue)
     const handleStatusChange = (taskID, status) => {
-        setTaskStatusMap((prev) => ({ ...prev, [taskID]: status }));
         setDebounceStatus({ ...debounceStatus, [taskID]: status });
+        setTaskAttrMap({ ...taskAttrMap, [taskID]: { ...taskAttrMap[taskID], status: status } });
     }
     // Called by fetchTodoList to build the tree structure (prepare for rendering)
     const buildForest = (items, projectID) => {
@@ -129,8 +129,8 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                 JSON.stringify({ "authenticationToken": authToken, "itemIDs": taskIDs }),
             );
             const attrsList = dataAttributes.map(attr => JSON.parse(attr));
-            const taskStatusMap = Object.fromEntries(attrsList.map(attr => [attr.taskID, attr.status]));
-            setTaskStatusMap(taskStatusMap);
+            const taskAttrMap = Object.fromEntries(attrsList.map(attr => [attr.taskID, attr]));
+            setTaskAttrMap(taskAttrMap);
 
             // Fetch section list
             const sectionItems = items.filter(item => item.itemType === 'Section');
@@ -143,7 +143,21 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
             console.error(e);
         }
     }
-    const Section = ({ section, taskStatusMap }) => {
+    const Priority = ({ priority }) => {
+        return (
+            <Box sx={{
+                    display: 'inline-block',
+                    padding: '2px',
+                    borderRadius: '5px',
+                    color: 'black',
+                    backgroundColor: priority === 'High' ? 'red' : priority === 'Medium' ? 'yellow' : 'green',
+                }}>
+                <Typography variant='task'>{priority}</Typography>
+            </Box>
+        );
+    };
+
+    const Section = ({ section, taskAttrMap }) => {
         return (
             <Accordion sx = {{
                     border: '1px solid',
@@ -183,7 +197,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                     {/* Render children */}
                     {section.children && section.children.length > 0 && (
                         <Box>
-                            {section.children.map(child => renderTree(child, taskStatusMap))}
+                            {section.children.map(child => renderTree(child, taskAttrMap))}
                         </Box>
                     )}
                 </AccordionDetails>
@@ -191,7 +205,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
         );
     };
 
-    const Task = ({ task, taskStatusMap }) => {
+    const Task = ({ task, taskAttrMap }) => {
         return (
                 <Box key={task.itemID}
                 sx = {{
@@ -206,7 +220,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                 <Box alignItems='center' display={'block'}>
                     {task.itemType === 'Task' && (
                         <Checkbox
-                            checked={taskStatusMap[task.itemID] === 'Completed'}
+                            checked={taskAttrMap[task.itemID]?.status === 'Completed'}
                             onChange={(e) => {
                                 const status = e.target.checked ? 'Completed' : 'Pending';
                                 handleStatusChange(task.itemID, status);
@@ -222,6 +236,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                     )}
                     {/* Name, Edit button (Task only), and Delete button */}
                     <Typography variant={'task'}>{task.name}</Typography>
+                    <Priority priority={taskAttrMap[task.itemID]?.priority} />
                     <button onClick={() => setViewTaskDetailID(task.itemID)}>Edit</button>
                     {task.name !== '' &&
                         <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
@@ -229,7 +244,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                     {/* Render children */}
                     {task.children && task.children.length > 0 && (
                         <Box>
-                            {task.children.map(child => renderTree(child, taskStatusMap))}
+                            {task.children.map(child => renderTree(child, taskAttrMap))}
                         </Box>
                     )}
                 </Box>
@@ -238,13 +253,13 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
     };
 
     // Render the todoitem tree recursively
-    const renderTree = (node, taskStatusMap) => {
+    const renderTree = (node, taskAttrMap) => {
         return (
             <Box key={node.itemID}>
                 {node.itemType === 'Section' ? (
-                    <Section section={node} taskStatusMap={taskStatusMap} />
+                    <Section section={node} taskAttrMap={taskAttrMap} />
                 ) : (
-                    <Task task={node} taskStatusMap={taskStatusMap} />
+                    <Task task={node} taskAttrMap={taskAttrMap} />
                 )}
             </Box>
         );
@@ -357,7 +372,7 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
             {/* Render the tree */}
             <div className={styles.treeItems}>
                 {Object.values(tree).length > 0 ? (
-                    Object.values(tree).map(root => renderTree(root, taskStatusMap))
+                    Object.values(tree).map(root => renderTree(root, taskAttrMap))
                 ) : (
                     <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box>
                 )}
