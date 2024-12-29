@@ -62,7 +62,7 @@ const typography = {
         fontSize: 20,
     },
     drawer: {
-        fontWeight: 500,
+        fontWeight: 600,
         fontSize: 16,
         textTransform: "uppercase",
         color: "#9896A3",

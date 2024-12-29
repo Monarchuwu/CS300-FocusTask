@@ -238,7 +238,10 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                     {/* Name, Edit button (Task only), and Delete button */}
                     <Typography variant={'task'}>{task.name}</Typography>
                     <Priority priority={taskAttrMap[task.itemID]?.priority} />
-                    {taskAttrMap[task.itemID]?.dueDate && <Typography variant={'task'}>{taskAttrMap[task.itemID]?.dueDate}</Typography>}
+                    {taskAttrMap[task.itemID]?.dueDate && 
+                        <Typography variant={'taskAttr'} sx={{ color: 'text.secondary' }}>
+                            {taskAttrMap[task.itemID]?.dueDate}
+                        </Typography>}
                     <button onClick={() => setViewTaskDetailID(task.itemID)}>Edit</button>
                     {task.name !== '' &&
                         <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>

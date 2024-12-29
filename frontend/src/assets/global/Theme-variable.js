@@ -26,6 +26,12 @@ const baseTheme = createTheme({
         main: "#888793",
         light: "#F9F8FF",
     },
+    text: {
+        primary: "#3C3B40",
+        secondary: "#9896A3",
+        disabled: "#B7B7B7",
+        danger: "#fc4b6c",
+    },
     border: {
         main: "#E6E4F0",
     },
@@ -52,11 +58,7 @@ const baseTheme = createTheme({
     warning: {
       main: "#fdd43f",
       contrastText: "#ffffff",
-    },
-    text: {
-      secondary: "#777e89",
-      danger: "#fc4b6c",
-    },
+    }
   },
   shape: {
     borderRadius: 5,
