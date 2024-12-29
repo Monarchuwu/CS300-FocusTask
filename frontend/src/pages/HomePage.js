@@ -2,7 +2,7 @@ import styles from './HomePage.module.css';
 
 import { callAPITemplate } from '../utils';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { CircularProgress, Box, Typography, 
@@ -14,7 +14,10 @@ import ReadMoreRoundedIcon from '@mui/icons-material/ReadMoreRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import { Helmet } from 'react-helmet';
 import { Dialog, DialogActions, DialogContent, 
-    DialogContentText, DialogTitle, Button } from '@mui/material';
+    DialogContentText, DialogTitle, Button, TextField } from '@mui/material';
+import { Plus } from 'react-iconly';
+import { ClickAwayListener } from '@mui/base/ClickAwayListener';
+
 
 function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     const navigate = useNavigate();
@@ -36,6 +39,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
     const [openDialog, setOpenDialog] = React.useState(false);
     const [taskToDelete, setTaskToDelete] = React.useState(null);
+    const newSectionNameRef = useRef(null);
 
     const handleOpenDialog = (taskID) => {
         setTaskToDelete(taskID);
@@ -111,6 +115,11 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         setDebounceStatus({ ...debounceStatus, [taskID]: status });
         setTaskAttrMap({ ...taskAttrMap, [taskID]: { ...taskAttrMap[taskID], status: status } });
     }
+    // Handle adding new section
+    const handleCancleAddSection = () => {
+        setIsAddingSection(false);
+        setNewSectionName("");
+    }
     // Called by fetchTodoList to build the tree structure (prepare for rendering)
     const buildForest = (items, projectID) => {
         const itemMap = {}; // Map items by itemID for easy access
@@ -182,19 +191,45 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         );
     };
 
+    const handleNewSectionClick = () => {
+        setIsAddingSection(true);
+        setTimeout(() => {
+            if (newSectionNameRef.current) {
+                newSectionNameRef.current.focus();
+            }
+        }, 0);
+    };
+
+    // if is adding new section, and escape key is pressed, cancel adding section
+    // if enter key is pressed, add the section
+    React.useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (isAddingSection) {
+                if (e.key === 'Escape') {
+                    handleCancleAddSection();
+                }
+                else if (e.key === 'Enter') {
+                    callAddSectionAPI(newSectionName, selectedProject);
+                }
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAddingSection, newSectionName]);
+
+
     const Section = ({ section, taskAttrMap }) => {
         return (
             <Accordion sx = {{
                     border: '1px solid',
                     borderColor: 'border.main',
                     borderRadius: '5px',
-                    margin: '15px',
+                    margin: '15px 0px',
                     boxShadow: 'none',
                     backgroundColor: 'white',
                     '&.MuiAccordion-root.Mui-expanded': {
-                        margin: '15px',
-                        marginBottom: '15px',
-                        marginTop: '15px',
+                        margin: '15px 0px',
                     }
                 }} defaultExpanded disableGutters={true}>
                 {section.name !== '' && 
@@ -386,13 +421,13 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
 
     return (
-        <div>
+        <Box sx={{ padding: '15px' }}>
             <Helmet>
                 <title>Inbox - FocusTask</title>
             </Helmet>
             {/* Add Task and add Section */}
             {selectedProject &&
-                <>
+                <Box>
                     {/* Add Task */}
                     {addingSectionID && (
                         <div>
@@ -425,20 +460,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                             <button onClick={() => callAddTaskAPI(newTaskName, addingSectionID ? addingSectionID : sectionDefaultID.current, undefined, undefined, undefined, newTaskDescription)}>Add</button>
                         </div>
                     )}
-                    {/* Add Section */}
-                    <button onClick={() => setIsAddingSection(true)}>Add Section</button>
-                    {isAddingSection && (
-                        <div>
-                            <input
-                                type="text"
-                                value={newSectionName}
-                                onChange={(e) => setNewSectionName(e.target.value)}
-                            />
-                            <button onClick={() => { setIsAddingSection(false); setNewSectionName(""); }}>Cancel</button>
-                            <button onClick={() => callAddSectionAPI(newSectionName, selectedProject)}>Add</button>
-                        </div>
-                    )}
-                </>
+                </Box>
             }
             {/* Render the tree */}
             <div className={styles.treeItems}>
@@ -448,7 +470,28 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box>
                 )}
             </div>
-        </div>
+            {/* Add Section */}
+            {isAddingSection ? (
+                <ClickAwayListener onClickAway={handleCancleAddSection}>
+                    <div>
+                        <TextField
+                            type="text"
+                            value={newSectionName}
+                            onChange={(e) => setNewSectionName(e.target.value)}
+                            fullWidth
+                            size='small'
+                            label='Section Name'
+                            inputRef={newSectionNameRef}
+                        />
+                    </div>
+                </ClickAwayListener>
+            ) : (            
+                <Button onClick={handleNewSectionClick} 
+                    fullWidth startIcon={<Plus set="bulk"/>}>
+                    New Section
+                </Button>)
+            }
+        </Box>
     );
 }
 
