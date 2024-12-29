@@ -67,6 +67,10 @@ const typography = {
         textTransform: "uppercase",
         color: "#9896A3",
     },
+    priority: {
+        fontWeight: 600,
+        fontSize: 12,
+    },
 };
 
 export default typography;

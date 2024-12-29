@@ -146,13 +146,16 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
     const Priority = ({ priority }) => {
         return (
             <Box sx={{
-                    display: 'inline-block',
-                    padding: '2px',
-                    borderRadius: '5px',
-                    color: 'black',
-                    backgroundColor: priority === 'High' ? 'red' : priority === 'Medium' ? 'yellow' : 'green',
+                    display: 'inline-flex',
+                    padding: '2px 8px',
+                    margin: '4px',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: '100px',
+                    color: priority === 'High' ? 'priority.high' : priority === 'Medium' ? 'priority.medium' : 'priority.low',
+                    backgroundColor: priority === 'High' ? 'priority.highBackground' : priority === 'Medium' ? 'priority.mediumBackground' : 'priority.lowBackground',
                 }}>
-                <Typography variant='task'>{priority}</Typography>
+                <Typography variant='priority'>{priority}</Typography>
             </Box>
         );
     };
@@ -216,24 +219,22 @@ function HomePage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) 
                     margin: '5px',
                     backgroundColor: 'gray.light',
                 }}>
-                {/* Checkbox for Task */}
                 <Box alignItems='center' display={'block'}>
-                    {task.itemType === 'Task' && (
-                        <Checkbox
-                            checked={taskAttrMap[task.itemID]?.status === 'Completed'}
-                            onChange={(e) => {
-                                const status = e.target.checked ? 'Completed' : 'Pending';
-                                handleStatusChange(task.itemID, status);
-                            }}
-                            sx={{
-                                color: "#BBBBBE",
-                                '&.Mui-checked': {
-                                    color: "primary.main",
-                                },
-                            }}
-                            size="small"
-                        />
-                    )}
+                    {/* Checkbox for Task */}
+                    <Checkbox
+                        checked={taskAttrMap[task.itemID]?.status === 'Completed'}
+                        onChange={(e) => {
+                            const status = e.target.checked ? 'Completed' : 'Pending';
+                            handleStatusChange(task.itemID, status);
+                        }}
+                        sx={{
+                            color: "#BBBBBE",
+                            '&.Mui-checked': {
+                                color: "primary.main",
+                            },
+                        }}
+                        size="small"
+                    />
                     {/* Name, Edit button (Task only), and Delete button */}
                     <Typography variant={'task'}>{task.name}</Typography>
                     <Priority priority={taskAttrMap[task.itemID]?.priority} />

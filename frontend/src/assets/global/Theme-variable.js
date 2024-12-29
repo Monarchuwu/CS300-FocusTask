@@ -14,6 +14,14 @@ const TopbarHeight = 70;
 const baseTheme = createTheme({
   direction: "ltr",
   palette: {
+    priority: {
+        high: "#FD71AF",
+        highBackground: "#FD71AF4D",
+        medium: "#FFC800",
+        mediumBackground: "#FFC8004D",
+        low: "#93A0FF",
+        lowBackground: "#93A0FF4D",
+    },
     gray: {
         main: "#888793",
         light: "#F9F8FF",
