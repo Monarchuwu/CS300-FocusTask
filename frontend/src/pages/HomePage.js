@@ -234,7 +234,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         return (
             <React.Fragment>
             <Box key={task.itemID}
-                className = {task.itemID === viewTaskDetailID ? styles.selectedTask : ''}
                 sx = {{
                     boxSizing: 'border-box',
                     border: '1px solid',
@@ -242,7 +241,8 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     borderRadius: '5px',
                     padding: '2px',
                     margin: '5px',
-                    backgroundColor: 'gray.light',
+                    backgroundColor: task.itemID === viewTaskDetailID ? 'white' : 'gray.light',
+                    boxShadow: task.itemID === viewTaskDetailID ? '0px 2px 5px 0px rgba(0,0,0,0.2)' : 'none',
                     "&:hover": {
                         backgroundColor: 'white',
                         boxShadow: '0px 2px 5px 0px rgba(0,0,0,0.2)',
@@ -252,7 +252,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                         }
                     },
                     "& button": {
-                        display: 'none',
+                        display: task.itemID === viewTaskDetailID ? 'inline' : 'none',
                     }
                 }}>
                 <Box alignItems='center' display={'block'}>
