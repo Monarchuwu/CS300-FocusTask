@@ -14,7 +14,7 @@ import { callAPITemplate } from './utils';
 
 import React from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { CircularProgress, Box } from '@mui/material';
+import { CircularProgress, Box, Grid2 as Grid } from '@mui/material';
 
 console.log(process.env.REACT_APP_API_URL);
 
@@ -211,21 +211,32 @@ function LayoutWithNavBar({
 
 
     return (loading ? <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box> :
-        <div className={suggestTaskList || viewTaskDetailID ? styles.container_3Columns : styles.container_2Columns}>
-            <SideBar />
-            {renderChildrenWithProps()}
-            {suggestTaskList ?
-                <SuggestTaskBar
-                    setUpdateTaskAttrs={setUpdateTaskAttrs}
-                    setSuggestTaskList={setSuggestTaskList}
-                />
-                : viewTaskDetailID && <TaskDetailBar
-                    taskID={viewTaskDetailID}
-                    setTaskID={setViewTaskDetailID}
-                    updateTaskAttrs={updateTaskAttrs}
-                    setUpdateTaskAttrs={setUpdateTaskAttrs}
-                    setTaskPomodoro={setTaskPomodoro}
-                />}
-        </div>
+        <Grid container>
+            <Grid item size={{ xs: 12, sm: 3 }}>
+                <SideBar />
+            </Grid>
+            <Grid item size={{ xs: 12, sm: 6 }}>
+                {renderChildrenWithProps()}
+            </Grid>
+            <Grid item size={{ xs: 12, sm: 3 }} sx={{ 
+                padding: '30px 25px',
+                borderLeft: '1px solid',
+                borderColor: 'border.main',
+                backgroundColor: 'white',
+            }}>
+                {suggestTaskList ?
+                    <SuggestTaskBar
+                        setUpdateTaskAttrs={setUpdateTaskAttrs}
+                        setSuggestTaskList={setSuggestTaskList}
+                    />
+                    : viewTaskDetailID && <TaskDetailBar
+                        taskID={viewTaskDetailID}
+                        setTaskID={setViewTaskDetailID}
+                        updateTaskAttrs={updateTaskAttrs}
+                        setUpdateTaskAttrs={setUpdateTaskAttrs}
+                        setTaskPomodoro={setTaskPomodoro}
+                    />}
+            </Grid>
+        </Grid>
     );
 }

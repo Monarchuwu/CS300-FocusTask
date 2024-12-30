@@ -143,14 +143,12 @@ function SideBar() {
     return (
         <Drawer
             sx={{
-                width: drawerWidth,
-                flexShrink: 0,
                 '& .MuiDrawer-paper': {
-                    width: drawerWidth,
                     boxSizing: 'border-box',
                     px: '25px',
                     py: '30px',
                     borderColor: 'border.main',
+                    position: 'relative',
                 },
             }}
             variant="permanent"

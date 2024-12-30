@@ -5,6 +5,8 @@ import { callAPITemplate } from '../utils';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import Box from '@mui/material/Box';
+
 function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPomodoro }) {
     const navigate = useNavigate();
     // State variable for viewing task details
@@ -129,8 +131,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
 
 
     return (
-        <div className={styles.container}>
-            <h1>TaskDetail</h1>
+        <Box className={styles.container}>
             <button onClick={() => setTaskID(null)}>Close</button>
             <button onClick={() => startPomodoro()}>Start Pomodoro</button>
 
@@ -161,7 +162,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                     )}
                 </div>
             )}
-        </div>
+        </Box>
     )
 }
 
