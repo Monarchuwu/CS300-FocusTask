@@ -211,18 +211,20 @@ function LayoutWithNavBar({
 
 
     return (loading ? <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box> :
-        <Grid container>
-            <Grid item size={{ xs: 12, sm: 3 }}>
+        <Grid container spacing={0} sx={{ height: '100vh' }}>
+            <Grid item size={{ xs: 12, sm: 2.5 }} sx={{ overflowY: 'auto' }}>
                 <SideBar />
             </Grid>
-            <Grid item size={{ xs: 12, sm: 6 }}>
+            <Grid item size={{ xs: 12, sm: 6 }} sx={{ overflowY: 'auto', height: '100vh' }}>
                 {renderChildrenWithProps()}
             </Grid>
-            <Grid item size={{ xs: 12, sm: 3 }} sx={{ 
+            <Grid item size={{ xs: 12, sm: 3.5 }} sx={{ 
                 padding: '30px 25px',
                 borderLeft: '1px solid',
                 borderColor: 'border.main',
                 backgroundColor: 'white',
+                overflowY: 'auto',
+                height: '100vh'
             }}>
                 {suggestTaskList ?
                     <SuggestTaskBar

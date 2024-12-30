@@ -143,6 +143,7 @@ function SideBar() {
     return (
         <Drawer
             sx={{
+                height: '100vh',
                 '& .MuiDrawer-paper': {
                     boxSizing: 'border-box',
                     px: '25px',
