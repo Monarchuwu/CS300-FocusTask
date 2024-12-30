@@ -466,12 +466,16 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     variant='outlined'
                     label='Description'
                     onChange={(e) => setNewTaskDescription(e.target.value)}
-                    multiline
+                    slotProps={{ htmlInput: { style: { fontSize: 14 } }, 
+                                inputLabel: { style: { fontSize: 14 } }
+                            }}
+                    size="small"
+                    multilines
                     fullWidth
                 />  
                 <Box sx={{ display: 'flex', marginTop: '10px' }}>
                     <Box>
-                        {selectedSectionName === '' ? (
+                        {selectedSectionName === '' || selectedSectionName === null ? (
                             <IconButton onClick={handleClick} size='small' color="text.primary">
                                 <Folder set="light" />
                             </IconButton>
