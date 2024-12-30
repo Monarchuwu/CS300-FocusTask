@@ -150,7 +150,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                             handleStatusChange(taskDetails.taskID, status);
                         }}
                     />
-                    <p>Due Date: {dayjs(taskDetails.dueDate).format('HH:mm, DD-MM-YY') || 'N/A'}</p>
+                    <p>Due Date: {taskDetails.dueDate ? dayjs(taskDetails.dueDate).format('HH:mm, DD-MM-YY') : 'N/A'}</p>
                     <p>Priority: {taskDetails.priority || 'N/A'}</p>
                     <p>Description: {taskDetails.description || 'N/A'}</p>
                     {isToday(taskDetails.inTodayDate) ? (

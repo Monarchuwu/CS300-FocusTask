@@ -14,7 +14,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { Helmet } from 'react-helmet';
 import { Dialog, DialogActions, DialogContent, 
     DialogContentText, DialogTitle, Button, TextField } from '@mui/material';
-import { Plus, Folder, Calendar } from 'react-iconly';
+import { Plus, Folder, Calendar, InfoSquare } from 'react-iconly';
 import { ClickAwayListener } from '@mui/base/ClickAwayListener';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -49,6 +49,23 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     const [dueDateOpen, setDueDateOpen] = React.useState(false);
     const [selectedDate, setSelectedDate] = React.useState(null);
     const [tempDate, setTempDate] = React.useState(dayjs()); // Holds the temporary date
+
+    const [selectedPriority, setSelectedPriority] = React.useState(null);
+    const [priorityAnchorEl, setPriorityAnchorEl] = React.useState(null);
+
+    const handlePriorityClick = (event) => {
+        setPriorityAnchorEl(event.currentTarget);
+    };
+
+    const handlePriorityClose = () => {
+        setPriorityAnchorEl(null);
+    };
+
+    const handlePriorityMenuItemClick = (priority) => {
+        setSelectedPriority(priority);
+        handlePriorityClose();
+    };
+
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -154,6 +171,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 setSelectedDate(null);
                 setSelectedSectionName(null);
                 setTempDate(dayjs());
+                setSelectedPriority(null);
                 fetchTodoList(selectedProject);
             }
         )
@@ -295,7 +313,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     const handleAddTask = () => {
         callAddTaskAPI(newTaskName, addingSectionID ? 
-                        addingSectionID : sectionDefaultID.current, selectedDate, undefined, undefined, newTaskDescription
+                        addingSectionID : sectionDefaultID.current, selectedDate, selectedPriority, undefined, newTaskDescription
                         );
     };
 
@@ -536,6 +554,13 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         );
     }
 
+    const getPriorityColor = (priority) => {
+        if (priority === 'High') return 'priority.high';
+        else if (priority === 'Medium') return 'priority.medium';
+        else if (priority === 'Low') return 'priority.low';
+        else return 'text.primary';
+    };
+
     const AddTaskField = (selectedProject, addingSectionID) => {
         if (selectedProject === null || addingSectionID === null) {
             return (<Box></Box>);
@@ -550,8 +575,8 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
             }}>
                 {taskNameField()}
                 {taskDescriptionField()}
-                {/* Section selection */}
                 <Box sx={{ display: 'flex', marginTop: '10px', alignItems: 'center', gap: '5px' }}>
+                    {/* Section selection */}
                     <Box id="sectionSelection">
                         {selectedSectionName === '' || selectedSectionName === null ? (
                             <IconButton onClick={handleClick} size='small' color="text.primary">
@@ -618,7 +643,43 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                             </DialogActions>
                         </Dialog>
                     </Box>
-                
+                    {/* Priority selection */}
+                    <Box id="prioritySelection">
+                            {selectedPriority === null ? (
+                                <IconButton onClick={handlePriorityClick} size="small">
+                                    {/* rotate the icon 180 degree */}
+                                    <InfoSquare set="light" style={{ transform: 'rotate(180deg)' }} />
+                                </IconButton>
+                            ) : (
+                                <Button onClick={handlePriorityClick} 
+                                    startIcon={<InfoSquare set="bulk" style={{ transform: 'rotate(180deg)' }}/>} 
+                                    variant="outlined" size="small" sx={{ 
+                                        color: getPriorityColor(selectedPriority), 
+                                        borderColor: getPriorityColor(selectedPriority),
+                                    }}>
+                                    {selectedPriority}
+                                </Button>
+                            )}
+                            <Menu
+                                anchorEl={priorityAnchorEl}
+                                open={Boolean(priorityAnchorEl)}
+                                onClose={handlePriorityClose}
+                            >
+                                {['High', 'Medium', 'Low'].map((priority) => (
+                                    <MenuItem
+                                        key={priority}
+                                        onClick={() => handlePriorityMenuItemClick(priority)}
+                                    >
+                                        <Typography variant="body2" color={getPriorityColor(priority)}>
+                                            {priority}
+                                        </Typography>
+                                    </MenuItem>
+                                ))}
+                            </Menu>
+                        </Box>
+
+
+
                     {/* <button onClick={() => { setAddingSectionID(sectionDefaultID.current); 
                         setNewTaskName(""); setNewTaskDescription(""); }}>
                         Cancel
