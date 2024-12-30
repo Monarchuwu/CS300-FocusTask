@@ -237,6 +237,16 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAddingSection, newSectionName]);
 
+    const handleAddTask = () => {
+        callAddTaskAPI(newTaskName, addingSectionID ? 
+                        addingSectionID : sectionDefaultID.current, undefined, undefined, undefined, newTaskDescription
+                        );
+        setAddingSectionID(null);
+        setNewTaskName("");
+        setNewTaskDescription("");
+        setSelectedSectionName(null);
+    };
+
 
     const Section = ({ section, taskAttrMap }) => {
         return (
@@ -511,9 +521,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                         setNewTaskName(""); setNewTaskDescription(""); }}>
                         Cancel
                     </button> */}
-                    <Button onClick={() => callAddTaskAPI(newTaskName, addingSectionID ? 
-                        addingSectionID : sectionDefaultID.current, undefined, undefined, undefined, newTaskDescription
-                        )} variant="contained" startIcon={<AddRoundedIcon />} size="small"
+                    <Button onClick={() => handleAddTask()} variant="contained" startIcon={<AddRoundedIcon />} size="small"
                             float='right' sx={{ marginLeft: 'auto' }}>
                             Add
                     </Button>
