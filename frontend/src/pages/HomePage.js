@@ -60,6 +60,8 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     const handleDueDateClickOpen = () => {
         setDueDateOpen(true);
+        setTempDate(dayjs(selectedDate || dayjs())); // Set the temporary date to the last confirmed date
+        // console.log('Temp Due Date:', dayjs(tempDate).format());
     };
 
     const handleDueDateClose = () => {
@@ -69,13 +71,13 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     const handleDateChange = (newDate) => {
         setTempDate(newDate); // Update the temporary date as the user selects a new date
-        console.log('Temp Due Date:', dayjs(tempDate).format());
+        // console.log('Temp Due Date:', dayjs(tempDate).format());
     };
 
 
     const handleSetDueDate = () => {
         setSelectedDate(tempDate); // Confirm the date selection
-        console.log('Selected Due Date:', dayjs(selectedDate).format());
+        console.log('Selected Due Date:', dayjs(tempDate).format());
         handleDueDateClose();
     };
 
@@ -124,6 +126,11 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     }
     const callAddTaskAPI = async (name, parentID, dueDate = null, priority = null, status = null, description = null, inTodayDate = null) => {
         const authToken = localStorage.getItem('authToken');
+        // Convert dueDate to ISO string if it's not null
+        if (dueDate) {
+            dueDate = dayjs(dueDate).toISOString(); // or use .format('YYYY-MM-DDTHH:mm:ssZ') for specific formatting
+        }
+        console.log('Due Date:', dueDate);
         var payload = {
             "authenticationToken": authToken,
             "name": name,
@@ -140,10 +147,13 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         callAPITemplate(
             `${process.env.REACT_APP_API_URL}/task/add`,
             JSON.stringify(payload),
-            (data) => {
+            () => {
                 setAddingSectionID(null);
                 setNewTaskName("");
                 setNewTaskDescription("");
+                setSelectedDate(null);
+                setSelectedSectionName(null);
+                setTempDate(dayjs());
                 fetchTodoList(selectedProject);
             }
         )
@@ -196,16 +206,35 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 `${process.env.REACT_APP_API_URL}/todo_item/get_list`,
                 JSON.stringify({ "authenticationToken": authToken, "itemID": projectID }),
             );
-            const items = dataItem.map(item => JSON.parse(item)).filter(item => item.itemID !== projectID);
+            const items = dataItem
+                .map(item => JSON.parse(item))
+                .filter(item => item.itemID !== projectID);
             setTree(buildForest(items, projectID));
 
             // Fetch checkbox status of tasks
             const taskIDs = items.filter(item => item.itemType === 'Task').map(task => task.itemID);
+            
+            
+            const payload = {
+                authenticationToken: authToken,
+                itemIDs: taskIDs,
+            };
+            // Convert any `datetime` values to strings
+            const serializedPayload = JSON.stringify(payload, (key, value) =>
+                value instanceof Date ? value.toISOString() : value
+            );
+
             const dataAttributes = await callAPITemplate(
                 `${process.env.REACT_APP_API_URL}/task_attributes/get_list`,
-                JSON.stringify({ "authenticationToken": authToken, "itemIDs": taskIDs }),
+                serializedPayload
             );
-            const attrsList = dataAttributes.map(attr => JSON.parse(attr));
+            const attrsList = dataAttributes.map(attr => {
+                const parsedAttr = JSON.parse(attr);
+                return {
+                    ...parsedAttr,
+                    dueDate: parsedAttr.dueDate ? dayjs(parsedAttr.dueDate).toISOString() : null,
+                };
+            });
             const taskAttrMap = Object.fromEntries(attrsList.map(attr => [attr.taskID, attr]));
             setTaskAttrMap(taskAttrMap);
 
@@ -268,12 +297,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         callAddTaskAPI(newTaskName, addingSectionID ? 
                         addingSectionID : sectionDefaultID.current, selectedDate, undefined, undefined, newTaskDescription
                         );
-        setAddingSectionID(null);
-        setNewTaskName("");
-        setNewTaskDescription("");
-        setSelectedDate(null);
-        setSelectedSectionName(null);
-        setTempDate(dayjs());
     };
 
 
@@ -351,7 +374,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                         display: task.itemID === viewTaskDetailID ? 'inline' : 'none',
                     }
                 }}>
-                <Box alignItems='center' display={'block'}>
+                <Box alignItems='center' display='flex'>
                     {/* Checkbox for Task */}
                     <Checkbox
                         checked={taskAttrMap[task.itemID]?.status === 'Completed'}
@@ -380,8 +403,8 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                         <DeleteRoundedIcon/>
                     </IconButton>}
                     {taskAttrMap[task.itemID]?.dueDate && 
-                        <Typography variant={'taskAttr'} sx={{ color: 'text.secondary' }}>
-                            {taskAttrMap[task.itemID]?.dueDate}
+                        <Typography variant={'taskAttr'} sx={{ color: 'text.secondary', marginLeft: 'auto', marginRight: '8px' }}>
+                            {dayjs(taskAttrMap[task.itemID]?.dueDate).format('HH:mm, DD-MM-YYYY')}
                         </Typography>}
                     {/* Render children */}
                     {task.children && task.children.length > 0 && (
@@ -570,7 +593,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                             : (
                                 <Button onClick={handleDueDateClickOpen} startIcon={<Calendar set="bulk" />} 
                                     variant="outlined" size="small" color="primary">
-                                    {dayjs(selectedDate).format('DD-MM-YYYY HH:mm')}
+                                    {dayjs(selectedDate).format('HH:mm, DD-MM-YYYY')}
                                 </Button>
                             )
                         }
