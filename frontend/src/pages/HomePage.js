@@ -8,14 +8,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CircularProgress, Box, Typography, 
         Checkbox, Accordion, AccordionDetails, 
         AccordionSummary, 
-        IconButton} from '@mui/material';
+        IconButton, Menu, MenuItem} from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ReadMoreRoundedIcon from '@mui/icons-material/ReadMoreRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { Helmet } from 'react-helmet';
 import { Dialog, DialogActions, DialogContent, 
     DialogContentText, DialogTitle, Button, TextField } from '@mui/material';
-import { Plus } from 'react-iconly';
+import { Plus, Folder } from 'react-iconly';
 import { ClickAwayListener } from '@mui/base/ClickAwayListener';
 
 
@@ -28,6 +29,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     const [newSectionName, setNewSectionName] = React.useState("");
     // State variables for adding new task
     const [addingSectionID, setAddingSectionID] = React.useState(null);
+    const [selectedSectionName, setSelectedSectionName] = React.useState(null);
     const [newTaskName, setNewTaskName] = React.useState("");
     const [newTaskDescription, setNewTaskDescription] = React.useState("");
     // State variables for rendering the tree
@@ -39,7 +41,24 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
     const [openDialog, setOpenDialog] = React.useState(false);
     const [taskToDelete, setTaskToDelete] = React.useState(null);
-    const newSectionNameRef = useRef(null);
+    const newSectionNameRef = React.useRef(null);
+    const [anchorEl, setAnchorEl] = React.useState(null);
+
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleMenuItemClick = (sectionID) => {
+        const sectionName = sectionList.current[sectionID];
+        setAddingSectionID(parseInt(sectionID));
+        setSelectedSectionName(sectionName);
+        handleClose();
+    };
+
 
     const handleOpenDialog = (taskID) => {
         setTaskToDelete(taskID);
@@ -419,49 +438,93 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const AddTaskField = (selectedProject, addingSectionID) => {
+        if (selectedProject === null || addingSectionID === null) {
+            return (<Box></Box>);
+        } else return (
+            <Box sx = {{ 
+                    border: '2px solid', 
+                    borderColor: 'border.main', 
+                    borderRadius: '5px', 
+                    padding: '15px', 
+                    margin: '10px 0px',
+                    backgroundColor: 'white', 
+            }}>
+                <TextField
+                    type="text"
+                    size="small"
+                    variant='standard'
+                    value={newTaskName}
+                    placeholder='Task Name'
+                    onChange={(e) => setNewTaskName(e.target.value)}
+                    fullWidth
+                    sx={{marginBottom: '10px'}}
+                />
+                <TextField
+                    type="text"
+                    value={newTaskDescription}  
+                    variant='outlined'
+                    label='Description'
+                    onChange={(e) => setNewTaskDescription(e.target.value)}
+                    multiline
+                    fullWidth
+                />  
+                <Box sx={{ display: 'flex', marginTop: '10px' }}>
+                    <Box>
+                        {selectedSectionName === '' ? (
+                            <IconButton onClick={handleClick} size='small' color="text.primary">
+                                <Folder set="light" />
+                            </IconButton>
+                        ) : (
+                            <Button onClick={handleClick} startIcon={<Folder set="bulk" />} 
+                                variant="outlined" size="small" color="primary">
+                                {selectedSectionName}
+                            </Button>
+                        )}
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={handleClose}
+                        >
+                            {Object.entries(sectionList.current).map(([sectionID, sectionName]) => (
+                                <MenuItem
+                                    key={sectionID}
+                                    onClick={() => handleMenuItemClick(sectionID)}
+                                    style={{
+                                        backgroundColor: addingSectionID === parseInt(sectionID) ? 'lightblue' : 'white',
+                                        color: sectionName === '' ? 'default' : 'primary'
+                                    }}
+                                >
+                                    <Typography variant="body2" color={'text.primary'}>
+                                        {sectionName === '' ? '---' : sectionName}
+                                    </Typography>
+                                </MenuItem>
+                            ))}
+                        </Menu>
+                    </Box>
+                
+                    {/* <button onClick={() => { setAddingSectionID(sectionDefaultID.current); 
+                        setNewTaskName(""); setNewTaskDescription(""); }}>
+                        Cancel
+                    </button> */}
+                    <Button onClick={() => callAddTaskAPI(newTaskName, addingSectionID ? 
+                        addingSectionID : sectionDefaultID.current, undefined, undefined, undefined, newTaskDescription
+                        )} variant="contained" startIcon={<AddRoundedIcon />} size="small"
+                            float='right' sx={{ marginLeft: 'auto' }}>
+                            Add
+                    </Button>
+                </Box>
+            </Box>
+        );
+    };
 
     return (
         <Box sx={{ padding: '15px' }}>
             <Helmet>
                 <title>Inbox - FocusTask</title>
             </Helmet>
-            {/* Add Task and add Section */}
-            {selectedProject &&
-                <Box>
-                    {/* Add Task */}
-                    {addingSectionID && (
-                        <div>
-                            <label>Name</label>
-                            <input
-                                type="text"
-                                value={newTaskName}
-                                onChange={(e) => setNewTaskName(e.target.value)}
-                            />
-                            <br />
-                            <label>Description</label>
-                            <input
-                                type="text"
-                                value={newTaskDescription}
-                                onChange={(e) => setNewTaskDescription(e.target.value)}
-                            />
-                            <div>
-                                <label>Choose Section</label>
-                                {
-                                    Object.entries(sectionList.current).map(([sectionID, sectionName]) => (
-                                        <button
-                                            key={sectionID}
-                                            onClick={() => setAddingSectionID(parseInt(sectionID))}
-                                            style={{ backgroundColor: addingSectionID === parseInt(sectionID) ? 'lightblue' : 'white' }}
-                                        >{sectionName === '' ? '---' : sectionName}</button>
-                                    ))
-                                }
-                            </div>
-                            <button onClick={() => { setAddingSectionID(sectionDefaultID.current); setNewTaskName(""); setNewTaskDescription(""); }}>Cancel</button>
-                            <button onClick={() => callAddTaskAPI(newTaskName, addingSectionID ? addingSectionID : sectionDefaultID.current, undefined, undefined, undefined, newTaskDescription)}>Add</button>
-                        </div>
-                    )}
-                </Box>
-            }
+            {/* Add Task */}
+            {AddTaskField(selectedProject, addingSectionID)}
             {/* Render the tree */}
             <div className={styles.treeItems}>
                 {Object.values(tree).length > 0 ? (
