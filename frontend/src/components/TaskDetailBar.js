@@ -6,6 +6,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
+import dayjs from 'dayjs';
 
 function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPomodoro }) {
     const navigate = useNavigate();
@@ -45,6 +46,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                 `${process.env.REACT_APP_API_URL}/todo_item/get`,
                 JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
             );
+            // convert dueDate to serializable format before parse to JSON
             return JSON.parse(data);
         }
         catch (e) {
@@ -148,7 +150,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                             handleStatusChange(taskDetails.taskID, status);
                         }}
                     />
-                    <p>Due Date: {taskDetails.dueDate || 'N/A'}</p>
+                    <p>Due Date: {dayjs(taskDetails.dueDate).format('HH:mm, DD-MM-YY') || 'N/A'}</p>
                     <p>Priority: {taskDetails.priority || 'N/A'}</p>
                     <p>Description: {taskDetails.description || 'N/A'}</p>
                     {isToday(taskDetails.inTodayDate) ? (
