@@ -165,15 +165,15 @@ function SideBar() {
                             to={item.url}
                             sx={{
                                 backgroundColor: isSelected(item) ? 'primary.main' : 'inherit',
-                                color: isSelected(item) ? 'white' : 'text.primary',
+                                color: isSelected(item) ? 'white' : 'text.secondary',
                                 '&:hover': {
                                     backgroundColor: isSelected(item) ? 'primary.main' : 'primary.light',
-                                    color: isSelected(item) ? 'white' : 'text.primary',
+                                    color: isSelected(item) ? 'white' : 'text.secondary',
                                 },
                                 borderRadius: '10px'
                             }}
                         >
-                            <ListItemIcon sx={{ color: isSelected(item) ? 'white' : 'text.primary' }}>
+                            <ListItemIcon sx={{ color: isSelected(item) ? 'white' : 'text.secondary' }}>
                                 {item.icon}
                             </ListItemIcon>
                             <ListItemText primary={item.text}
@@ -238,10 +238,10 @@ function SideBar() {
                                 }}
                                 sx={{
                                     backgroundColor: searchParams.get('project') === project.name ? 'primary.main' : 'inherit',
-                                    color: searchParams.get('project') === project.name ? 'white' : 'text.primary',
+                                    color: searchParams.get('project') === project.name ? 'white' : 'text.secondary',
                                     '&:hover': {
                                         backgroundColor: searchParams.get('project') === project.name ? 'primary.main' : 'primary.light',
-                                        color: searchParams.get('project') === project.name ? 'white' : 'text.primary',
+                                        color: searchParams.get('project') === project.name ? 'white' : 'text.secondary',
                                     },
                                     borderRadius: '10px'
                                 }}

@@ -530,8 +530,8 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                             inputLabel: { style: { fontSize: 14 } }
                         }}
                 size="small"
-                multilines
                 fullWidth
+                multiline={true}
             />  
         );
     }
