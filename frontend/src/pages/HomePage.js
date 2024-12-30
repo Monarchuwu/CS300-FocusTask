@@ -404,7 +404,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     </IconButton>}
                     {taskAttrMap[task.itemID]?.dueDate && 
                         <Typography variant={'taskAttr'} sx={{ color: 'text.secondary', marginLeft: 'auto', marginRight: '8px' }}>
-                            {dayjs(taskAttrMap[task.itemID]?.dueDate).format('HH:mm, DD-MM-YYYY')}
+                            {dayjs(taskAttrMap[task.itemID]?.dueDate).format('HH:mm, DD-MM-YY')}
                         </Typography>}
                     {/* Render children */}
                     {task.children && task.children.length > 0 && (
@@ -593,7 +593,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                             : (
                                 <Button onClick={handleDueDateClickOpen} startIcon={<Calendar set="bulk" />} 
                                     variant="outlined" size="small" color="primary">
-                                    {dayjs(selectedDate).format('HH:mm, DD-MM-YYYY')}
+                                    {dayjs(selectedDate).format('HH:mm, DD-MM-YY')}
                                 </Button>
                             )
                         }
