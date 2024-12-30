@@ -1,8 +1,6 @@
-import styles from './HomePage.module.css';
-
 import { callAPITemplate } from '../utils';
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { CircularProgress, Box, Typography, 
@@ -16,8 +14,12 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { Helmet } from 'react-helmet';
 import { Dialog, DialogActions, DialogContent, 
     DialogContentText, DialogTitle, Button, TextField } from '@mui/material';
-import { Plus, Folder } from 'react-iconly';
+import { Plus, Folder, Calendar } from 'react-iconly';
 import { ClickAwayListener } from '@mui/base/ClickAwayListener';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import dayjs from 'dayjs';
 
 
 function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
@@ -44,12 +46,37 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     const newSectionNameRef = React.useRef(null);
     const [anchorEl, setAnchorEl] = React.useState(null);
 
+    const [dueDateOpen, setDueDateOpen] = React.useState(false);
+    const [selectedDate, setSelectedDate] = React.useState(null);
+    const [tempDate, setTempDate] = React.useState(dayjs()); // Holds the temporary date
+
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
     };
 
     const handleClose = () => {
         setAnchorEl(null);
+    };
+
+    const handleDueDateClickOpen = () => {
+        setDueDateOpen(true);
+    };
+
+    const handleDueDateClose = () => {
+        setDueDateOpen(false);
+        setTempDate(selectedDate); // Reset tempDate to the last confirmed date
+    };
+
+    const handleDateChange = (newDate) => {
+        setTempDate(newDate); // Update the temporary date as the user selects a new date
+        console.log('Temp Due Date:', dayjs(tempDate).format());
+    };
+
+
+    const handleSetDueDate = () => {
+        setSelectedDate(tempDate); // Confirm the date selection
+        console.log('Selected Due Date:', dayjs(selectedDate).format());
+        handleDueDateClose();
     };
 
     const handleMenuItemClick = (sectionID) => {
@@ -239,12 +266,14 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     const handleAddTask = () => {
         callAddTaskAPI(newTaskName, addingSectionID ? 
-                        addingSectionID : sectionDefaultID.current, undefined, undefined, undefined, newTaskDescription
+                        addingSectionID : sectionDefaultID.current, selectedDate, undefined, undefined, newTaskDescription
                         );
         setAddingSectionID(null);
         setNewTaskName("");
         setNewTaskDescription("");
+        setSelectedDate(null);
         setSelectedSectionName(null);
+        setTempDate(dayjs());
     };
 
 
@@ -268,6 +297,9 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                         justifyContent='center'
                         sx = {{ 
                             margin: '0px',
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontWeight: '600',
+                            color: 'text.primary',
                             '.MuiAccordionSummary-content': {
                                 transition: 'margin 0.3s ease',
                             },
@@ -448,6 +480,39 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const taskNameField = () => {
+        return (
+            <TextField
+                type="text"
+                size="small"
+                variant='standard'
+                value={newTaskName}
+                placeholder='Task Name'
+                onChange={(e) => setNewTaskName(e.target.value)}
+                fullWidth
+                sx={{marginBottom: '10px'}}
+            />
+        );
+    }
+
+    const taskDescriptionField = () => {
+        return (
+            <TextField
+                type="text"
+                value={newTaskDescription}  
+                variant='outlined'
+                label='Description'
+                onChange={(e) => setNewTaskDescription(e.target.value)}
+                slotProps={{ htmlInput: { style: { fontSize: 14 } }, 
+                            inputLabel: { style: { fontSize: 14 } }
+                        }}
+                size="small"
+                multilines
+                fullWidth
+            />  
+        );
+    }
+
     const AddTaskField = (selectedProject, addingSectionID) => {
         if (selectedProject === null || addingSectionID === null) {
             return (<Box></Box>);
@@ -460,31 +525,11 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     margin: '10px 0px',
                     backgroundColor: 'white', 
             }}>
-                <TextField
-                    type="text"
-                    size="small"
-                    variant='standard'
-                    value={newTaskName}
-                    placeholder='Task Name'
-                    onChange={(e) => setNewTaskName(e.target.value)}
-                    fullWidth
-                    sx={{marginBottom: '10px'}}
-                />
-                <TextField
-                    type="text"
-                    value={newTaskDescription}  
-                    variant='outlined'
-                    label='Description'
-                    onChange={(e) => setNewTaskDescription(e.target.value)}
-                    slotProps={{ htmlInput: { style: { fontSize: 14 } }, 
-                                inputLabel: { style: { fontSize: 14 } }
-                            }}
-                    size="small"
-                    multilines
-                    fullWidth
-                />  
-                <Box sx={{ display: 'flex', marginTop: '10px' }}>
-                    <Box>
+                {taskNameField()}
+                {taskDescriptionField()}
+                {/* Section selection */}
+                <Box sx={{ display: 'flex', marginTop: '10px', alignItems: 'center', gap: '5px' }}>
+                    <Box id="sectionSelection">
                         {selectedSectionName === '' || selectedSectionName === null ? (
                             <IconButton onClick={handleClick} size='small' color="text.primary">
                                 <Folder set="light" />
@@ -516,6 +561,40 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                             ))}
                         </Menu>
                     </Box>
+                    {/* Due date selection */}
+                    <Box id="dueDateSelection">
+                        {selectedDate === null ? 
+                            (<IconButton onClick={handleDueDateClickOpen} size="small">
+                                <Calendar set="light" />
+                            </IconButton>) 
+                            : (
+                                <Button onClick={handleDueDateClickOpen} startIcon={<Calendar set="bulk" />} 
+                                    variant="outlined" size="small" color="primary">
+                                    {dayjs(selectedDate).format('DD-MM-YYYY HH:mm')}
+                                </Button>
+                            )
+                        }
+                        <Dialog open={dueDateOpen} onClose={handleDueDateClose}>
+                            <DialogTitle>Task Due Date</DialogTitle>
+                            <DialogContent>
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <DateTimePicker
+                                        renderInput={(props) => <TextField {...props} />}
+                                        value={tempDate || dayjs()}
+                                        onChange={handleDateChange}
+                                    />
+                                </LocalizationProvider>
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleDueDateClose} color="danger" variant="outlined">
+                                    CANCEL
+                                </Button>
+                                <Button onClick={handleSetDueDate} color="primary" autoFocus variant="contained">
+                                    CONFIRM
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                    </Box>
                 
                     {/* <button onClick={() => { setAddingSectionID(sectionDefaultID.current); 
                         setNewTaskName(""); setNewTaskDescription(""); }}>
@@ -538,7 +617,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
             {/* Add Task */}
             {AddTaskField(selectedProject, addingSectionID)}
             {/* Render the tree */}
-            <div className={styles.treeItems}>
+            <div>
                 {Object.values(tree).length > 0 ? (
                     Object.values(tree).map(root => renderTree(root, taskAttrMap))
                 ) : (

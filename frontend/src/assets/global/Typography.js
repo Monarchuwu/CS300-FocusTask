@@ -1,5 +1,7 @@
+import '../css/PlusJakartaSans.css';
+
 const typography = {
-    fontFamily: 'Plus Jakarta Sans, Arial, sans-serif', // Replace "Poppins" with your chosen font
+    fontFamily: '"Plus Jakarta Sans", Arial, sans-serif', // Replace "Poppins" with your chosen font
     body1: {
         fontWeight: 500, // or 'bold'
         fontSize: 16,
