@@ -52,6 +52,20 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     const [selectedPriority, setSelectedPriority] = React.useState(null);
     const [priorityAnchorEl, setPriorityAnchorEl] = React.useState(null);
+    const [showTaskDescription, setShowTaskDescription] = React.useState(false);
+    const taskDescriptionRef = React.useRef(null);
+
+    const handleKeyPressTaskName = (e) => {
+        if (e.shiftKey && e.key === 'Enter') {
+            setShowTaskDescription(true);
+            setTimeout(() => {
+                taskDescriptionRef.current.focus();
+            }, 0);
+        } else if (e.key === 'Enter') {
+            handleAddTask();
+        }
+    };
+
 
     const handlePriorityClick = (event) => {
         setPriorityAnchorEl(event.currentTarget);
@@ -172,6 +186,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 setSelectedSectionName(null);
                 setTempDate(dayjs());
                 setSelectedPriority(null);
+                setShowTaskDescription(false);
                 fetchTodoList(selectedProject);
             }
         )
@@ -530,8 +545,11 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 value={newTaskName}
                 placeholder='Task Name'
                 onChange={(e) => setNewTaskName(e.target.value)}
+                onKeyPress={handleKeyPressTaskName}
                 fullWidth
-                sx={{marginBottom: '10px'}}
+                sx={{marginBottom: '10px', 
+                    "& .MuiInputBase-root::before": { borderColor: 'border.main' },
+                }}
             />
         );
     }
@@ -541,7 +559,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
             <TextField
                 type="text"
                 value={newTaskDescription}  
-                variant='outlined'
+                variant="outlined"
                 label='Description'
                 onChange={(e) => setNewTaskDescription(e.target.value)}
                 slotProps={{ htmlInput: { style: { fontSize: 14 } }, 
@@ -550,6 +568,12 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 size="small"
                 fullWidth
                 multiline={true}
+                sx={{
+                    "& fieldset": { borderColor: 'border.main' },
+                    marginBottom: '10px',
+                }}
+                inputRef={taskDescriptionRef}
+                onKeyUp={(e) => { if (e.key === 'Enter') handleAddTask(); }}
             />  
         );
     }
@@ -566,7 +590,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
             return (<Box></Box>);
         } else return (
             <Box sx = {{ 
-                    border: '2px solid', 
+                    border: '1px solid', 
                     borderColor: 'border.main', 
                     borderRadius: '5px', 
                     padding: '15px', 
@@ -574,8 +598,8 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     backgroundColor: 'white', 
             }}>
                 {taskNameField()}
-                {taskDescriptionField()}
-                <Box sx={{ display: 'flex', marginTop: '10px', alignItems: 'center', gap: '5px' }}>
+                {showTaskDescription && taskDescriptionField()}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                     {/* Section selection */}
                     <Box id="sectionSelection">
                         {selectedSectionName === '' || selectedSectionName === null ? (
