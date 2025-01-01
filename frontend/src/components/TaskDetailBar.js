@@ -25,6 +25,7 @@ const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
             <Input
                 value={taskDetails?.name || ''}
                 onChange={handleFieldChange('name')}
+                fullWidth
             />
         </Box>
     );
@@ -36,6 +37,13 @@ const TaskDetailDescription = ({ taskDetails, handleFieldChange }) => {
             value={taskDetails?.description || ''}
             onChange={handleFieldChange('description')}
             variant="outlined"
+            slotProps={{ htmlInput: { style: { fontSize: 14 } }, 
+                inputLabel: { style: { fontSize: 14 } }
+            }}
+            sx={{
+                "& fieldset": { borderColor: 'border.main' },
+                marginBottom: '10px',
+            }}
             multiline
             fullWidth
         />
@@ -215,13 +223,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                     />
                     {/* Checkbox for Task */}
                     <button onClick={() => startPomodoro()}>Start Pomodoro</button>
-                    <p>Due Date: {taskDetails.dueDate ? dayjs(taskDetails.dueDate).format('HH:mm, DD-MM-YY') : 'N/A'}</p>
-                    <p>Priority: {taskDetails.priority || 'N/A'}</p>
-                    <TaskDetailDescription 
-                        taskDetails={{ description: taskDetails?.description }} 
-                        handleFieldChange={handleFieldChange}
-                    />
-                    {isToday(taskDetails.inTodayDate) ? (
+                                        {isToday(taskDetails.inTodayDate) ? (
                         <button onClick={() => {
                             callUpdateInTodayDateAPI(taskID, '2100-01-01T00:00:00+00:00');
                         }}>Remove From Today's Task</button>
@@ -230,6 +232,12 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                             callUpdateInTodayDateAPI(taskID, new Date().toISOString().replace('Z', '+00:00'));
                         }}>Add To Today's Task</button>
                     )}
+                    <p>Due Date: {taskDetails.dueDate ? dayjs(taskDetails.dueDate).format('HH:mm, DD-MM-YY') : 'N/A'}</p>
+                    <p>Priority: {taskDetails.priority || 'N/A'}</p>
+                    <TaskDetailDescription 
+                        taskDetails={{ description: taskDetails?.description }} 
+                        handleFieldChange={handleFieldChange}
+                    />
                 </div>
             )}
         </Box>
