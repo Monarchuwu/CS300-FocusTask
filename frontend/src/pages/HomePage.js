@@ -405,8 +405,11 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     },
                     "& button": {
                         display: task.itemID === viewTaskDetailID ? 'inline' : 'none',
-                    }
-                }}>
+                    },
+                    cursor: 'pointer',
+                }}
+                onClick={() => setViewTaskDetailID(task.itemID)} 
+                >
                 <Box alignItems='center' display='flex'>
                     {/* Checkbox for Task */}
                     <Checkbox
@@ -426,10 +429,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     {/* Name, Edit button (Task only), and Delete button */}
                     <Typography variant={'task'}>{task.name}</Typography>
                     <Priority priority={taskAttrMap[task.itemID]?.priority} />
-                    <IconButton onClick={() => setViewTaskDetailID(task.itemID)} 
-                        size='small' color="text.secondary" sx={{ width: '34px', height: '34px' }}>
-                        <ReadMoreRoundedIcon />
-                    </IconButton>
                     {task.name !== '' &&                 
                     <IconButton onClick={() => handleOpenDialog(task.itemID)} color="danger"
                         size='small' sx={{ width: '34px', height: '34px' }}>
