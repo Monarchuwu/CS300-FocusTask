@@ -13,7 +13,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { Helmet } from 'react-helmet';
 import { Dialog, DialogActions, DialogContent, 
     DialogContentText, DialogTitle, Button, TextField } from '@mui/material';
-import { Plus, Folder, Calendar, InfoSquare } from 'react-iconly';
+import { Plus, Folder, InfoSquare } from 'react-iconly';
 import { ClickAwayListener } from '@mui/base/ClickAwayListener';
 
 import DateTimePickerButtonDialog from "../components/DateTimePickerButtonDialog";

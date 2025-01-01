@@ -45,8 +45,8 @@ const DateTimePickerButtonDialog = ({
         handleDueDateClose();
     };
 
-    return (<Box id="dueDateSelection">
-        {selectedDate === null ? 
+    return (<Box id="dueDateSelection"  >
+        {selectedDate === null || dayjs(selectedDate).isValid() === false ? 
             (<IconButton onClick={handleDueDateClickOpen} size="small">
                 <Calendar set="light" />
             </IconButton>) 

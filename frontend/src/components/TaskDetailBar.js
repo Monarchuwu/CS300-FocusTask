@@ -9,7 +9,10 @@ import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
 import Input from '@mui/material/Input';
 import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
 import dayjs from 'dayjs';
+
+import DateTimePickerButtonDialog from './DateTimePickerButtonDialog';
 
 
 const DEBOUNCE_DELAY = 700;
@@ -20,22 +23,34 @@ const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
         <Box display="flex" sx={{ alignItems: 'center' }}>
             <Checkbox
                 checked={taskDetails?.status === 'Completed'}
-                onChange={handleFieldChange('status')}
+                onChange={(e) => handleFieldChange('status', e.target.checked ? 'Completed' : 'Pending')}
             />  
             <Input
                 value={taskDetails?.name || ''}
-                onChange={handleFieldChange('name')}
+                onChange={ (e) => handleFieldChange('name', e.target.value) }
                 fullWidth
             />
         </Box>
     );
 };
 
+const TaskDetailDuePriority = ({ taskDetails, handleFieldChange }) => {
+    return (
+        <Box display="flex" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+            <Button>{taskDetails.priority || 'N/A'}</Button>
+            <DateTimePickerButtonDialog
+                selectedDate={dayjs(taskDetails.dueDate)}
+                setSelectedDate={(newDate) => handleFieldChange('dueDate', newDate)}
+            />
+        </Box>
+    );  
+}
+
 const TaskDetailDescription = ({ taskDetails, handleFieldChange }) => {
     return (
         <TextField
             value={taskDetails?.description || ''}
-            onChange={handleFieldChange('description')}
+            onChange={(e) => handleFieldChange('description', e.target.value)}
             variant="outlined"
             slotProps={{ htmlInput: { style: { fontSize: 14 } }, 
                 inputLabel: { style: { fontSize: 14 } }
@@ -196,11 +211,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
 
     const debouncedUpdateTaskField = useDebounce(updateTaskField, DEBOUNCE_DELAY);
 
-    const handleFieldChange = (field) => (event) => {
-        const value = event.target.type === 'checkbox' ? 
-                        (event.target.checked ? 'Completed' : 'Pending')
-                        : event.target.value;
-
+    const handleFieldChange = (field, value) => {
         // Update local state immediately
         setTaskDetails((prevDetails) => ({
             ...prevDetails,
@@ -221,6 +232,10 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                         taskDetails={{ name: taskDetails?.name, status: taskDetails?.status }} 
                         handleFieldChange={handleFieldChange} 
                     />
+                    <TaskDetailDuePriority 
+                        taskDetails={{ dueDate: taskDetails?.dueDate, priority: taskDetails?.priority }} 
+                        handleFieldChange={handleFieldChange}
+                    />
                     {/* Checkbox for Task */}
                     <button onClick={() => startPomodoro()}>Start Pomodoro</button>
                                         {isToday(taskDetails.inTodayDate) ? (
@@ -232,8 +247,6 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                             callUpdateInTodayDateAPI(taskID, new Date().toISOString().replace('Z', '+00:00'));
                         }}>Add To Today's Task</button>
                     )}
-                    <p>Due Date: {taskDetails.dueDate ? dayjs(taskDetails.dueDate).format('HH:mm, DD-MM-YY') : 'N/A'}</p>
-                    <p>Priority: {taskDetails.priority || 'N/A'}</p>
                     <TaskDetailDescription 
                         taskDetails={{ description: taskDetails?.description }} 
                         handleFieldChange={handleFieldChange}
