@@ -10,6 +10,46 @@ import Checkbox from '@mui/material/Checkbox';
 import Input from '@mui/material/Input';
 import dayjs from 'dayjs';
 
+const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
+    return (
+        <Box display="flex" sx={{ alignItems: 'center' }}>
+            <Checkbox
+                checked={taskDetails?.status === 'Completed'}
+                onChange={handleFieldChange('status')}
+                size="small"
+            />  
+            <Input
+                value={taskDetails?.name || ''}
+                onChange={handleFieldChange('name')}
+            />
+        </Box>
+    );
+};
+
+const useDebounce = (func, delay) => {
+    const timer = React.useRef(null);
+
+    React.useEffect(() => {
+        // Clean up the timer when the component unmounts
+        return () => {
+            if (timer.current) {
+                clearTimeout(timer.current);
+            }
+        };
+    }, []);
+
+    const debouncedFunction = (...args) => {
+        if (timer.current) {
+            clearTimeout(timer.current);
+        }
+        timer.current = setTimeout(() => {
+            func(...args);
+        }, delay);
+    };
+
+    return debouncedFunction;
+};
+
 function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPomodoro }) {
     const navigate = useNavigate();
     // State variable for viewing task details
@@ -121,14 +161,14 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                     JSON.stringify({ "authenticationToken": authToken, "taskID": taskID, [field]: value })
                 );
             }
-            // setUpdateTaskAttrs(Math.random());
+            setUpdateTaskAttrs(Math.random());
             console.log(`Field "${field}" updated in database:`, value);
         } catch (e) {
             console.error(`Failed to update field "${field}":`, e);
         }
     };
 
-    const debouncedUpdateTaskField = debounce(updateTaskField, 2000);
+    const debouncedUpdateTaskField = useDebounce(updateTaskField, 500);
 
     const handleFieldChange = (field) => (event) => {
         const value = event.target.type === 'checkbox' ? 
@@ -145,30 +185,16 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
         debouncedUpdateTaskField(field, value);
     };
 
-    
-    const TaskDetailTitle = () => {
-        return (
-            <Box display="flex" sx={{ alignItems: 'center' }}>
-                <Checkbox
-                    checked={taskDetails?.status === 'Completed'}
-                    onChange={handleFieldChange('status')}
-                    size="small"
-                />  
-                <Input
-                    value={taskDetails?.name || ''}
-                    onChange={handleFieldChange('name')}
-                />
-            </Box>
-        )
-    }
-
 
     return (
         <Box className={styles.container}>
             {/* View Task Detail */}
             {taskDetails && (
                 <div>
-                    <TaskDetailTitle />
+                    <TaskDetailTitle 
+                        taskDetails={{ name: taskDetails?.name, status: taskDetails?.status }} 
+                        handleFieldChange={handleFieldChange} 
+                    />
                     {/* Checkbox for Task */}
                     <button onClick={() => setTaskID(null)}>Close</button>
                     <button onClick={() => startPomodoro()}>Start Pomodoro</button>
