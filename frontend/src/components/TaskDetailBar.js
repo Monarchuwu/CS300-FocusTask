@@ -60,6 +60,7 @@ const TaskDetailDescription = ({ taskDetails, handleFieldChange }) => {
                 marginBottom: '10px',
             }}
             multiline
+            rows={5}
             fullWidth
         />
     );

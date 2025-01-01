@@ -545,7 +545,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     marginBottom: '10px',
                 }}
                 inputRef={taskDescriptionRef}
-                onKeyUp={(e) => { if (e.key === 'Enter') handleAddTask(); }}
+                onKeyUp={(e) => { if (e.key === 'Enter' && e.ctrlKey) handleAddTask(); }}
             />  
         );
     }
