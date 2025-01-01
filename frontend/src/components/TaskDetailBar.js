@@ -10,6 +10,9 @@ import Checkbox from '@mui/material/Checkbox';
 import Input from '@mui/material/Input';
 import dayjs from 'dayjs';
 
+
+const DEBOUNCE_DELAY = 700;
+
 // Title of the task detail
 const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
     return (
@@ -171,7 +174,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
         }
     };
 
-    const debouncedUpdateTaskField = useDebounce(updateTaskField, 500);
+    const debouncedUpdateTaskField = useDebounce(updateTaskField, DEBOUNCE_DELAY);
 
     const handleFieldChange = (field) => (event) => {
         const value = event.target.type === 'checkbox' ? 
@@ -199,7 +202,6 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                         handleFieldChange={handleFieldChange} 
                     />
                     {/* Checkbox for Task */}
-                    <button onClick={() => setTaskID(null)}>Close</button>
                     <button onClick={() => startPomodoro()}>Start Pomodoro</button>
                     <p>Due Date: {taskDetails.dueDate ? dayjs(taskDetails.dueDate).format('HH:mm, DD-MM-YY') : 'N/A'}</p>
                     <p>Priority: {taskDetails.priority || 'N/A'}</p>
