@@ -6,6 +6,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
+import Input from '@mui/material/Input';
 import dayjs from 'dayjs';
 
 function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPomodoro }) {
@@ -13,9 +15,6 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
     // State variable for viewing task details
     const [taskDetails, setTaskDetails] = React.useState(null);
     // State variable for debouncing status (checkbox) changes
-    const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
-    const [checkboxStatus, setCheckboxStatus] = React.useState('Pending');
-
 
     // API call functions
     const callGetTaskAttributesAPI = async (taskID) => {
@@ -62,11 +61,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
             today.getMonth() === dateToCheck.getMonth() &&
             today.getFullYear() === dateToCheck.getFullYear()
     }
-    // Handle checkbox status change (add to the debounce queue)
-    const handleStatusChange = (taskID, status) => {
-        setCheckboxStatus(status);
-        setDebounceStatus({ ...debounceStatus, [taskID]: status });
-    }
+
     // Fetch task details function
     const fetchTaskDetails = async () => {
         if (taskID) {
@@ -74,8 +69,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                 const attrs = await callGetTaskAttributesAPI(taskID);
                 const todoItem = await callGetTodoItemAPI(taskID);
                 const data = { ...attrs, name: todoItem.name, labelID: todoItem.labelID };
-                setTaskDetails(data);
-                setCheckboxStatus(data.status);
+                setTaskDetails(data);   
             }
             catch (e) {
                 console.error('Failed to fetch task attributes:', e);
@@ -84,22 +78,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
         }
         else setTaskDetails(null);
     }
-    // Apply the debounced status changes to the server
-    const applyDebounceStatus = async (debounceStatus) => {
-        const authToken = localStorage.getItem('authToken');
-        for (const [taskID, status] of Object.entries(debounceStatus)) {
-            try {
-                await callAPITemplate(
-                    `${process.env.REACT_APP_API_URL}/task_attributes/update`,
-                    JSON.stringify({ "authenticationToken": authToken, "taskID": Number(taskID), "status": status })
-                );
-            }
-            catch (e) {
-                console.error(e);
-            }
-        };
-        setUpdateTaskAttrs(Math.random());
-    }
+
     // Start Pomodoro function
     const startPomodoro = () => {
         const authToken = localStorage.getItem('authToken');
@@ -119,37 +98,80 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
         fetchTaskDetails();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskID, updateTaskAttrs]);
-    // Update checkbox status smoothly with debouncing (50ms)
-    React.useEffect(() => {
-        const timeout = setTimeout(() => {
-            if (Object.keys(debounceStatus).length > 0) {
-                applyDebounceStatus(debounceStatus);
-                setDebounceStatus({});
+
+    const debounce = (func, delay) => {
+        let timer;
+        return (...args) => {
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(() => func(...args), delay);
+        };
+    };
+
+    const updateTaskField = async (field, value) => {
+        try {
+            const authToken = localStorage.getItem('authToken');
+            if (field === 'name') {
+                await callAPITemplate(
+                    `${process.env.REACT_APP_API_URL}/todo_item/update`,
+                    JSON.stringify({ "authenticationToken": authToken, "itemID": Number(taskID), "name": value })
+                );
+            } else {
+                await callAPITemplate(
+                    `${process.env.REACT_APP_API_URL}/task_attributes/update`,
+                    JSON.stringify({ "authenticationToken": authToken, "taskID": taskID, [field]: value })
+                );
             }
-        }, 50);
-        return () => clearTimeout(timeout);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debounceStatus]);
+            // setUpdateTaskAttrs(Math.random());
+            console.log(`Field "${field}" updated in database:`, value);
+        } catch (e) {
+            console.error(`Failed to update field "${field}":`, e);
+        }
+    };
+
+    const debouncedUpdateTaskField = debounce(updateTaskField, 2000);
+
+    const handleFieldChange = (field) => (event) => {
+        const value = event.target.type === 'checkbox' ? 
+                        (event.target.checked ? 'Completed' : 'Pending')
+                        : event.target.value;
+
+        // Update local state immediately
+        setTaskDetails((prevDetails) => ({
+            ...prevDetails,
+            [field]: value,
+        }));
+
+        // Update the backend with debounce
+        debouncedUpdateTaskField(field, value);
+    };
+
+    
+    const TaskDetailTitle = () => {
+        return (
+            <Box display="flex" sx={{ alignItems: 'center' }}>
+                <Checkbox
+                    checked={taskDetails?.status === 'Completed'}
+                    onChange={handleFieldChange('status')}
+                    size="small"
+                />  
+                <Input
+                    value={taskDetails?.name || ''}
+                    onChange={handleFieldChange('name')}
+                />
+            </Box>
+        )
+    }
 
 
     return (
         <Box className={styles.container}>
-            <button onClick={() => setTaskID(null)}>Close</button>
-            <button onClick={() => startPomodoro()}>Start Pomodoro</button>
-
             {/* View Task Detail */}
             {taskDetails && (
                 <div>
-                    <h2>{taskDetails.name}</h2>
+                    <TaskDetailTitle />
                     {/* Checkbox for Task */}
-                    <input
-                        type="checkbox"
-                        checked={checkboxStatus === 'Completed'}
-                        onChange={(e) => {
-                            const status = e.target.checked ? 'Completed' : 'Pending';
-                            handleStatusChange(taskDetails.taskID, status);
-                        }}
-                    />
+                    <button onClick={() => setTaskID(null)}>Close</button>
+                    <button onClick={() => startPomodoro()}>Start Pomodoro</button>
                     <p>Due Date: {taskDetails.dueDate ? dayjs(taskDetails.dueDate).format('HH:mm, DD-MM-YY') : 'N/A'}</p>
                     <p>Priority: {taskDetails.priority || 'N/A'}</p>
                     <p>Description: {taskDetails.description || 'N/A'}</p>

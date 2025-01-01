@@ -512,7 +512,7 @@ def task_attributes_get_list(request):
                 if task.userID != userID:
                     raise Exception(
                         'User does not have permission to access this item')
-
+                
                 taskAttrs = TaskManager().getTaskAttributes(taskID=itemID)
                 # convert datetime in taskAttributes to serializeable JSON
                 if taskAttrs.dueDate is not None:
