@@ -132,6 +132,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     const handleConfirmDelete = () => {
         callDeleteTodoItemAPI(taskToDelete);
+        setViewTaskDetailID(null);
         handleCloseDialog();
     };
 

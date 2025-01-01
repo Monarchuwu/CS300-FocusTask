@@ -10,6 +10,7 @@ import Checkbox from '@mui/material/Checkbox';
 import Input from '@mui/material/Input';
 import dayjs from 'dayjs';
 
+// Title of the task detail
 const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
     return (
         <Box display="flex" sx={{ alignItems: 'center' }}>
@@ -26,6 +27,8 @@ const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
     );
 };
 
+
+// Debounce hook
 const useDebounce = (func, delay) => {
     const timer = React.useRef(null);
 
