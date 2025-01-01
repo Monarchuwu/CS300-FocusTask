@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
 import Input from '@mui/material/Input';
+import TextField from '@mui/material/TextField';
 import dayjs from 'dayjs';
 
 
@@ -20,7 +21,6 @@ const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
             <Checkbox
                 checked={taskDetails?.status === 'Completed'}
                 onChange={handleFieldChange('status')}
-                size="small"
             />  
             <Input
                 value={taskDetails?.name || ''}
@@ -29,6 +29,18 @@ const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
         </Box>
     );
 };
+
+const TaskDetailDescription = ({ taskDetails, handleFieldChange }) => {
+    return (
+        <TextField
+            value={taskDetails?.description || ''}
+            onChange={handleFieldChange('description')}
+            variant="outlined"
+            multiline
+            fullWidth
+        />
+    );
+}
 
 
 // Debounce hook
@@ -205,7 +217,10 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                     <button onClick={() => startPomodoro()}>Start Pomodoro</button>
                     <p>Due Date: {taskDetails.dueDate ? dayjs(taskDetails.dueDate).format('HH:mm, DD-MM-YY') : 'N/A'}</p>
                     <p>Priority: {taskDetails.priority || 'N/A'}</p>
-                    <p>Description: {taskDetails.description || 'N/A'}</p>
+                    <TaskDetailDescription 
+                        taskDetails={{ description: taskDetails?.description }} 
+                        handleFieldChange={handleFieldChange}
+                    />
                     {isToday(taskDetails.inTodayDate) ? (
                         <button onClick={() => {
                             callUpdateInTodayDateAPI(taskID, '2100-01-01T00:00:00+00:00');
