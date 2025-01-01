@@ -22,8 +22,6 @@ import {
 import LogoText from '../components/LogoText';
 import { callAPITemplate } from '../utils';
 
-const drawerWidth = 260;
-
 const items = [
     { text: 'Inbox', icon: <Message set="bulk" />, url: '/' },
     { text: 'Today', icon: <Calendar set="bulk" />, url: '/today' },
