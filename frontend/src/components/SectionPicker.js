@@ -3,7 +3,7 @@ import React from 'react';
 import { Box, Button, IconButton, Menu, MenuItem, Typography } from '@mui/material';
 import { Folder } from 'react-iconly';
 
-const SectionPicker = ({ sectionList, selectedSectionName, setSelectedSectionName, addingSectionID, setAddingSectionID }) => {
+const SectionPicker = ({ sectionList, selectedSection, setSelectedSection }) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
 
     const handleClick = (event) => {
@@ -16,21 +16,21 @@ const SectionPicker = ({ sectionList, selectedSectionName, setSelectedSectionNam
 
     const handleMenuItemClick = (sectionID) => {
         const sectionName = sectionList.current[sectionID];
-        setAddingSectionID(parseInt(sectionID));
-        setSelectedSectionName(sectionName);
+        // sectionList.current = Object.fromEntries(sectionItems.map(section => [section.itemID, section.name]));
+        setSelectedSection({ itemID: parseInt(sectionID), name: sectionName });
         handleClose();
     };
 
     return (
         <Box id="sectionSelection">
-            {selectedSectionName === '' || selectedSectionName === null ? (
+            {selectedSection?.name === '' || selectedSection?.name === null ? (
                 <IconButton onClick={handleClick} size='small' color="text.primary">
                     <Folder set="light" />
                 </IconButton>
             ) : (
                 <Button onClick={handleClick} startIcon={<Folder set="bulk" />} 
                     variant="outlined" size="small" color="primary">
-                    {selectedSectionName}
+                    {selectedSection?.name}
                 </Button>
             )}
             <Menu
@@ -43,7 +43,7 @@ const SectionPicker = ({ sectionList, selectedSectionName, setSelectedSectionNam
                         key={sectionID}
                         onClick={() => handleMenuItemClick(sectionID)}
                         style={{
-                            backgroundColor: addingSectionID === parseInt(sectionID) ? 'lightblue' : 'white',
+                            backgroundColor: selectedSection?.itemID === parseInt(sectionID) ? 'lightblue' : 'white',
                             color: sectionName === '' ? 'default' : 'primary'
                         }}
                     >

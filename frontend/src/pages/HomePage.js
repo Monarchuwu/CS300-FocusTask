@@ -31,8 +31,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     const [isAddingSection, setIsAddingSection] = React.useState(false);
     const [newSectionName, setNewSectionName] = React.useState("");
     // State variables for adding new task
-    const [addingSectionID, setAddingSectionID] = React.useState(null);
-    const [selectedSectionName, setSelectedSectionName] = React.useState(null);
+    const [selectedSection, setSelectedSection] = React.useState(null);
     const [newTaskName, setNewTaskName] = React.useState("");
     const [newTaskDescription, setNewTaskDescription] = React.useState("");
     // State variables for rendering the tree
@@ -123,11 +122,10 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
             `${process.env.REACT_APP_API_URL}/task/add`,
             JSON.stringify(payload),
             () => {
-                setAddingSectionID(null);
+                setSelectedSection(null);
                 setNewTaskName("");
                 setNewTaskDescription("");
                 setSelectedDate(null);
-                setSelectedSectionName(null);
                 setSelectedPriority(null);
                 setShowTaskDescription(false);
                 fetchTodoList(selectedProject);
@@ -219,7 +217,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
             sectionList.current = Object.fromEntries(sectionItems.map(section => [section.itemID, section.name]));
             const defaultSection = sectionItems.find(section => section.name === '');
             sectionDefaultID.current = defaultSection ? defaultSection.itemID : null;
-            setAddingSectionID(sectionDefaultID.current);
+            setSelectedSection(defaultSection);
         }
         catch (e) {
             console.error(e);
@@ -270,8 +268,8 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     }, [isAddingSection, newSectionName]);
 
     const handleAddTask = () => {
-        callAddTaskAPI(newTaskName, addingSectionID ? 
-                        addingSectionID : sectionDefaultID.current, selectedDate, selectedPriority, undefined, newTaskDescription
+        callAddTaskAPI(newTaskName, selectedSection ? 
+                        selectedSection.itemID : sectionDefaultID.current, selectedDate, selectedPriority, undefined, newTaskDescription
                         );
     };
 
@@ -521,8 +519,8 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         );
     }
 
-    const AddTaskField = (selectedProject, addingSectionID) => {
-        if (selectedProject === null || addingSectionID === null) {
+    const AddTaskField = () => {
+        if (selectedProject === null || selectedSection === null) {
             return (<Box></Box>);
         } else return (
             <Box sx = {{ 
@@ -538,10 +536,8 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <SectionPicker
                         sectionList={sectionList}
-                        selectedSectionName={selectedSectionName}
-                        addingSectionID={addingSectionID}
-                        setAddingSectionID={setAddingSectionID}
-                        setSelectedSectionName={setSelectedSectionName}
+                        selectedSection={selectedSection}
+                        setSelectedSection={setSelectedSection}
                     />
                     {/* Due date selection */}
                     <DateTimePickerButtonDialog
@@ -572,7 +568,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 <title>Inbox - FocusTask</title>
             </Helmet>
             {/* Add Task */}
-            {AddTaskField(selectedProject, addingSectionID)}
+            {AddTaskField()}
             {/* Render the tree */}
             <div>
                 {Object.values(tree).length > 0 ? (
