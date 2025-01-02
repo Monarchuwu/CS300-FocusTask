@@ -464,7 +464,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 }}
             />
         );
-    }
+    };
 
     const taskDescriptionField = () => {
         return (
@@ -518,12 +518,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     {/* Priority selection */}
                     <PriorityPicker priority={selectedPriority} setPriority={setSelectedPriority} />
 
-
-
-                    {/* <button onClick={() => { setAddingSectionID(sectionDefaultID.current); 
-                        setNewTaskName(""); setNewTaskDescription(""); }}>
-                        Cancel
-                    </button> */}
                     <Button onClick={() => handleAddTask()} variant="contained" startIcon={<AddRoundedIcon />} size="small"
                             float='right' sx={{ marginLeft: 'auto' }}>
                             Add

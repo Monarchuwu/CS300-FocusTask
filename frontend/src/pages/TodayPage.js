@@ -13,10 +13,16 @@ import Typography from '@mui/material/Typography';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import dayjs from 'dayjs';
 import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
-import { Tooltip } from '@mui/material';
+import { Tooltip, TextField } from '@mui/material';
+
+import DateTimePickerButtonDialog from '../components/DateTimePickerButtonDialog';
+import PriorityPicker from '../components/PriorityPicker';
+
+import TipsAndUpdatesTwoToneIcon from '@mui/icons-material/TipsAndUpdatesTwoTone';
 
 
 function TodayPage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, setSuggestTaskList }) {
@@ -31,7 +37,10 @@ function TodayPage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, set
     const [taskAttrMap, setTaskAttrMap] = React.useState({}); // Checkbox status of tasks
     // State variable for debouncing status (checkbox) changes
     const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
-
+    const [selectedDate, setSelectedDate] = React.useState(null);
+    const [selectedPriority, setSelectedPriority] = React.useState(null);
+    const [showTaskDescription, setShowTaskDescription] = React.useState(false);
+    const taskDescriptionRef = React.useRef(null);
 
     // API call functions
     const callGetProjectByNameAPI = async (name) => {
@@ -207,7 +216,7 @@ function TodayPage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, set
                     backgroundColor: task.itemID === viewTaskDetailID ? 'white' : 'gray.light',
                     boxShadow: task.itemID === viewTaskDetailID ? '0px 2px 5px 0px rgba(0,0,0,0.2)' : 'none'
                 }}
-                onClick={() => setViewTaskDetailID(task.itemID)} 
+                onClick={() => {setSuggestTaskList(false); setViewTaskDetailID(task.itemID);}} 
                 >
                 <Box alignItems='center' display='flex'>
                     {/* Checkbox for Task */}
@@ -295,56 +304,100 @@ function TodayPage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, set
         )
     }
 
+    const handleKeyPressTaskName = (e) => {
+        if (e.shiftKey && e.key === 'Enter') {
+            setShowTaskDescription(true);
+            setTimeout(() => {
+                taskDescriptionRef.current.focus();
+            }, 0);
+        } else if (e.key === 'Enter') {
+            handleAddTask();
+        }
+    };
+
+    const handleAddTask = () => {
+        callAddTaskAPI(newTaskName, sectionDefaultID, 
+            selectedDate, selectedPriority, 
+            undefined, newTaskDescription
+        );
+        setNewTaskName("");
+        setNewTaskDescription("");
+        setSelectedDate(null);
+        setSelectedPriority(null);
+        setShowTaskDescription(false);
+    };
 
     return (
         <Box sx={{ padding: '15px' }}>
             {/* Add Task */}
             {projectDefaultID && sectionDefaultID && (
-                <div>
-                    <label>Name</label>
-                    <input
+                <Box sx = {{ 
+                    border: '1px solid', 
+                    borderColor: 'border.main', 
+                    borderRadius: '5px', 
+                    padding: '15px', 
+                    margin: '10px 0px',
+                    backgroundColor: 'white', 
+                }}>
+                    <TextField
                         type="text"
+                        size="small"
+                        variant='standard'
                         value={newTaskName}
+                        placeholder='Task Name'
                         onChange={(e) => setNewTaskName(e.target.value)}
+                        onKeyUp={handleKeyPressTaskName}
+                        fullWidth
+                        sx={{marginBottom: '10px', 
+                            "& .MuiInputBase-root::before": { borderColor: 'border.main' },
+                        }}
                     />
-                    <br />
-                    <label>Description</label>
-                    <input
-                        type="text"
-                        value={newTaskDescription}
-                        onChange={(e) => setNewTaskDescription(e.target.value)}
-                    />
-                    <button onClick={() => { setNewTaskName(""); setNewTaskDescription(""); }}>Cancel</button>
-                    <button onClick={() => callAddTaskAPI(newTaskName, sectionDefaultID, undefined, undefined, undefined, newTaskDescription)}>Add</button>
-                </div>
+                    {showTaskDescription &&                 
+                        <TextField
+                            type="text"
+                            value={newTaskDescription}  
+                            variant="outlined"
+                            label='Description'
+                            onChange={(e) => setNewTaskDescription(e.target.value)}
+                            slotProps={{ htmlInput: { style: { fontSize: 14 } }, 
+                                        inputLabel: { style: { fontSize: 14 } }
+                                    }}
+                            size="small"
+                            fullWidth
+                            multiline={true}
+                            sx={{
+                                "& fieldset": { borderColor: 'border.main' },
+                                marginBottom: '10px',
+                            }}
+                            inputRef={taskDescriptionRef}
+                            onKeyUp={(e) => { if (e.key === 'Enter' && e.ctrlKey) handleAddTask(); }}
+                        />  
+                    }
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        {/* Due date selection */}
+                        <DateTimePickerButtonDialog
+                            selectedDate={selectedDate}
+                            setSelectedDate={setSelectedDate}
+                        />
+                        {/* Priority selection */}
+                        <PriorityPicker priority={selectedPriority} setPriority={setSelectedPriority} />
+                        <Button onClick={() => handleAddTask()} variant="contained" startIcon={<AddRoundedIcon />} size="small"
+                                float='right' sx={{ marginLeft: 'auto' }}>
+                                Add
+                        </Button>
+                    </Box>
+                </Box>
             )}
             {/* Suggest Task List button */}
-            <button onClick={() => setSuggestTaskList(true)}>Suggestions</button>
+            <Button onClick={() => {
+                    setSuggestTaskList(true);
+                    setViewTaskDetailID(null);
+                }} fullWidth
+                startIcon={<TipsAndUpdatesTwoToneIcon />}>
+                View Today's Suggested Tasks
+            </Button>
             {/* Render Task List */}
             {!taskList ? <Box justifyContent='center' alignItems='center' display='flex' height='25vh'> <CircularProgress /> </Box> :
-                // <ul className={styles.taskList}>
-                //     {taskList.map(task => (
-                //         <li key={task.itemID} className={styles.taskItem}>
-                //             {/* Checkbox for Task */}
-                //             <input
-                //                 type="checkbox"
-                //                 checked={taskStatusMap[task.itemID] === 'Completed'}
-                //                 onChange={(e) => {
-                //                     const status = e.target.checked ? 'Completed' : 'Pending';
-                //                     handleStatusChange(task.itemID, status);
-                //                 }}
-                //             />
-                //             {/* Name, Edit button, and Delete button */}
-                //             <strong>{task.name}</strong> ({task.itemType})
-                //             <button onClick={() => {
-                //                 setViewTaskDetailID(task.itemID);
-                //                 setSuggestTaskList(false);
-                //             }}>Edit</button>
-                //             <button onClick={() => navigateToOriginalProject(task.itemID)}>Show location</button>
-                //             <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
-                //         </li>
-                //     ))}
-                // </ul>
                 <Box>
                     <Section taskList={taskList} taskAttrMap={taskAttrMap} targetStatus='Pending' title='To-do' />
                     <Section taskList={taskList} taskAttrMap={taskAttrMap} targetStatus='Completed' title='Completed'/>
