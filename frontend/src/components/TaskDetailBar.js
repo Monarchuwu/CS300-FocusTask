@@ -15,7 +15,7 @@ import dayjs from 'dayjs';
 import DateTimePickerButtonDialog from './DateTimePickerButtonDialog';
 
 
-const DEBOUNCE_DELAY = 700;
+const DEBOUNCE_DELAY = 600;
 
 // Title of the task detail
 const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {

@@ -5,6 +5,7 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Dialog from '@mui/material/Dialog';
 import TextField from '@mui/material/TextField';
+import { Tooltip } from '@mui/material';
 import { Calendar } from 'react-iconly';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -46,6 +47,7 @@ const DateTimePickerButtonDialog = ({
     };
 
     return (<Box id="dueDateSelection"  >
+        <Tooltip title="Due Date">
         {selectedDate === null || dayjs(selectedDate).isValid() === false ? 
             (<IconButton onClick={handleDueDateClickOpen} size="small">
                 <Calendar set="light" />
@@ -57,6 +59,7 @@ const DateTimePickerButtonDialog = ({
                 </Button>
             )
         }
+        </Tooltip>
         <Dialog open={dueDateOpen} onClose={handleDueDateClose}>
             <DialogTitle>Task Due Date</DialogTitle>
             <DialogContent>
