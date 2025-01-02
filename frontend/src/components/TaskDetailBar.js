@@ -11,9 +11,11 @@ import Input from '@mui/material/Input';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import dayjs from 'dayjs';
+import { Tooltip } from '@mui/material/';
 
 import DateTimePickerButtonDialog from './DateTimePickerButtonDialog';
 import PriorityPicker from './PriorityPicker';
+import { TimeCircle, Send, Calendar } from 'react-iconly';
 
 
 const DEBOUNCE_DELAY = 600;
@@ -37,7 +39,11 @@ const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
 
 const TaskDetailDuePriority = ({ taskDetails, handleFieldChange }) => {
     return (
-        <Box display="flex" sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '5px' }}>
+        <Box display="flex" sx={{ 
+                alignItems: 'center', 
+                flexWrap: 'wrap', gap: '5px',
+                marginBottom: '5px'
+            }}>
             <PriorityPicker
                 priority={taskDetails.priority}
                 setPriority={(newPriority) => handleFieldChange('priority', newPriority)}
@@ -49,6 +55,49 @@ const TaskDetailDuePriority = ({ taskDetails, handleFieldChange }) => {
         </Box>
     );  
 }
+
+const TaskDetailPomoToday = ({ taskDetails, startPomodoro, callUpdateInTodayDateAPI }) => {
+    // Helper function to check if a date string is today
+    const isToday = (stringDate) => {
+        if (!stringDate) return false; // null or undefined
+        const today = new Date();
+        const dateToCheck = new Date(stringDate);
+        return today.getDate() === dateToCheck.getDate() &&
+            today.getMonth() === dateToCheck.getMonth() &&
+            today.getFullYear() === dateToCheck.getFullYear()
+    };
+
+    return (
+        <Box display="flex" sx={{ alignItems: 'center', flexWrap: 'wrap', gap: '5px', marginBottom: '5px' }}>
+            <Tooltip title="Start Pomodoro" arrow>
+                <Button onClick={()=> startPomodoro()} variant='contained' 
+                        color="secondary" sx={{ flex: 1, minWidth: "fit-content" }} startIcon={<TimeCircle set="bulk"/>}>
+                    Pomodoro</Button>
+            </Tooltip>
+            {isToday(taskDetails?.inTodayDate) ? (
+                <Tooltip title="Remove from Today's Task" arrow>
+                <Button sx={{ flex: 1, minWidth: "fit-content" }} 
+                        onClick={() => {callUpdateInTodayDateAPI(taskDetails?.taskID, '2100-01-01T00:00:00+00:00');}}
+                        startIcon={<Calendar set="bulk"/>}
+                        variant="contained"
+                        color="secondary">
+                    Today
+                </Button>
+                </Tooltip>
+            ) : (
+                <Tooltip title="Add to Today's Task" arrow>
+                    <Button sx={{ flex: 1, minWidth: "fit-content" }}
+                            onClick={()=> {callUpdateInTodayDateAPI(taskDetails?.taskID, new Date().toISOString().replace('Z', '+00:00'));}}
+                            startIcon={<Send set="bulk"/>}
+                            variant="outlined"
+                            color='secondary'>
+                        Today
+                    </Button>
+                </Tooltip>
+            )}
+        </Box>
+    );
+};
 
 const TaskDetailDescription = ({ taskDetails, handleFieldChange }) => {
     return (
@@ -63,6 +112,7 @@ const TaskDetailDescription = ({ taskDetails, handleFieldChange }) => {
                 "& fieldset": { borderColor: 'border.main' },
                 marginBottom: '10px',
             }}
+            size="small"
             multiline
             rows={5}
             fullWidth
@@ -137,15 +187,6 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
         catch (e) {
             console.error(e);
         }
-    }
-    // Helper function to check if a date string is today
-    const isToday = (stringDate) => {
-        if (!stringDate) return false; // null or undefined
-        const today = new Date();
-        const dateToCheck = new Date(stringDate);
-        return today.getDate() === dateToCheck.getDate() &&
-            today.getMonth() === dateToCheck.getMonth() &&
-            today.getFullYear() === dateToCheck.getFullYear()
     }
 
     // Fetch task details function
@@ -232,7 +273,7 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
         <Box className={styles.container}>
             {/* View Task Detail */}
             {taskDetails && (
-                <div>
+                <Box>
                     <TaskDetailTitle 
                         taskDetails={{ name: taskDetails?.name, status: taskDetails?.status }} 
                         handleFieldChange={handleFieldChange} 
@@ -242,21 +283,18 @@ function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs,
                         handleFieldChange={handleFieldChange}
                     />
                     {/* Checkbox for Task */}
-                    <button onClick={() => startPomodoro()}>Start Pomodoro</button>
-                                        {isToday(taskDetails.inTodayDate) ? (
-                        <button onClick={() => {
-                            callUpdateInTodayDateAPI(taskID, '2100-01-01T00:00:00+00:00');
-                        }}>Remove From Today's Task</button>
-                    ) : (
-                        <button onClick={() => {
-                            callUpdateInTodayDateAPI(taskID, new Date().toISOString().replace('Z', '+00:00'));
-                        }}>Add To Today's Task</button>
-                    )}
+                    <TaskDetailPomoToday 
+                        taskDetails={{ 
+                            inTodayDate: taskDetails?.inTodayDate,
+                            taskID: taskID }} 
+                        startPomodoro={startPomodoro}
+                        callUpdateInTodayDateAPI={callUpdateInTodayDateAPI}
+                    />
                     <TaskDetailDescription 
                         taskDetails={{ description: taskDetails?.description }} 
                         handleFieldChange={handleFieldChange}
                     />
-                </div>
+                </Box>
             )}
         </Box>
     )
