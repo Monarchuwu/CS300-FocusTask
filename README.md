@@ -15,13 +15,22 @@ Create a `.env` file in the root directory of the project and add the following:
 ```bash
 DATABASE_NAME=focus_task_db
 DATABASE_USER=focus_task_admin
-DATABASE_PASSWORD=<password>
+DATABASE_PASSWORD=<your_password>
 DATABASE_PORT=5432  
-DATABASE_HOST=focus-task-postgres
+DATABASE_HOST=db
+DATABASE_ENGINE=django.db.backends.postgresql
 DJANGO_ENV=development
+SECRET_KEY=<your_secret_key>
 ```
-Set the DATABASE_PASSWORD to a password of your choice.
+Set the DATABASE_PASSWORD to a password of your choice. Set the SECRET_KEY to a secret key of your choice.
 If you're in our team, you can get the file from this [link](https://drive.google.com/file/d/1Powqoi92qATvAI0RD-x41aYPqAz1yOiJ/view?usp=drive_link).
+
+Add another `.env` in `frontend` folder with following constants:
+```bash
+REACT_APP_API_URL=http://localhost:8000/todolist/api 
+```
+
+Replace the `REACT_APP_API_URL` to match your backend API URL.
 
 ### 4. Build and run
 Go to the root directory of the project and run the following commands:

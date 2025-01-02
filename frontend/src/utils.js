@@ -45,3 +45,10 @@ export const callAPITemplate = async (
         fetchError(e);
     }
 }
+
+export const getPriorityColor = (priority) => {
+    if (priority === 'High') return 'priority.high';
+    else if (priority === 'Medium') return 'priority.medium';
+    else if (priority === 'Low') return 'priority.low';
+    else return 'text.primary';
+};

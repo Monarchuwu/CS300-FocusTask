@@ -76,6 +76,32 @@ def test_api_user_signout(client, userManager):
 
 
 @pytest.mark.django_db
+def test_get_username(client, userManager):
+    userManager.registerUser(
+        username="testuser",
+        email="test@gmail.com",
+        password="password123",
+    )
+    authenticationToken = userManager.signIn(
+        email="test@gmail.com",
+        password="password123"
+    )
+
+    url = "/todolist/api/user/get_username"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken
+    }))
+
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert response.headers["Content-Type"] == "application/json", \
+        f"Expected content-type 'application/json', but got {response.headers['Content-Type']}"
+    
+    jsonData = response.json()
+    assert jsonData['status'] == 'success'
+    assert jsonData['data'] == 'testuser'
+
+
+@pytest.mark.django_db
 def test_api_authentication_status_notfound(client):
     url = "/todolist/api/authentication/status"
     response = client.post(url, content_type='application/json', data=json.dumps({

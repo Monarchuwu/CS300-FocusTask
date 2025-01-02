@@ -2,15 +2,18 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 import json
 
-def value_in_dict(dict: dict, key: str, default = None):
+
+def value_in_dict(dict: dict, key: str, default=None):
     if key not in dict or key.lower() == "none" or key.lower() == "null":
         return default
     return dict[key]
+
 
 def normalize_data(dict: dict, required_keys: list = []):
     for key in required_keys:
         dict[key] = value_in_dict(dict, key)
     return dict
+
 
 class User:
     def __init__(self,
@@ -40,13 +43,15 @@ class User:
 
     @staticmethod
     def from_json(json_data):
-        json_data = normalize_data(json_data, ["userID", "username", "email", "passwordHash", "avatarURL", "createdAt"])
+        json_data = normalize_data(json_data, [
+                                   "userID", "username", "email", "passwordHash", "avatarURL", "createdAt"])
         return User(json_data["userID"],
                     json_data["username"],
                     json_data["email"],
                     json_data["passwordHash"],
                     json_data["avatarURL"],
                     json_data["createdAt"])
+
 
 class WebsiteBlocking:
     def __init__(self,
@@ -69,6 +74,7 @@ class WebsiteBlocking:
         }
         return json.dumps(json_data)
 
+
 class Preferences:
     def __init__(self,
                  userID: int,
@@ -82,6 +88,7 @@ class Preferences:
         self.notification = notification
         self.autoBlock = autoBlock
 
+
 class AuthenticationToken:
     def __init__(self,
                  tokenID: int,
@@ -93,12 +100,14 @@ class AuthenticationToken:
         self.tokenValue = tokenValue
         self.expiryDate = expiryDate
 
+
 class Label:
     def __init__(self,
                  labelID: int,
                  name: str):
         self.labelID = labelID
         self.name = name
+
 
 class TodoItem:
     def __init__(self,
@@ -128,7 +137,7 @@ class TodoItem:
             "labelID": self.labelID
         }
         return json.dumps(json_data)
-    
+
     def to_json_without_userID(self):
         json_data = {
             "itemID": self.itemID,
@@ -139,11 +148,13 @@ class TodoItem:
             "labelID": self.labelID
         }
         return json.dumps(json_data)
-    
+
     @staticmethod
     def from_json(json_data):
-        json_data = normalize_data(json_data, ["itemID", "name", "parentID", "createdDate", "userID", "itemType", "labelID"])
-        createdDate = None if json_data["createdDate"] is None else datetime.fromisoformat(json_data["createdDate"])
+        json_data = normalize_data(json_data, [
+                                   "itemID", "name", "parentID", "createdDate", "userID", "itemType", "labelID"])
+        createdDate = None if json_data["createdDate"] is None else datetime.fromisoformat(
+            json_data["createdDate"])
         return TodoItem(json_data["itemID"],
                         json_data["name"],
                         json_data["parentID"],
@@ -151,6 +162,7 @@ class TodoItem:
                         json_data["userID"],
                         json_data["itemType"],
                         json_data["labelID"])
+
 
 class TaskAttributes:
     def __init__(self,
@@ -170,23 +182,24 @@ class TaskAttributes:
     def __str__(self):
         json_data = {
             "taskID": self.taskID,
-            "dueDate": self.dueDate,
+            "dueDate": self.dueDate.isoformat() if self.dueDate is not None else None,
             "priority": self.priority,
             "status": self.status,
             "description": self.description,
-            "inTodayDate": self.inTodayDate.isoformat()
+            "inTodayDate": self.inTodayDate.isoformat() if self.inTodayDate is not None else None
         }
         return json.dumps(json_data)
-    
+
     def to_json_without_taskID(self):
         json_data = {
-            "dueDate": self.dueDate,
+            "dueDate": self.dueDate.isoformat() if self.dueDate is not None else None,
             "priority": self.priority,
             "status": self.status,
             "description": self.description,
             "inTodayDate": self.inTodayDate.isoformat()
         }
         return json.dumps(json_data)
+
 
 class Media:
     def __init__(self,
@@ -199,6 +212,7 @@ class Media:
         self.taskID = taskID
         self.uploadedDate = uploadedDate
 
+
 class Logs:
     def __init__(self,
                  logID: int,
@@ -209,6 +223,7 @@ class Logs:
         self.taskID = taskID
         self.logContent = logContent
         self.createdAt = createdAt
+
 
 class Reminder:
     def __init__(self,
@@ -222,6 +237,7 @@ class Reminder:
         self.reminderMode = reminderMode
         self.timeOffset = timeOffset
         self.specificTime = specificTime
+
 
 class PomodoroHistory:
     def __init__(self,

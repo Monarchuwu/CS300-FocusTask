@@ -9,20 +9,20 @@ import TodayPage from './pages/TodayPage';
 import PomodoroPage from './pages/PomodoroPage';
 import SignInPage from './pages/SignInPage';
 import RegisterPage from './pages/RegisterPage';
-import NotFoundPage from './pages/NotFoundPage';
 
 import { callAPITemplate } from './utils';
 
 import React from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { CircularProgress, Box, Grid2 as Grid } from '@mui/material';
+
+console.log(process.env.REACT_APP_API_URL);
 
 function App() {
     const navigate = useNavigate();
     const location = useLocation();
     // State variable for DOM to wait while checking validation status  
     const [isLoading, setIsLoading] = React.useState(true);
-    // State variable for selected project
-    const [selectedProject, setSelectedProject] = React.useState(null);
     // State variables for task detail
     const [viewTaskDetailID, setViewTaskDetailID] = React.useState(null);
     const [updateTaskAttrs, setUpdateTaskAttrs] = React.useState(0);
@@ -35,6 +35,9 @@ function App() {
     // Check if the authentication token is still valid
     // when the app is loaded
     React.useEffect(() => {
+        if (!isLoading) {
+            return;
+        }
         const checkToken = async () => {
             const isSignInPages = location.pathname === '/signin' || location.pathname === '/register';
             const authToken = localStorage.getItem('authToken');
@@ -43,7 +46,7 @@ function App() {
                 if (isSignInPages) {
                     if (authToken !== null) {
                         await callAPITemplate(
-                            'http://localhost:8000/todolist/api/authentication/status',
+                            `${process.env.REACT_APP_API_URL}/authentication/status`,
                             JSON.stringify({ "authenticationToken": authToken }),
                             (data) => {
                                 if (data.status) {
@@ -59,7 +62,7 @@ function App() {
                     }
                     else {
                         await callAPITemplate(
-                            'http://localhost:8000/todolist/api/authentication/status',
+                            `${process.env.REACT_APP_API_URL}/authentication/status`,
                             JSON.stringify({ "authenticationToken": authToken }),
                             (data) => {
                                 if (!data.status) {
@@ -78,21 +81,21 @@ function App() {
 
             setTimeout(() => {
                 setIsLoading(false);
-            }, 0);
+            }, 1000);
         }
         checkToken();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [isLoading]);
 
 
     return (isLoading
-        ? <div>Loading...</div>
+        ? <Box justifyContent='center' alignItems='center' display='flex' height='100vh'>
+            <CircularProgress />
+        </Box>
         : <div className={styles.App}>
             <Routes>
                 <Route path='/' element={
                     <LayoutWithNavBar
-                        selectedProject={selectedProject}
-                        setSelectedProject={setSelectedProject}
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
@@ -106,8 +109,6 @@ function App() {
                 } />
                 <Route path='/today' element={
                     <LayoutWithNavBar
-                        selectedProject={selectedProject}
-                        setSelectedProject={setSelectedProject}
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
@@ -121,8 +122,6 @@ function App() {
                 } />
                 <Route path='/pomodoro' element={
                     <LayoutWithNavBar
-                        selectedProject={selectedProject}
-                        setSelectedProject={setSelectedProject}
                         viewTaskDetailID={viewTaskDetailID}
                         setViewTaskDetailID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
@@ -136,7 +135,7 @@ function App() {
                 } />
                 <Route path='/signin' element={<SignInPage />} />
                 <Route path='/register' element={<RegisterPage />} />
-                <Route path='/*' element={<NotFoundPage />} />
+                <Route path="/*" element={<Navigate to="/" replace />} />
             </Routes>
         </div>
     );
@@ -146,7 +145,6 @@ export default App;
 
 function LayoutWithNavBar({
     children,
-    selectedProject, setSelectedProject,
     viewTaskDetailID, setViewTaskDetailID,
     updateTaskAttrs, setUpdateTaskAttrs,
     suggestTaskList, setSuggestTaskList,
@@ -159,7 +157,7 @@ function LayoutWithNavBar({
     const callGetTodoItemAPI = async (taskID) => {
         const authToken = localStorage.getItem('authToken');
         const data = await callAPITemplate(
-            'http://localhost:8000/todolist/api/todo_item/get',
+            `${process.env.REACT_APP_API_URL}/todo_item/get`,
             JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
         );
         return JSON.parse(data);
@@ -169,7 +167,7 @@ function LayoutWithNavBar({
         switch (children.type) {
             case HomePage:
                 return React.cloneElement(children, {
-                    selectedProject,
+                    viewTaskDetailID,
                     setViewTaskDetailID,
                     updateTaskAttrs, setUpdateTaskAttrs
                 });
@@ -192,12 +190,12 @@ function LayoutWithNavBar({
     // Load the last active pomodoro session
     React.useEffect(() => {
         if (taskPomodoro !== null) {
-            return;
+            setLoading(false);
         }
         const loadPomodoro = async () => {
             const authToken = localStorage.getItem('authToken');
             const data = JSON.parse(await callAPITemplate(
-                'http://localhost:8000/todolist/api/pomodoro/get_last_active_session',
+                `${process.env.REACT_APP_API_URL}/pomodoro/get_last_active_session`,
                 JSON.stringify({ "authenticationToken": authToken })
             ));
             if (data.haveActiveSession) {
@@ -212,22 +210,34 @@ function LayoutWithNavBar({
     }, []);
 
 
-    return (loading ? <div>Loading...</div> :
-        <div className={suggestTaskList || viewTaskDetailID ? styles.container_3Columns : styles.container_2Columns}>
-            <SideBar selectedProject={selectedProject} setSelectedProject={setSelectedProject} />
-            {renderChildrenWithProps()}
-            {suggestTaskList ?
-                <SuggestTaskBar
-                    setUpdateTaskAttrs={setUpdateTaskAttrs}
-                    setSuggestTaskList={setSuggestTaskList}
-                />
-                : viewTaskDetailID && <TaskDetailBar
-                    taskID={viewTaskDetailID}
-                    setTaskID={setViewTaskDetailID}
-                    updateTaskAttrs={updateTaskAttrs}
-                    setUpdateTaskAttrs={setUpdateTaskAttrs}
-                    setTaskPomodoro={setTaskPomodoro}
-                />}
-        </div>
+    return (loading ? <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box> :
+        <Grid container spacing={0} sx={{ height: '100vh' }}>
+            <Grid item size={{ xs: 12, sm: 2.5 }} sx={{ overflowY: 'auto' }}>
+                <SideBar />
+            </Grid>
+            <Grid item size={{ xs: 12, sm: 6 }} sx={{ overflowY: 'auto', height: '100vh' }}>
+                {renderChildrenWithProps()}
+            </Grid>
+            <Grid item size={{ xs: 12, sm: 3.5 }} sx={{
+                padding: '30px 25px',
+                borderLeft: '1px solid',
+                borderColor: 'border.main',
+                backgroundColor: 'white',
+                overflowY: 'auto',
+                height: '100vh'
+            }}>
+                {suggestTaskList ?
+                    <SuggestTaskBar
+                        setUpdateTaskAttrs={setUpdateTaskAttrs}
+                        setSuggestTaskList={setSuggestTaskList}
+                    />
+                    : viewTaskDetailID && <TaskDetailBar
+                        taskID={viewTaskDetailID}
+                        updateTaskAttrs={updateTaskAttrs}
+                        setUpdateTaskAttrs={setUpdateTaskAttrs}
+                        setTaskPomodoro={setTaskPomodoro}
+                    />}
+            </Grid>
+        </Grid>
     );
 }

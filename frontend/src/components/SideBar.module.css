@@ -1,31 +1,9 @@
-.container {}
-
-.navbar {
-    list-style: none;
+.container {
+    padding: 20px;  
 }
 
-.navbarItem {
-    text-decoration: none;
-    color: black;
-}
-
-.navbarItemActive {
-    color: white;
-    background-color: black;
-}
-
-.projectContent {}
-
-.projectTitle {}
-
-.projectList {
-    display: flex;
-    flex-direction: column;
-}
-
-.project {}
-
-.projectActive {
-    color: white;
-    background-color: black;
+.user {
+    position: absolute;
+    bottom: 10px;
+    float: right;
 }

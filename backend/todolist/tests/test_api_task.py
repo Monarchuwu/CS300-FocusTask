@@ -346,6 +346,75 @@ def test_api_todo_item_get(client, authenticationToken):
 
 
 @pytest.mark.django_db
+def test_api_project_get_by_name(client, authenticationToken):
+    # Setup
+    url = "/todolist/api/project/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testproject",
+    }))
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
+
+    # Test the API
+    url = "/todolist/api/project/get_by_name"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "projectName": "testproject",
+    }))
+
+    # Check the response status
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert response.headers["Content-Type"] == "application/json", \
+        f"Expected content-type 'application/json', but got {response.headers['Content-Type']}"
+    
+    # Check the response data
+    jsonData = response.json()
+    assert jsonData['status'] == 'success'
+
+    data = json.loads(jsonData['data'])
+    expectedKeys = ['itemID', 'name', 'parentID', 'createdDate', 'itemType', 'labelID']
+    assert all(key in data for key in expectedKeys)
+    assert 'userID' not in data
+    assert data['itemID'] == itemID
+
+
+@pytest.mark.django_db
+def test_api_section_get_by_name(client, authenticationToken):
+    # Setup
+    url = "/todolist/api/project/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testproject",
+    }))
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
+
+    # Test the API
+    url = "/todolist/api/section/get_by_name"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "projectID": itemID,
+        "sectionName": "",
+    }))
+
+    # Check the response status
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert response.headers["Content-Type"] == "application/json", \
+        f"Expected content-type 'application/json', but got {response.headers['Content-Type']}"
+    
+    # Check the response data
+    jsonData = response.json()
+    assert jsonData['status'] == 'success'
+
+    data = json.loads(jsonData['data'])
+    expectedKeys = ['itemID', 'name', 'parentID', 'createdDate', 'itemType', 'labelID']
+    assert all(key in data for key in expectedKeys)
+    assert 'userID' not in data
+    assert data['itemID'] == itemID+1
+
+
+@pytest.mark.django_db
 def test_api_task_attributes_get(client, authenticationToken):
     # Setup project
     url = "/todolist/api/project/add"
@@ -442,7 +511,63 @@ def test_api_todo_item_get_list(client, authenticationToken):
     jsonData = response.json()
     assert jsonData['status']=="success"
 
-    itemList = [projectID, sectionID, itemID]
+    itemList = [projectID, projectID+1, sectionID, itemID]
+
+    jsonDatas = jsonData['data']
+    # print(jsonDatas)
+    assert len(jsonDatas) == len(itemList)
+    for jsondata in jsonDatas:
+        assert json.loads(jsondata)['itemID'] in itemList
+
+
+@pytest.mark.django_db
+def test_api_todo_item_get_project_list(client, authenticationToken):
+    # Set up
+    url = "/todolist/api/project/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testproject",
+    }))
+    project = json.loads(response.json()['data'])
+    projectID = project["itemID"]
+
+    url = "/todolist/api/section/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testsection",
+        "parentID":projectID,
+    }))
+    data = json.loads(response.json()['data'])
+    sectionID = data["itemID"]
+
+    url = "/todolist/api/task/add"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "name": "testtask",
+        "parentID": sectionID,
+        "priority": "High",
+        "description": "Nothing here",
+    }))
+    data = json.loads(response.json()['data'])
+    itemID = data["itemID"]
+
+    # Test the api
+    url = "/todolist/api/todo_item/get_project_list"
+    response = client.post(url, content_type='application/json', data=json.dumps({
+        "authenticationToken": authenticationToken,
+        "projectName": "testproject",
+    }))
+
+    # Check the response status
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert response.headers["Content-Type"] == "application/json", \
+        f"Expected content-type 'application/json', but got {response.headers['Content-Type']}"
+
+    # Check the response data
+    jsonData = response.json()
+    assert jsonData['status']=="success"
+
+    itemList = [projectID, projectID+1, sectionID, itemID]
 
     jsonDatas = jsonData['data']
     # print(jsonDatas)
@@ -481,8 +606,10 @@ def test_api_todo_item_get_all(client, authenticationToken):
     jsonData = response.json()
     assert jsonData['status'] == "success"
 
-    itemList = [projectID1, projectID2]
-    nameList = ['testproject1', 'testproject2']
+    # projectID1-2 is the empty project of the user
+    # projectID1-1 is the empty section of the empty project
+    itemList = [projectID1-2, projectID1-1, projectID1, projectID1+1, projectID2, projectID2+1]
+    nameList = ['', 'testproject1', 'testproject2']
     jsonDatas = jsonData['data']
     assert len(jsonDatas) == len(itemList)
     for jsondata in jsonDatas:
@@ -520,8 +647,9 @@ def test_api_project_get_all(client, authenticationToken):
     jsonData = response.json()
     assert jsonData['status'] == "success"
 
-    projectList = [projectID1, projectID2]
-    nameList = ['testproject1', 'testproject2']
+    # projectID1-2 is the empty project of the user
+    projectList = [projectID1-2, projectID1, projectID2]
+    nameList = ['', 'testproject1', 'testproject2']
     jsonDatas = jsonData['data']
     assert len(jsonDatas) == len(projectList)
     for jsondata in jsonDatas:

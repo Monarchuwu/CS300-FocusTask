@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import dj_database_url
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,14 +22,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-%ric$-@s=)x)hufowu$\
-                rm-_m^xn6w6gbe&9qg=ms!k+=31*rec"
+SECRET_KEY = config('SECRET_KEY', default='django-insecure$@^_')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# It should be False, but for development purposes, it is set to True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS',
+                       default='localhost, 127.0.0.1, 172.18.0.2, 0.0.0.0',
+                       cast=lambda v: [s.strip() for s in v.split(',')])
 
 
 # Application definition
@@ -87,11 +91,17 @@ WSGI_APPLICATION = "focus_task.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": config('DATABASE_ENGINE', default='django.db.backends.postgresql'),
+        "NAME": config('DATABASE_NAME', default='focus_task'),
+        "USER": config('DATABASE_USER', default='user'),
+        "PASSWORD": config('DATABASE_PASSWORD', default='password'),
+        "HOST": config('DATABASE_HOST', default='localhost'),
+        "PORT": config('DATABASE_PORT', default='5432'),
     }
 }
-
+DATABASE_URL = config('DATABASE_URL', default=None)
+if DATABASE_URL:
+    DATABASES["default"] = dj_database_url.parse(DATABASE_URL)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -133,3 +143,9 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='',
+    cast=lambda v: [s.strip() for s in v.split(',')] if v else []
+)

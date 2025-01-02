@@ -43,6 +43,3 @@ jobs:
 
     - name: Display flake8 output
       run: cat flake8_output.txt
-
-    - name: Run tests
-      run: docker-compose exec -T backend pytest

@@ -6,3 +6,6 @@ pytest-django
 bcrypt
 djangorestframework==3.14
 django-cors-headers
+dj-database-url
+psycopg2-binary
+python-decouple

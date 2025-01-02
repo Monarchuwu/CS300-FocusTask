@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 from datetime import datetime
 from . import objects
 
@@ -119,12 +120,45 @@ class TodoItemDB(MyDB):
         TASK = "Task"
 
     itemID = models.AutoField(primary_key = True)
-    name = models.CharField(max_length = 100)
+    name = models.CharField(max_length = 100, blank=True)
     parentID = models.ForeignKey("self", on_delete = models.CASCADE, null = True, blank = True)
     createdDate = models.DateTimeField("Created date", default = timezone.now)
     userID = models.ForeignKey(UserDB, on_delete = models.CASCADE)
     itemType = models.CharField(max_length = 10, choices=ItemType.choices, default = ItemType.TASK)
     labelID = models.ForeignKey(LabelDB, on_delete = models.CASCADE, null = True, blank = True)
+
+    def clean(self):
+        # Project contraints
+        if self.itemType == self.ItemType.PROJECT:
+            if TodoItemDB.objects.filter(userID=self.userID, name=self.name, itemType=self.ItemType.PROJECT).exclude(itemID=self.itemID).exists():
+                raise ValidationError("A Project with this user and name already exists.")
+            if self.parentID is not None:
+                raise ValidationError("A Project cannot have a parent.")
+
+        # Section contraints
+        if self.itemType == self.ItemType.SECTION:
+            if TodoItemDB.objects.filter(userID=self.userID, name=self.name, parentID=self.parentID, itemType=self.ItemType.SECTION).exclude(itemID=self.itemID).exists():
+                raise ValidationError("A Section with this user, project parent, and name already exists.")
+            if self.parentID.itemType != self.ItemType.PROJECT:
+                raise ValidationError("A Section must have a Project parent.")
+            
+        # Task contraints
+        if self.itemType == self.ItemType.TASK:
+            if self.parentID is None:
+                raise ValidationError("A Task must have a parent.")
+            if self.parentID.itemType != self.ItemType.SECTION:
+                raise ValidationError("A Task must have a Section parent.")
+            if self.name == "":
+                raise ValidationError("A Task must have a name.")
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.name == "" and not kwargs.get('cascade_delete', False):
+            raise ValueError("Direct deletion of TodoItemDB named \"\" is not allowed.")
+        super().delete(*args, **kwargs)
 
     def get_data_object(self):
         return objects.TodoItem(
@@ -152,6 +186,10 @@ class TaskAttributesDB(MyDB):
     status = models.CharField(max_length = 10, choices = Status.choices, default = Status.PENDING)
     description = models.CharField(max_length = 500, default = "", blank = True)
     inTodayDate = models.DateTimeField("In Today date", default = timezone.make_aware(datetime(2100, 1, 1)))
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def get_data_object(self):
         return objects.TaskAttributes(

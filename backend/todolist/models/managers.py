@@ -49,6 +49,13 @@ class UserManager:
             return "User signed out successfully"
         except databases.AuthenticationTokenDB.DoesNotExist:
             raise ValueError("Error: Authentication token not found")
+        
+    def getUsername(self, authenticationToken: str):
+        try:
+            token = databases.AuthenticationTokenDB.objects.get(tokenValue=authenticationToken)
+            return token.userID.username
+        except databases.AuthenticationTokenDB.DoesNotExist:
+            raise ValueError("Error: Authentication token not found")
 
 
 class TaskManager:
@@ -71,7 +78,6 @@ class TaskManager:
                 itemType=todoItem.itemType,
                 labelID=None if todoItem.labelID is None else databases.LabelDB.objects.get(labelID=todoItem.labelID)
             )
-            item.full_clean()
             item.save()
             return item.get_data_object()
         except databases.UserDB.DoesNotExist:
@@ -124,6 +130,24 @@ class TaskManager:
             raise ValueError(f"User with ID {userID} does not exist.")
         except Exception as e:
             raise ValueError(f"An error occurred while fetching all the todo items: {e}")
+        
+    def getProjectByName(self, userID: int, projectName: str):
+        try:
+            project = databases.TodoItemDB.objects.get(userID=userID, name=projectName, itemType=databases.TodoItemDB.ItemType.PROJECT)
+            return project.get_data_object()
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"Project with name {projectName} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while fetching the project: {e}")
+        
+    def getSectionByName(self, userID: int, projectID: int, sectionName: str):
+        try:
+            section = databases.TodoItemDB.objects.get(userID=userID, parentID=projectID, name=sectionName, itemType=databases.TodoItemDB.ItemType.SECTION)
+            return section.get_data_object()
+        except databases.TodoItemDB.DoesNotExist:
+            raise ValueError(f"Section with name {sectionName} does not exist.")
+        except Exception as e:
+            raise ValueError(f"An error occurred while fetching the section: {e}")
 
     def getAllProject(self, userID: int):
         try:
@@ -144,7 +168,6 @@ class TaskManager:
                 description=attrs.description,
                 inTodayDate=attrs.inTodayDate
             )
-            taskAttributes_db.full_clean()
             taskAttributes_db.save()
             return taskAttributes_db.get_data_object()
         except databases.TodoItemDB.DoesNotExist:
