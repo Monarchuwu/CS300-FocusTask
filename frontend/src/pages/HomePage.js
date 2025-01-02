@@ -20,6 +20,7 @@ import dayjs from 'dayjs';
 import DateTimePickerButtonDialog from "../components/DateTimePickerButtonDialog";
 import { getPriorityColor } from "../utils";
 import PriorityPicker from "../components/PriorityPicker";
+import SectionPicker from "../components/SectionPicker";
 
 
 function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
@@ -44,7 +45,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     const [openDialog, setOpenDialog] = React.useState(false);
     const [taskToDelete, setTaskToDelete] = React.useState(null);
     const newSectionNameRef = React.useRef(null);
-    const [anchorEl, setAnchorEl] = React.useState(null);
 
     const [selectedDate, setSelectedDate] = React.useState(null);
     const [selectedPriority, setSelectedPriority] = React.useState(null);
@@ -62,23 +62,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
             handleAddTask();
         }
     };
-
-
-    const handleClick = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleMenuItemClick = (sectionID) => {
-        const sectionName = sectionList.current[sectionID];
-        setAddingSectionID(parseInt(sectionID));
-        setSelectedSectionName(sectionName);
-        handleClose();
-    };
-
 
     const handleOpenDialog = (taskID) => {
         setTaskToDelete(taskID);
@@ -552,39 +535,13 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 {taskNameField()}
                 {showTaskDescription && taskDescriptionField()}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    {/* Section selection */}
-                    <Box id="sectionSelection">
-                        {selectedSectionName === '' || selectedSectionName === null ? (
-                            <IconButton onClick={handleClick} size='small' color="text.primary">
-                                <Folder set="light" />
-                            </IconButton>
-                        ) : (
-                            <Button onClick={handleClick} startIcon={<Folder set="bulk" />} 
-                                variant="outlined" size="small" color="primary">
-                                {selectedSectionName}
-                            </Button>
-                        )}
-                        <Menu
-                            anchorEl={anchorEl}
-                            open={Boolean(anchorEl)}
-                            onClose={handleClose}
-                        >
-                            {Object.entries(sectionList.current).map(([sectionID, sectionName]) => (
-                                <MenuItem
-                                    key={sectionID}
-                                    onClick={() => handleMenuItemClick(sectionID)}
-                                    style={{
-                                        backgroundColor: addingSectionID === parseInt(sectionID) ? 'lightblue' : 'white',
-                                        color: sectionName === '' ? 'default' : 'primary'
-                                    }}
-                                >
-                                    <Typography variant="body2" color={'text.primary'}>
-                                        {sectionName === '' ? '---' : sectionName}
-                                    </Typography>
-                                </MenuItem>
-                            ))}
-                        </Menu>
-                    </Box>
+                    <SectionPicker
+                        sectionList={sectionList}
+                        selectedSectionName={selectedSectionName}
+                        addingSectionID={addingSectionID}
+                        setAddingSectionID={setAddingSectionID}
+                        setSelectedSectionName={setSelectedSectionName}
+                    />
                     {/* Due date selection */}
                     <DateTimePickerButtonDialog
                         selectedDate={selectedDate}
