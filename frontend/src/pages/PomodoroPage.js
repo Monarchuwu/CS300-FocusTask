@@ -5,10 +5,8 @@ import BarChart24 from '../components/BarChart24';
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
-function PomodoroPage({ taskPomodoro }) {
-    const navigate = useNavigate();
+function PomodoroPage({ taskPomodoro, setTaskPomodoro }) {
     // statistic pomodoro
     const [statistic, setStatistic] = React.useState(null);
     const total = React.useMemo(() => {
@@ -28,39 +26,39 @@ function PomodoroPage({ taskPomodoro }) {
 
 
     // API call functions
-    const callStartPomodoroAPI = () => {
+    const callStartPomodoroAPI = async () => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
+        await callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/start`,
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
-    const callPausePomodoroAPI = () => {
+    const callPausePomodoroAPI = async () => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
+        await callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/pause`,
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
-    const callContinuePomodoroAPI = () => {
+    const callContinuePomodoroAPI = async () => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
+        await callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/continue`,
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
-    const callEndPomodoroAPI = () => {
+    const callEndPomodoroAPI = async () => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
+        await callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/end`,
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
-    const callSetPomodoroLengthAPI = (length) => {
+    const callSetPomodoroLengthAPI = async (pomodoroID, length) => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
+        await callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/set_length`,
-            JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID, "length": length }),
+            JSON.stringify({ "authenticationToken": authToken, "pomodoroID": pomodoroID, "length": length }),
             (data) => setPomodoroLength(length)
         )
     }
@@ -97,7 +95,7 @@ function PomodoroPage({ taskPomodoro }) {
         return setInterval(async () => {
             setRemainingTime((prev) => {
                 const remainingTime = prev - 1;
-                if (remainingTime - 1 <= 0) {
+                if (remainingTime <= 0) {
                     endPomodoro();
                 }
                 return remainingTime;
@@ -105,47 +103,47 @@ function PomodoroPage({ taskPomodoro }) {
         }, 1000);
     }
     // handle pomodoro functions
-    const startPomodoro = () => {
-        callStartPomodoroAPI();
+    const startPomodoro = async () => {
+        await callStartPomodoroAPI();
         setPomodoroStatus("Running");
         taskPomodoro.status = "Running";
         setRemainingTime(pomodoroLength);
         timerID.current = createTimer();
     }
-    const pausePomodoro = () => {
-        callPausePomodoroAPI();
+    const pausePomodoro = async () => {
+        await callPausePomodoroAPI();
         setPomodoroStatus("Paused");
         taskPomodoro.status = "Paused";
         clearInterval(timerID.current);
         timerID.current = null;
+        fetchRemainingTime();
     }
-    const continuePomodoro = () => {
-        callContinuePomodoroAPI();
+    const continuePomodoro = async () => {
+        await callContinuePomodoroAPI();
         setPomodoroStatus("Running");
         taskPomodoro.status = "Running";
         timerID.current = createTimer();
     }
-    const endPomodoro = () => {
-        callEndPomodoroAPI();
+    const endPomodoro = async () => {
+        await callEndPomodoroAPI();
         setPomodoroStatus("Completed");
         taskPomodoro.status = "Completed";
         clearInterval(timerID.current);
         timerID.current = null;
-        console.log(taskPomodoro);
-        navigateToOriginalProject(taskPomodoro.taskID);
+        fetchStatistic();
+        createNewPomodoroSession(taskPomodoro.taskID, taskPomodoro.name);
     }
-    // Navigate to the original project of the task
-    const navigateToOriginalProject = async (taskID) => {
+    // Start Pomodoro function
+    const createNewPomodoroSession = (taskID, taskName) => {
         const authToken = localStorage.getItem('authToken');
-        const data = await callAPITemplate(
-            `${process.env.REACT_APP_API_URL}/todo_item/get_project`,
-            JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
+        callAPITemplate(
+            `${process.env.REACT_APP_API_URL}/pomodoro/set_task`,
+            JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
+            (data) => {
+                setTaskPomodoro({ ...JSON.parse(data), name: taskName });
+                callSetPomodoroLengthAPI(JSON.parse(data).pomodoroID, inputPomodoroLength);
+            }
         );
-        const projectName = JSON.parse(data).name;
-        navigate({
-            pathname: '/',
-            search: `?project=${projectName}`,
-        });
     }
 
     // Fetch statistic
@@ -163,7 +161,6 @@ function PomodoroPage({ taskPomodoro }) {
         const authToken = localStorage.getItem('authToken');
         try {
             console.log("Fetching block list");
-            console.log(authToken);
             const dataBlockItems = await callAPITemplate(
                 `${process.env.REACT_APP_API_URL}/website_block/get_block_list`,
                 JSON.stringify({ authenticationToken: authToken }),
@@ -255,7 +252,7 @@ function PomodoroPage({ taskPomodoro }) {
                                         setInputPomodoroLength(value);
                                     }}
                                     max={10800} min={0} maxLength={5} />
-                                <button onClick={() => { callSetPomodoroLengthAPI(inputPomodoroLength) }}>Set</button>
+                                <button onClick={() => { callSetPomodoroLengthAPI(taskPomodoro.pomodoroID, inputPomodoroLength) }}>Set</button>
                             </>
                         }
                         {/* Display the pomodoro session */}
@@ -290,7 +287,6 @@ function PomodoroPage({ taskPomodoro }) {
                     </div>
                 }
                 <div className={styles.statistic}>
-                    <button onClick={() => fetchStatistic()}>Load Statistic</button>
                     {!statistic
                         ? <div>No Statistic</div>
                         : <div>
