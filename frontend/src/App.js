@@ -81,7 +81,7 @@ function App() {
 
             setTimeout(() => {
                 setIsLoading(false);
-            }, 0);
+            }, 1000);
         }
         checkToken();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -218,7 +218,7 @@ function LayoutWithNavBar({
             <Grid item size={{ xs: 12, sm: 6 }} sx={{ overflowY: 'auto', height: '100vh' }}>
                 {renderChildrenWithProps()}
             </Grid>
-            <Grid item size={{ xs: 12, sm: 3.5 }} sx={{ 
+            <Grid item size={{ xs: 12, sm: 3.5 }} sx={{
                 padding: '30px 25px',
                 borderLeft: '1px solid',
                 borderColor: 'border.main',
