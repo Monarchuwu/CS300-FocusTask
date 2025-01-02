@@ -13,6 +13,7 @@ import Button from '@mui/material/Button';
 import dayjs from 'dayjs';
 
 import DateTimePickerButtonDialog from './DateTimePickerButtonDialog';
+import PriorityPicker from './PriorityPicker';
 
 
 const DEBOUNCE_DELAY = 600;
@@ -36,11 +37,14 @@ const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
 
 const TaskDetailDuePriority = ({ taskDetails, handleFieldChange }) => {
     return (
-        <Box display="flex" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-            <Button>{taskDetails.priority || 'N/A'}</Button>
+        <Box display="flex" sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '5px' }}>
+            <PriorityPicker
+                priority={taskDetails.priority}
+                setPriority={(newPriority) => handleFieldChange('priority', newPriority)}
+            />
             <DateTimePickerButtonDialog
                 selectedDate={dayjs(taskDetails.dueDate)}
-                setSelectedDate={(newDate) => handleFieldChange('dueDate', newDate)}
+                setSelectedDate={(newDate) => handleFieldChange('dueDate', dayjs(newDate).toISOString())}
             />
         </Box>
     );  

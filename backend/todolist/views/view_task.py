@@ -6,6 +6,7 @@ from queue import Queue
 from ..models.objects import *
 from ..models.managers import *
 from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime
 
 
 @csrf_exempt
@@ -118,9 +119,6 @@ def task_add(request):
                 **attributes
             )
             taskAttributes = TaskManager().addTaskAttributes(taskAttributes)
-            # convert datetime in taskAttributes to serializeable JSON
-            if taskAttributes.dueDate is not None:
-                taskAttributes.dueDate = taskAttributes.dueDate.isoformat()
 
             # Response data
             data = json.dumps({
@@ -217,7 +215,7 @@ def task_attributes_update(request):
                 raise Exception(
                     'User does not have permission to access this item')
 
-            taskAttrs.dueDate = dueDate if (
+            taskAttrs.dueDate = datetime.fromisoformat(dueDate) if (
                 dueDate is not None) else taskAttrs.dueDate
             taskAttrs.priority = priority if (
                 priority is not None) else taskAttrs.priority
@@ -347,10 +345,6 @@ def task_attributes_get(request):
                 raise Exception(
                     'User does not have permission to access this item')
             taskAttributes = TaskManager().getTaskAttributes(taskID)
-
-            # convert datetime in taskAttributes to serializeable JSON
-            if taskAttributes.dueDate is not None:
-                taskAttributes.dueDate = taskAttributes.dueDate.isoformat()
 
             return JsonResponse({'status': 'success', 'data': str(taskAttributes)})
         except json.JSONDecodeError:
@@ -512,11 +506,8 @@ def task_attributes_get_list(request):
                 if task.userID != userID:
                     raise Exception(
                         'User does not have permission to access this item')
-                
+
                 taskAttrs = TaskManager().getTaskAttributes(taskID=itemID)
-                # convert datetime in taskAttributes to serializeable JSON
-                if taskAttrs.dueDate is not None:
-                    taskAttrs.dueDate = taskAttrs.dueDate.isoformat()
                 task_attributes_list.append(str(taskAttrs))
 
             return JsonResponse({'status': 'success', 'data': task_attributes_list})
