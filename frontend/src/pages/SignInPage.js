@@ -35,7 +35,13 @@ function SignInPage() {
                 localStorage.setItem('authToken', authToken);
                 navigate('/');
             },
-            (message) => setMessage(message || 'An error occurred'),
+            (message) => {
+                if (message === 'Error: User not found' || message === 'Error: Incorrect password') {
+                    setMessage('Wrong username or password');
+                    return;
+                }
+                setMessage(message || 'An error occurred')
+            },
             (e) => setMessage('Error: ' + e.message)
         )
     }
