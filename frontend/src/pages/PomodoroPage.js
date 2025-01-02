@@ -5,8 +5,10 @@ import BarChart24 from '../components/BarChart24';
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function PomodoroPage({ taskPomodoro }) {
+    const navigate = useNavigate();
     // statistic pomodoro
     const [statistic, setStatistic] = React.useState(null);
     const total = React.useMemo(() => {
@@ -127,6 +129,21 @@ function PomodoroPage({ taskPomodoro }) {
         taskPomodoro.status = "Completed";
         clearInterval(timerID.current);
         timerID.current = null;
+        console.log(taskPomodoro);
+        navigateToOriginalProject(taskPomodoro.taskID);
+    }
+    // Navigate to the original project of the task
+    const navigateToOriginalProject = async (taskID) => {
+        const authToken = localStorage.getItem('authToken');
+        const data = await callAPITemplate(
+            `${process.env.REACT_APP_API_URL}/todo_item/get_project`,
+            JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
+        );
+        const projectName = JSON.parse(data).name;
+        navigate({
+            pathname: '/',
+            search: `?project=${projectName}`,
+        });
     }
 
     // Fetch statistic
