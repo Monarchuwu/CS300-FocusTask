@@ -54,7 +54,7 @@ export const getPriorityColor = (priority) => {
 };
 
 
-// Convert seconds to display format H:MM:SS
+// Convert seconds to display format MM:SS
 export const displaySeconds = (seconds) => {
     if (typeof (seconds) !== 'number' || seconds < 0) {
         return "type error";
@@ -63,4 +63,17 @@ export const displaySeconds = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     seconds %= 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
+
+
+// Convert seconds to display format HHhMMm
+export const displaySecondsHour = (seconds) => {
+    if (typeof (seconds) !== 'number' || seconds < 0) {
+        return "type error";
+    }
+    // display in format HHhMMm
+    const hours = Math.floor(seconds / 3600);
+    seconds %= 3600;
+    const minutes = Math.floor(seconds / 60);
+    return `${hours}h${minutes}m`;
 };

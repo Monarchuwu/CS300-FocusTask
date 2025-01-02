@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
-import { displaySeconds } from '../utils';
-import { Box } from '@mui/material';
+import { displaySecondsHour } from '../utils';
+import { Box, Divider, Typography } from '@mui/material';
 import { callAPITemplate } from '../utils';
 
 const FocusStatistics = () => {
@@ -48,18 +48,30 @@ const FocusStatistics = () => {
 
     return (
         <Box>
-            <button onClick={() => fetchStatistic()}>Load Statistic</button>
-            {
-                !statistic ? 
-                <div>No Statistic</div> :
-                <BarChart
-                    dataset={statistic}
-                    xAxis={[{ dataKey: 'hour', scaleType: 'band', label: 'Hour' }]}
-                    series={[{ dataKey: 'minutes' }]}
-                    {...chartSetting}
-                />
-            }
-            <p>Today's focus: {displaySeconds(total)}</p>
+            <Typography variant="h6">Focus Statistics</Typography>
+            <Divider />
+            <Box display="flex" 
+                sx={{
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    flexDirection: 'column',
+                    gap: 2,
+                }}>
+                {
+                    !statistic ? 
+                    <div>No Statistic</div> :
+                    <BarChart
+                        dataset={statistic}
+                        xAxis={[{ dataKey: 'hour', scaleType: 'band', label: 'Hour' }]}
+                        series={[{ dataKey: 'minutes' }]}
+                        {...chartSetting}
+                    />
+                }
+                <Box display="flex" flexDirection="column" justifyContent={'center'} alignItems={'center'}>
+                    <Typography variant="body1">Today's focus</Typography> 
+                    <Typography variant="num_data" color='primary.main'>{displaySecondsHour(total)}</Typography>
+                </Box>
+            </Box>
         </Box>
     );
 };

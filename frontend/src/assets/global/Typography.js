@@ -78,6 +78,10 @@ const typography = {
         fontWeight: 600,
         fontSize: 12,
     },
+    num_data: {
+        fontWeight: 700,
+        fontSize: 24,
+    },
 };
 
 export default typography;
