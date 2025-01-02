@@ -7,16 +7,19 @@ import { useNavigate } from 'react-router-dom';
 import { Typography, Box, Button } from '@mui/material';
 import { displaySeconds } from '../utils';
 
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import RemoveRoundedIcon from '@mui/icons-material/RemoveRounded';
+
 function PomodoroPage({ taskPomodoro }) {
     const navigate = useNavigate();
     // State variable to edit the length of the pomodoro
-    const [pomodoroLength, setPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 0);
-    const [inputPomodoroLength, setInputPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 0);
+    const [pomodoroLength, setPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 25*60);
+    const [inputPomodoroLength, setInputPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 25*60);
     // State variable to store the status of the pomodoro
     const [pomodoroStatus, setPomodoroStatus] = React.useState(taskPomodoro && taskPomodoro.status ? taskPomodoro.status : "Canceled");
     // Variables to store the timer ID (running state)
     const timerID = React.useRef(null);
-    const [remainingTime, setRemainingTime] = React.useState(0);
+    const [remainingTime, setRemainingTime] = React.useState(25 * 60);
 
 
     // API call functions
@@ -159,6 +162,19 @@ function PomodoroPage({ taskPomodoro }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskPomodoro?.status]);
 
+    const increasePomodoroLength = () => {
+        if (pomodoroLength < 90 * 60) {
+            setPomodoroLength(pomodoroLength + 5 * 60);
+            setRemainingTime(pomodoroLength + 5 * 60);
+        }
+    };
+
+    const decreasePomodoroLength = () => {
+        if (pomodoroLength > 5 * 60) {
+            setPomodoroLength(pomodoroLength - 5 * 60);
+            setRemainingTime(pomodoroLength - 5 * 60);
+        }
+    };
 
     const PomodoroMenu = ({pomodoroStatus}) => {
         const POMO_CIRCLE_SIZE = 350;
@@ -207,37 +223,38 @@ function PomodoroPage({ taskPomodoro }) {
 
         const PomodoroClock = () => {
             return (
-                <Box sx={{ backgroundColor: "#E6E4F0", borderRadius: POMO_CIRCLE_SIZE/2, 
-                            width: POMO_CIRCLE_SIZE, height: POMO_CIRCLE_SIZE, justifyContent: "center", display: "flex", alignItems: "center" }}>
-                    <Box sx={{ backgroundColor: "#F9F8FF", borderRadius: POMO_CIRCLE_SIZE/2 - 20, 
-                            width: POMO_CIRCLE_SIZE - 40, height: POMO_CIRCLE_SIZE - 40, justifyContent: "center", display: "flex", alignItems: "center" }}>
-                    <Typography variant="pomo">
-                        {pomodoroStatus === "Canceled" ? displaySeconds(pomodoroLength) : displaySeconds(remainingTime)}
-                    </Typography>
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", transition: "all 0.5s ease" }}>
+                    <Box sx={{ backgroundColor: "#E6E4F0", borderRadius: POMO_CIRCLE_SIZE/2, 
+                                width: POMO_CIRCLE_SIZE, height: POMO_CIRCLE_SIZE, 
+                                justifyContent: "center", display: "flex", 
+                                alignItems: "center" }}>
+                        <Box sx={{ backgroundColor: "#F9F8FF", borderRadius: POMO_CIRCLE_SIZE/2 - 20, 
+                                width: POMO_CIRCLE_SIZE - 40, height: POMO_CIRCLE_SIZE - 40, 
+                                justifyContent: "center", display: "flex", 
+                                flexDirection: "column",
+                                alignItems: "center" }}>
+                            {pomodoroStatus === "Canceled" && <Button onClick={increasePomodoroLength}><AddRoundedIcon/></Button>}
+                            <Typography variant="pomo">
+                                {pomodoroStatus === "Canceled" ? displaySeconds(pomodoroLength) : displaySeconds(remainingTime)}
+                            </Typography>
+                            {pomodoroStatus === "Canceled" && <Button onClick={decreasePomodoroLength}><RemoveRoundedIcon/></Button>}
+                        </Box>
                     </Box>
                 </Box>
             );
         }
 
         return (
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px" }}>
-                <Typography variant="h5">{taskPomodoro.name}</Typography>
-
-                {pomodoroStatus === "Canceled" &&
-                    <Box>
-                        <p>Set Length (seconds): </p>
-                        <input type="number"
-                            value={inputPomodoroLength.toString()}
-                            onChange={(e) => {
-                                const value = Math.max(0, Math.min(10800, Number(e.target.value)));
-                                setInputPomodoroLength(value);
-                            }}
-                            max={10800} min={0} maxLength={5} />
-                        <button onClick={() => { callSetPomodoroLengthAPI(inputPomodoroLength) }}>Set</button>
-                    </Box>
-                }
+            <Box sx={{ 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    gap: "20px", 
+                    height: "100vh" }}>
+                <Typography variant="h5">{taskPomodoro?.name || "Choose a Task in Project Lists"}</Typography>
                 <PomodoroClock />
-                {
+                {taskPomodoro && (
                     pomodoroStatus === "Canceled" ? 
                     <StartButton />
                     : pomodoroStatus === "Running" ? 
@@ -248,19 +265,14 @@ function PomodoroPage({ taskPomodoro }) {
                     : (
                         pomodoroStatus === "Paused" && <ContinueButton />
                     )
-                }
+                )}
             </Box>
         );
     };
 
 
     return (
-        <div className={styles.container}>
-            {!taskPomodoro
-                ? <Box sx={{ height: "100vh", justifyContent: "center"}} >No Pomodoro</Box>
-                : <PomodoroMenu pomodoroStatus={pomodoroStatus} />
-            }
-        </div>
+        <PomodoroMenu pomodoroStatus={pomodoroStatus} />
     );
 }
 
