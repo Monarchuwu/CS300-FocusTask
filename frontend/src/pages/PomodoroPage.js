@@ -6,6 +6,8 @@ import { callAPITemplate } from '../utils';
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Typography, Box, Button } from '@mui/material';
+import { displaySeconds } from '../utils';
 
 function PomodoroPage({ taskPomodoro }) {
     const navigate = useNavigate();
@@ -71,17 +73,6 @@ function PomodoroPage({ taskPomodoro }) {
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID }),
         )
         return parseInt(currentTime);
-    }
-    // Convert seconds to display format H:MM:SS
-    const displaySeconds = (seconds) => {
-        if (typeof (seconds) !== 'number' || seconds < 0) {
-            return "type error";
-        }
-        // display in format H:MM:SS
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        seconds %= 60;
-        return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
     // Update the remaining time
     const fetchRemainingTime = async () => {
@@ -235,59 +226,106 @@ function PomodoroPage({ taskPomodoro }) {
     }, []);
 
 
+    const PomodoroMenu = ({pomodoroStatus}) => {
+        const POMO_CIRCLE_SIZE = 350;
+
+        const pomoButtonProps = {
+            variant: 'contained',
+            size: 'large',
+            sx: { width: "230px", borderRadius: "8px", height: "55px" }
+        };
+
+        const StartButton = () => {
+            return (
+                <Button onClick={() => { startPomodoro() }}
+                    color='primary' {...pomoButtonProps}>
+                    Start
+                </Button>
+            );
+        };
+
+        const PauseButton = () => {
+            return (
+                <Button onClick={() => { pausePomodoro() }} color="pausebutton"
+                    {...pomoButtonProps}>
+                    Pause
+                </Button>
+            );
+        };
+
+        const EndButton = () => {
+            return (
+                <Button onClick={() => { endPomodoro() }} color="endbutton" 
+                    {...pomoButtonProps}>
+                    End
+                </Button>
+            );
+        };
+
+        const ContinueButton = () => {
+            return (
+                <Button onClick={() => { continuePomodoro() }}
+                    {...pomoButtonProps}>
+                    Continue
+                </Button>
+            );
+        };
+
+        const PomodoroClock = () => {
+            return (
+                <Box sx={{ backgroundColor: "#E6E4F0", borderRadius: POMO_CIRCLE_SIZE/2, 
+                            width: POMO_CIRCLE_SIZE, height: POMO_CIRCLE_SIZE, justifyContent: "center", display: "flex", alignItems: "center" }}>
+                    <Box sx={{ backgroundColor: "#F9F8FF", borderRadius: POMO_CIRCLE_SIZE/2 - 20, 
+                            width: POMO_CIRCLE_SIZE - 40, height: POMO_CIRCLE_SIZE - 40, justifyContent: "center", display: "flex", alignItems: "center" }}>
+                    <Typography variant="pomo">
+                        {pomodoroStatus === "Canceled" ? displaySeconds(pomodoroLength) : displaySeconds(remainingTime)}
+                    </Typography>
+                    </Box>
+                </Box>
+            );
+        }
+
+        return (
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px" }}>
+                <Typography variant="h5">{taskPomodoro.name}</Typography>
+
+                {pomodoroStatus === "Canceled" &&
+                    <Box>
+                        <p>Set Length (seconds): </p>
+                        <input type="number"
+                            value={inputPomodoroLength.toString()}
+                            onChange={(e) => {
+                                const value = Math.max(0, Math.min(10800, Number(e.target.value)));
+                                setInputPomodoroLength(value);
+                            }}
+                            max={10800} min={0} maxLength={5} />
+                        <button onClick={() => { callSetPomodoroLengthAPI(inputPomodoroLength) }}>Set</button>
+                    </Box>
+                }
+                <PomodoroClock />
+                {
+                    pomodoroStatus === "Canceled" ? 
+                    <StartButton />
+                    : pomodoroStatus === "Running" ? 
+                    <Box display="flex" justifyContent="center" sx={{ gap: "10px" }}>
+                        <PauseButton />
+                        <EndButton />
+                    </Box>
+                    : (
+                        pomodoroStatus === "Paused" && <ContinueButton />
+                    )
+                }
+            </Box>
+        );
+    };
+
+
     return (
         <div>
-            <h1>Pomodoro Page</h1>
             <div className={styles.container}>
                 {!taskPomodoro
-                    ? <div>No Pomodoro</div>
-                    : <div className={styles.pomodoro}>
-                        {/* Name of task */}
-                        <h2 className={styles.pomodoroTitle}>{taskPomodoro.name}</h2>
-                        {/* Set a new length for the pomodoro session */}
-                        {pomodoroStatus === "Canceled" &&
-                            <>
-                                <p>Set Length (seconds): </p>
-                                <input type="number"
-                                    value={inputPomodoroLength.toString()}
-                                    onChange={(e) => {
-                                        const value = Math.max(0, Math.min(10800, Number(e.target.value)));
-                                        setInputPomodoroLength(value);
-                                    }}
-                                    max={10800} min={0} maxLength={5} />
-                                <button onClick={() => { callSetPomodoroLengthAPI(inputPomodoroLength) }}>Set</button>
-                            </>
-                        }
-                        {/* Display the pomodoro session */}
-                        <div>
-                            { /* Status: Before running */
-                                pomodoroStatus === "Canceled" &&
-                                <>
-                                    <p>{displaySeconds(pomodoroLength)}</p>
-                                    <button onClick={() => { startPomodoro() }}>Start</button>
-                                </>
-                            }
-                            {
-                                pomodoroStatus === "Running" &&
-                                <>
-                                    <p>Time Remaining: {displaySeconds(remainingTime)}</p>
-                                    <button onClick={() => { pausePomodoro() }}>Pause</button>
-                                    <button onClick={() => { endPomodoro() }}>End</button>
-                                </>
-                            }
-                            {
-                                pomodoroStatus === "Paused" &&
-                                <>
-                                    <p>Time Remaining: {displaySeconds(remainingTime)}</p>
-                                    <button onClick={() => { continuePomodoro() }}>Continue</button>
-                                </>
-                            }
-                            {
-                                pomodoroStatus === "Completed" &&
-                                <p>Completed</p>
-                            }
-                        </div>
-                    </div>
+                    ? <Box sx={{ height: "100vh", justifyContent: "center"}} >No Pomodoro</Box>
+                    : <PomodoroMenu pomodoroStatus={pomodoroStatus} />
                 }
                 <div className={styles.statistic}>
                     <button onClick={() => fetchStatistic()}>Load Statistic</button>

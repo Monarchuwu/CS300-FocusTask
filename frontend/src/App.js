@@ -225,7 +225,7 @@ function LayoutWithNavBar({
                 backgroundColor: 'white',
                 overflowY: 'auto',
                 height: '100vh'
-            }}>
+            }}> 
                 {suggestTaskList ?
                     <SuggestTaskBar
                         setUpdateTaskAttrs={setUpdateTaskAttrs}

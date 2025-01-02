@@ -52,3 +52,15 @@ export const getPriorityColor = (priority) => {
     else if (priority === 'Low') return 'priority.low';
     else return 'text.primary';
 };
+
+
+// Convert seconds to display format H:MM:SS
+export const displaySeconds = (seconds) => {
+    if (typeof (seconds) !== 'number' || seconds < 0) {
+        return "type error";
+    }
+    // display in format MM:SS
+    const minutes = Math.floor(seconds / 60);
+    seconds %= 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
