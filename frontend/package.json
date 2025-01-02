@@ -10,6 +10,7 @@
     "@mui/icons-material": "6.3.0",
     "@mui/material": "^6.3.0",
     "@mui/styled-engine-sc": "6.3.0",
+    "@mui/x-charts": "^7.23.2",
     "@mui/x-date-pickers": "^7.23.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
