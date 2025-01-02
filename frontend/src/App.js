@@ -175,6 +175,7 @@ function LayoutWithNavBar({
                 });
             case TodayPage:
                 return React.cloneElement(children, {
+                    viewTaskDetailID,
                     setViewTaskDetailID,
                     updateTaskAttrs, setUpdateTaskAttrs,
                     setSuggestTaskList

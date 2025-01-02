@@ -18,7 +18,7 @@ import { ClickAwayListener } from '@mui/base/ClickAwayListener';
 import dayjs from 'dayjs';
 
 import DateTimePickerButtonDialog from "../components/DateTimePickerButtonDialog";
-import { getPriorityColor, AccordionSectionStyle, AccordionSummaryStyle } from "../utils";
+import { AccordionSectionStyle, AccordionSummaryStyle, Priority, TaskBoxStyle } from "../utils";
 import PriorityPicker from "../components/PriorityPicker";
 import SectionPicker from "../components/SectionPicker";
 
@@ -40,8 +40,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     const sectionDefaultID = React.useRef(null); // sectionID of sectionName is '' (default section)
     // State variable for debouncing status (checkbox) changes
     const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
-    const [openDialog, setOpenDialog] = React.useState(false);
-    const [taskToDelete, setTaskToDelete] = React.useState(null);
     const newSectionNameRef = React.useRef(null);
 
     const [selectedDate, setSelectedDate] = React.useState(null);
@@ -59,22 +57,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         } else if (e.key === 'Enter') {
             handleAddTask();
         }
-    };
-
-    const handleOpenDialog = (taskID) => {
-        setTaskToDelete(taskID);
-        setOpenDialog(true);
-    };
-
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-        setTaskToDelete(null);
-    };
-
-    const handleConfirmDelete = () => {
-        callDeleteTodoItemAPI(taskToDelete);
-        setViewTaskDetailID(null);
-        handleCloseDialog();
     };
 
     // API call functions
@@ -186,20 +168,10 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
             // Fetch checkbox status of tasks
             const taskIDs = items.filter(item => item.itemType === 'Task').map(task => task.itemID);
-            
-            
-            const payload = {
-                authenticationToken: authToken,
-                itemIDs: taskIDs,
-            };
-            // Convert any `datetime` values to strings
-            const serializedPayload = JSON.stringify(payload, (key, value) =>
-                value instanceof Date ? value.toISOString() : value
-            );
 
             const dataAttributes = await callAPITemplate(
                 `${process.env.REACT_APP_API_URL}/task_attributes/get_list`,
-                serializedPayload
+                JSON.stringify({ "authenticationToken": authToken, "itemIDs": taskIDs }),
             );
             const attrsList = dataAttributes.map(attr => {
                 const parsedAttr = JSON.parse(attr);
@@ -222,22 +194,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
             console.error(e);
         }
     }
-    const Priority = ({ priority }) => {
-        return (
-            <Box sx={{
-                    display: 'inline-flex',
-                    padding: '2px 8px',
-                    margin: '4px',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: '100px',
-                    color: getPriorityColor(priority),
-                    backgroundColor: priority === 'High' ? 'priority.highBackground' : priority === 'Medium' ? 'priority.mediumBackground' : 'priority.lowBackground',
-                }}>
-                <Typography variant='taskAttr'>{priority}</Typography>
-            </Box>
-        );
-    };
 
     const handleNewSectionClick = () => {
         setIsAddingSection(true);
@@ -311,30 +267,32 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
     };
 
     const Task = ({ task, taskAttrMap }) => {
+        const [openDialog, setOpenDialog] = React.useState(false);
+        const [taskToDelete, setTaskToDelete] = React.useState(null);
+
+        const handleOpenDialog = (taskID) => {
+            setTaskToDelete(taskID);
+            setOpenDialog(true);
+        };
+
+        const handleCloseDialog = () => {
+            setOpenDialog(false);
+            setTaskToDelete(null);
+        };
+
+        const handleConfirmDelete = () => {
+            callDeleteTodoItemAPI(taskToDelete);
+            setViewTaskDetailID(null);
+            handleCloseDialog();
+        };
+
         return (
             <React.Fragment>
             <Box key={task.itemID}
                 sx = {{
-                    boxSizing: 'border-box',
-                    border: '1px solid',
-                    borderColor: 'border.main',
-                    borderRadius: '5px',
-                    padding: '2px',
-                    margin: '5px',
+                    ...TaskBoxStyle,     
                     backgroundColor: task.itemID === viewTaskDetailID ? 'white' : 'gray.light',
-                    boxShadow: task.itemID === viewTaskDetailID ? '0px 2px 5px 0px rgba(0,0,0,0.2)' : 'none',
-                    "&:hover": {
-                        backgroundColor: 'white',
-                        boxShadow: '0px 2px 5px 0px rgba(0,0,0,0.2)',
-                        transition: 'background-color 0.1s ease, box-shadow 0.1s ease',
-                        "& button": {
-                            display: 'inline',
-                        }
-                    },
-                    "& button": {
-                        display: task.itemID === viewTaskDetailID ? 'inline' : 'none',
-                    },
-                    cursor: 'pointer',
+                    boxShadow: task.itemID === viewTaskDetailID ? '0px 2px 5px 0px rgba(0,0,0,0.2)' : 'none'
                 }}
                 onClick={() => setViewTaskDetailID(task.itemID)} 
                 >

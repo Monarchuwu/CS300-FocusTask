@@ -6,9 +6,20 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { CircularProgress, Box } from '@mui/material';
-import { getPriorityColor, AccordionSectionStyle, AccordionSummaryStyle } from "../utils";
+import { getPriorityColor, AccordionSectionStyle, AccordionSummaryStyle, TaskBoxStyle, Priority } from "../utils";
+import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import Typography from '@mui/material/Typography';
+import Checkbox from '@mui/material/Checkbox';
+import IconButton from '@mui/material/IconButton';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import dayjs from 'dayjs';
+import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
+import { Tooltip } from '@mui/material';
 
-function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, setSuggestTaskList }) {
+
+function TodayPage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, setSuggestTaskList }) {
     const navigate = useNavigate();
     // State variables for adding new task
     const [newTaskName, setNewTaskName] = React.useState("");
@@ -17,7 +28,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
     const [sectionDefaultID, setSectionDefaultID] = React.useState(null); // sectionID of sectionName is '' (default section)
     // State variables for rendering the tree
     const [taskList, setTaskList] = React.useState(null); // a list of tasks that will be rendered
-    const [taskStatusMap, setTaskStatusMap] = React.useState({}); // Checkbox status of tasks
+    const [taskAttrMap, setTaskAttrMap] = React.useState({}); // Checkbox status of tasks
     // State variable for debouncing status (checkbox) changes
     const [debounceStatus, setDebounceStatus] = React.useState({}); // Queue to smoothly change checkbox state
 
@@ -72,7 +83,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
     }
     // Handle checkbox status change (add to the debounce queue)
     const handleStatusChange = (taskID, status) => {
-        setTaskStatusMap((prev) => ({ ...prev, [taskID]: status }));
+        setTaskAttrMap({ ...taskAttrMap, [taskID]: status });
         setDebounceStatus({ ...debounceStatus, [taskID]: status });
     }
     // Fetch todo list data from the server
@@ -92,8 +103,8 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
                 JSON.stringify({ "authenticationToken": authToken, "itemIDs": taskIDs }),
             );
             const attrsList = dataAttributes.map(attr => JSON.parse(attr));
-            const taskStatusMap = Object.fromEntries(attrsList.map(attr => [attr.taskID, attr.status]));
-            setTaskStatusMap(taskStatusMap);
+            const taskAttrMap = Object.fromEntries(attrsList.map(attr => [attr.taskID, attr]));
+            setTaskAttrMap(taskAttrMap);
         }
         catch (e) {
             console.error(e);
@@ -169,6 +180,122 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
     }, [taskList]);
 
 
+    const Task = ({ task, taskAttrMap }) => {
+        const [openDialog, setOpenDialog] = React.useState(false);
+        const [taskToDelete, setTaskToDelete] = React.useState(null);
+
+        const handleOpenDialog = (taskID) => {
+            setTaskToDelete(taskID);
+            setOpenDialog(true);
+        };
+
+        const handleCloseDialog = () => {
+            setOpenDialog(false);
+            setTaskToDelete(null);
+        };
+
+        const handleConfirmDelete = () => {
+            callDeleteTodoItemAPI(taskToDelete);
+            setViewTaskDetailID(null);
+            handleCloseDialog();
+        };
+        return (
+            <React.Fragment>
+            <Box key={task.itemID}
+                sx = {{
+                    ...TaskBoxStyle,     
+                    backgroundColor: task.itemID === viewTaskDetailID ? 'white' : 'gray.light',
+                    boxShadow: task.itemID === viewTaskDetailID ? '0px 2px 5px 0px rgba(0,0,0,0.2)' : 'none'
+                }}
+                onClick={() => setViewTaskDetailID(task.itemID)} 
+                >
+                <Box alignItems='center' display='flex'>
+                    {/* Checkbox for Task */}
+                    <Checkbox
+                        checked={taskAttrMap[task.itemID]?.status === 'Completed'}
+                        onChange={(e) => {
+                            const status = e.target.checked ? 'Completed' : 'Pending';
+                            handleStatusChange(task.itemID, status);
+                        }}
+                        sx={{
+                            color: "#BBBBBE",
+                            '&.Mui-checked': {
+                                color: "primary.main",
+                            },
+                        }}
+                        size="small"
+                    />
+                    {/* Name, Edit button (Task only), and Delete button */}
+                    <Typography variant={'task'}>{task.name}</Typography>
+                    <Priority priority={taskAttrMap[task.itemID]?.priority} />
+                    {task.name !== '' &&     
+                    <Tooltip title="Delete Task">            
+                        <IconButton onClick={() => handleOpenDialog(task.itemID)} color="danger"
+                            size='small' sx={{ width: '34px', height: '34px' }}>
+                            <DeleteRoundedIcon/>
+                        </IconButton>
+                    </Tooltip>}
+                    <Tooltip title="Go to parent Project">
+                        <IconButton onClick={() => navigateToOriginalProject(task.itemID)} 
+                            size='small' sx={{ width: '34px', height: '34px' }}>
+                            <KeyboardReturnIcon/>
+                        </IconButton>
+                    </Tooltip>
+                    {taskAttrMap[task.itemID]?.dueDate && 
+                        <Typography variant={'taskAttr'} sx={{ color: 'text.secondary', marginLeft: 'auto', marginRight: '8px' }}>
+                            {dayjs(taskAttrMap[task.itemID]?.dueDate).format('HH:mm, DD-MM-YY')}
+                        </Typography>}
+                </Box>
+            </Box>
+            <Dialog
+                open={openDialog}
+                onClose={handleCloseDialog}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Are you sure you want to delete this task?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary" variant="outlined">
+                        CANCEL
+                    </Button>
+                    <Button onClick={handleConfirmDelete} color="danger" autoFocus variant='contained'>
+                        CONFIRM
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            </React.Fragment>
+        );
+    };
+
+
+    const Section = ({ taskList, taskAttrMap, targetStatus, title }) => {
+        const tasks = taskList.filter(task => taskAttrMap[task.itemID]?.status === targetStatus);
+        return (
+             <Accordion sx = {AccordionSectionStyle} defaultExpanded disableGutters={true}>
+                <AccordionSummary expandIcon={<ArrowDropDownIcon size="small" stroke="bold" />} 
+                        aria-controls="panel1a-content" id="panel1a-header"
+                        alignItems='center'
+                        justifyContent='center'
+                        sx = {AccordionSummaryStyle}>
+                    <Typography variant='section'>{title} ({tasks.length})</Typography>
+                </AccordionSummary>
+                <AccordionDetails disablePadding sx = {{ padding: '0px 10px 10px 10px'}}>
+                    {tasks.map(task => (
+                        <Box key={task.itemID}>
+                            <Task task={task} taskAttrMap={taskAttrMap} />
+                        </Box>
+                    ))}
+                </AccordionDetails>
+            </Accordion>
+        )
+    }
+
+
     return (
         <Box sx={{ padding: '15px' }}>
             {/* Add Task */}
@@ -195,29 +322,33 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
             <button onClick={() => setSuggestTaskList(true)}>Suggestions</button>
             {/* Render Task List */}
             {!taskList ? <Box justifyContent='center' alignItems='center' display='flex' height='25vh'> <CircularProgress /> </Box> :
-                <ul className={styles.taskList}>
-                    {taskList.map(task => (
-                        <li key={task.itemID} className={styles.taskItem}>
-                            {/* Checkbox for Task */}
-                            <input
-                                type="checkbox"
-                                checked={taskStatusMap[task.itemID] === 'Completed'}
-                                onChange={(e) => {
-                                    const status = e.target.checked ? 'Completed' : 'Pending';
-                                    handleStatusChange(task.itemID, status);
-                                }}
-                            />
-                            {/* Name, Edit button, and Delete button */}
-                            <strong>{task.name}</strong> ({task.itemType})
-                            <button onClick={() => {
-                                setViewTaskDetailID(task.itemID);
-                                setSuggestTaskList(false);
-                            }}>Edit</button>
-                            <button onClick={() => navigateToOriginalProject(task.itemID)}>Show location</button>
-                            <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
-                        </li>
-                    ))}
-                </ul>
+                // <ul className={styles.taskList}>
+                //     {taskList.map(task => (
+                //         <li key={task.itemID} className={styles.taskItem}>
+                //             {/* Checkbox for Task */}
+                //             <input
+                //                 type="checkbox"
+                //                 checked={taskStatusMap[task.itemID] === 'Completed'}
+                //                 onChange={(e) => {
+                //                     const status = e.target.checked ? 'Completed' : 'Pending';
+                //                     handleStatusChange(task.itemID, status);
+                //                 }}
+                //             />
+                //             {/* Name, Edit button, and Delete button */}
+                //             <strong>{task.name}</strong> ({task.itemType})
+                //             <button onClick={() => {
+                //                 setViewTaskDetailID(task.itemID);
+                //                 setSuggestTaskList(false);
+                //             }}>Edit</button>
+                //             <button onClick={() => navigateToOriginalProject(task.itemID)}>Show location</button>
+                //             <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
+                //         </li>
+                //     ))}
+                // </ul>
+                <Box>
+                    <Section taskList={taskList} taskAttrMap={taskAttrMap} targetStatus='Pending' title='To-do' />
+                    <Section taskList={taskList} taskAttrMap={taskAttrMap} targetStatus='Completed' title='Completed'/>
+                </Box>
             }
         </Box>
     )

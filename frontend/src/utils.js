@@ -1,3 +1,5 @@
+import { Box, Typography } from '@mui/material';
+
 export const callAPITemplate = async (
     url = '',
     bodyString = '',
@@ -106,4 +108,42 @@ export const AccordionSummaryStyle = {
             transition: 'margin 0.3s ease',
         } 
     } 
+};
+
+export const Priority = ({ priority }) => {
+    return (
+        <Box sx={{
+                display: 'inline-flex',
+                padding: '2px 8px',
+                margin: '4px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: '100px',
+                color: getPriorityColor(priority),
+                backgroundColor: priority === 'High' ? 'priority.highBackground' : priority === 'Medium' ? 'priority.mediumBackground' : 'priority.lowBackground',
+            }}>
+            <Typography variant='taskAttr'>{priority}</Typography>
+        </Box>
+    );
+};
+
+export const TaskBoxStyle = {
+    boxSizing: 'border-box',
+    border: '1px solid',
+    borderColor: 'border.main',
+    borderRadius: '5px',
+    padding: '2px',
+    margin: '5px',
+    "&:hover": {
+        backgroundColor: 'white',
+        boxShadow: '0px 2px 5px 0px rgba(0,0,0,0.2)',
+        transition: 'background-color 0.1s ease, box-shadow 0.1s ease',
+        "& button": {
+            display: 'inline',
+        }
+    },
+    "& button": {
+        display: 'none',
+    },
+    cursor: 'pointer',
 };
