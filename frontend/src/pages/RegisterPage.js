@@ -25,6 +25,8 @@ function RegisterPage() {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [message, setMessage] = React.useState('');
+    const [messageSeverity, setMessageSeverity] = React.useState('');
+    const [confirmPassword, setConfirmPassword] = React.useState('');
 
     const callRegisterAPI = (username, email, password) => {
         return new Promise((resolve, reject) => {
@@ -32,14 +34,17 @@ function RegisterPage() {
                 `${process.env.REACT_APP_API_URL}/user/register`,
                 JSON.stringify({ "username": username, "email": email, "password": password }),
                 (data) => {
+                    setMessageSeverity('success');
                     setMessage('User registered successfully!');
                     resolve('User registered successfully!');
                 },
                 (message) => {
+                    setMessageSeverity('error');
                     setMessage(message || 'An error occurred');
                     reject(message);
                 },
                 (e) => {
+                    setMessageSeverity('error');
                     setMessage('Error: ' + e.message);
                     reject(e.message);
                 }
@@ -56,10 +61,20 @@ function RegisterPage() {
                 localStorage.setItem('authToken', authToken);
                 navigate('/');
             },
-            (message) => setMessage(message || 'An error occurred'),
-            (e) => setMessage('Error: ' + e.message)
+            (message) => {
+                setMessage(message || 'An error occurred');
+                setMessageSeverity('error');
+            },
+            (e) => {
+                setMessage('Error: ' + e.message);
+                setMessageSeverity('error');
+            }
         )
     }
+    const handleConfirmPasswordChange = (e) => {
+        setConfirmPassword(e.target.value);
+    };
+
 
     const isValidEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -67,7 +82,13 @@ function RegisterPage() {
     }
     const handleSubmit = () => {
         if (!isValidEmail(email)) {
+            setMessageSeverity('error');
             setMessage('Email is invalid!');
+            return;
+        }
+        if (password !== confirmPassword) {
+            setMessageSeverity('error');
+            setMessage('Passwords do not match');
             return;
         }
         callRegisterAPI(username, email, password).then((message) => {
@@ -101,9 +122,14 @@ function RegisterPage() {
                         <TextField type="password" name="password" value={password} 
                             sx={{ mb: '24px' }} label="Password" onChange={(e) => setPassword(e.target.value)} fullWidth required/>
                         <br />
+                        <TextField type="password" name="confirmPassword" value={confirmPassword} 
+                            sx={{ mb: '24px' }} 
+                            color = {password === confirmPassword ? 'success' : 'error'}
+                            label="Confirm Password" onChange={handleConfirmPasswordChange} fullWidth required/>
+                        <br />
                         <Button variant='contained' type="submit" sx={{ mb: '24px' }}
                             onClick={() => handleSubmit()} fullWidth className={styles.SignInButton}>Create Account</Button>
-                        {message && <Alert severity="error">{message}</Alert>}
+                        {message && <Alert severity={messageSeverity === '' ? "warning" : messageSeverity}>{message}</Alert>}
                         <Button variant='text' onClick={() => navigate('/signin')}
                             sx='text-align: center; display: block; margin: 0 auto;'>Already had an account? Log in</Button>
                     </Box>
