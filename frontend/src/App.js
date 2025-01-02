@@ -15,6 +15,8 @@ import { callAPITemplate } from './utils';
 import React from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { CircularProgress, Box, Grid2 as Grid } from '@mui/material';
+import FocusStatistics from './components/FocusStatistics';
+import WebBlockList from './components/WebBlockList';
 
 console.log(process.env.REACT_APP_API_URL);
 
@@ -226,6 +228,11 @@ function LayoutWithNavBar({
                 overflowY: 'auto',
                 height: '100vh'
             }}> 
+                {children.type === PomodoroPage && 
+                    <Box>
+                        <FocusStatistics />
+                        <WebBlockList />
+                    </Box>}
                 {suggestTaskList ?
                     <SuggestTaskBar
                         setUpdateTaskAttrs={setUpdateTaskAttrs}

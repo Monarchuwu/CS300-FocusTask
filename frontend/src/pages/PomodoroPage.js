@@ -1,7 +1,5 @@
 import styles from './PomodoroPage.module.css';
 
-import BarChart24 from '../components/BarChart24';
-
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
@@ -11,12 +9,6 @@ import { displaySeconds } from '../utils';
 
 function PomodoroPage({ taskPomodoro }) {
     const navigate = useNavigate();
-    // statistic pomodoro
-    const [statistic, setStatistic] = React.useState(null);
-    const total = React.useMemo(() => {
-        if (!statistic) return 0;
-        return parseInt(statistic.reduce((acc, cur) => acc + cur[0], 0));
-    }, [statistic]);
     // State variable to edit the length of the pomodoro
     const [pomodoroLength, setPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 0);
     const [inputPomodoroLength, setInputPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 0);
@@ -25,8 +17,6 @@ function PomodoroPage({ taskPomodoro }) {
     // Variables to store the timer ID (running state)
     const timerID = React.useRef(null);
     const [remainingTime, setRemainingTime] = React.useState(0);
-    const [blockList, setBlockList] = React.useState([]);
-    const [newWebsite, setNewWebsite] = React.useState('');
 
 
     // API call functions
@@ -139,56 +129,6 @@ function PomodoroPage({ taskPomodoro }) {
         });
     }
 
-    // Fetch statistic
-    const fetchStatistic = async () => {
-        const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
-            `${process.env.REACT_APP_API_URL}/pomodoro/get_history_hour_fullday`,
-            JSON.stringify({ "authenticationToken": authToken, "date": new Date().toISOString() }),
-            (data) => setStatistic(data)
-        )
-    }
-
-    // Fetch the block list
-    const fetchBlockList = async () => {
-        const authToken = localStorage.getItem('authToken');
-        try {
-            console.log("Fetching block list");
-            console.log(authToken);
-            const dataBlockItems = await callAPITemplate(
-                `${process.env.REACT_APP_API_URL}/website_block/get_block_list`,
-                JSON.stringify({ authenticationToken: authToken }),
-            );
-            const blockItems = dataBlockItems.map(item => JSON.parse(item));
-            setBlockList(blockItems);
-        }
-        catch (e) {
-            console.error(e);
-        }
-    };
-
-    // Add a website to the block list
-    const addWebsite = async () => {
-        const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
-            `${process.env.REACT_APP_API_URL}/website_block/add_url`,
-            JSON.stringify({ authenticationToken: authToken, URL: newWebsite }),
-            () => fetchBlockList(),
-            setNewWebsite('')
-        );
-    };
-
-    // Delete a website from the block list
-    const deleteWebsite = async (blockID) => {
-        const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
-            `${process.env.REACT_APP_API_URL}/website_block/delete_url`,
-            JSON.stringify({ authenticationToken: authToken, blockID: blockID }),
-            () => fetchBlockList()
-        );
-    };
-
-
     // Update the timer based on the state of the pomodoro on page load
     React.useEffect(() => {
         if (pomodoroStatus === "Running") {
@@ -207,10 +147,7 @@ function PomodoroPage({ taskPomodoro }) {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    // Fetch statistic on page load
-    React.useEffect(() => {
-        fetchStatistic();
-    }, []);
+
     // Update the pomodoro status when the taskPomodoro changes
     React.useEffect(() => {
         if (taskPomodoro === null) {
@@ -221,9 +158,6 @@ function PomodoroPage({ taskPomodoro }) {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskPomodoro?.status]);
-    React.useEffect(() => {
-        fetchBlockList();
-    }, []);
 
 
     const PomodoroMenu = ({pomodoroStatus}) => {
@@ -321,42 +255,11 @@ function PomodoroPage({ taskPomodoro }) {
 
 
     return (
-        <div>
-            <div className={styles.container}>
-                {!taskPomodoro
-                    ? <Box sx={{ height: "100vh", justifyContent: "center"}} >No Pomodoro</Box>
-                    : <PomodoroMenu pomodoroStatus={pomodoroStatus} />
-                }
-                <div className={styles.statistic}>
-                    <button onClick={() => fetchStatistic()}>Load Statistic</button>
-                    {!statistic
-                        ? <div>No Statistic</div>
-                        : <div>
-                            <BarChart24 data={statistic} />
-                        </div>
-                    }
-                    <p>Today's focus: {displaySeconds(total)}</p>
-                </div>
-                <div className={styles.blockList}>
-                    <h2>Website Block List</h2>
-                    <ul>
-                        {blockList.map((blockItem) => (
-                            <li key={blockItem.blockID}>
-                                {blockItem.URL}
-                                <button onClick={() => deleteWebsite(blockItem.blockID)}>Delete</button>
-                            </li>
-                        ))}
-                    </ul>
-                    <input
-                        type="text"
-                        value={newWebsite}
-                        onChange={(e) => setNewWebsite(e.target.value)}
-                        placeholder="Add a website URL"
-                    />
-                    <button onClick={() => addWebsite()}>Add</button>
-                    <p>Example: facebook.com</p>
-                </div>
-            </div>
+        <div className={styles.container}>
+            {!taskPomodoro
+                ? <Box sx={{ height: "100vh", justifyContent: "center"}} >No Pomodoro</Box>
+                : <PomodoroMenu pomodoroStatus={pomodoroStatus} />
+            }
         </div>
     );
 }
