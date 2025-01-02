@@ -181,7 +181,7 @@ function LayoutWithNavBar({
                 });
             case PomodoroPage:
                 return React.cloneElement(children, {
-                    taskPomodoro,
+                    taskPomodoro, setTaskPomodoro
                 });
             default:
                 return children;
