@@ -230,6 +230,19 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
 
     const Section = ({ section, taskAttrMap }) => {
+        const countUncompletedTasks = (section) => {
+            let count = 0;
+            if (section.children) {
+                section.children.forEach(child => {
+                    if (child.itemType === 'Task' && taskAttrMap[child.itemID]?.status === 'Pending') {
+                        count++;
+                    }
+                });
+            }
+            return count;
+        }
+
+        if (section.name === '' && countUncompletedTasks(section) === 0) return <Box></Box>;
 
         return (
             <Accordion sx = {AccordionSectionStyle} defaultExpanded disableGutters={true}>
