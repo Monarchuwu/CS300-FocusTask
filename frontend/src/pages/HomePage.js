@@ -23,6 +23,36 @@ import PriorityPicker from "../components/PriorityPicker";
 import SectionPicker from "../components/SectionPicker";
 
 
+const AccordionSectionStyle = {
+    border: '1px solid',
+    borderColor: 'border.main',
+    borderRadius: '5px',
+    margin: '15px 0px',
+    boxShadow: 'none',
+    backgroundColor: 'white',
+    '&.MuiAccordion-root.Mui-expanded': {
+        margin: '15px 0px',
+    }
+};
+
+const AccordionSummaryStyle = {
+    margin: '0px',
+    fontFamily: 'Plus Jakarta Sans',
+    fontWeight: '600',
+    color: 'text.primary',
+    '.MuiAccordionSummary-content': {
+        transition: 'margin 0.3s ease',
+    },
+    '&.Mui-expanded': {
+        minHeight: '30px',
+        
+        '.MuiAccordionSummary-content': {
+            marginBottom: '2px',
+            transition: 'margin 0.3s ease',
+        } 
+    } 
+};
+
 function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -276,39 +306,13 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     const Section = ({ section, taskAttrMap }) => {
         return (
-            <Accordion sx = {{
-                    border: '1px solid',
-                    borderColor: 'border.main',
-                    borderRadius: '5px',
-                    margin: '15px 0px',
-                    boxShadow: 'none',
-                    backgroundColor: 'white',
-                    '&.MuiAccordion-root.Mui-expanded': {
-                        margin: '15px 0px',
-                    }
-                }} defaultExpanded disableGutters={true}>
+            <Accordion sx = {AccordionSectionStyle} defaultExpanded disableGutters={true}>
                 {section.name !== '' && 
                     <AccordionSummary expandIcon={<ArrowDropDownIcon size="small" stroke="bold" />} 
                         aria-controls="panel1a-content" id="panel1a-header"
                         alignItems='center'
                         justifyContent='center'
-                        sx = {{ 
-                            margin: '0px',
-                            fontFamily: 'Plus Jakarta Sans',
-                            fontWeight: '600',
-                            color: 'text.primary',
-                            '.MuiAccordionSummary-content': {
-                                transition: 'margin 0.3s ease',
-                            },
-                            '&.Mui-expanded': {
-                                minHeight: '30px',
-                                
-                                '.MuiAccordionSummary-content': {
-                                    marginBottom: '2px',
-                                    transition: 'margin 0.3s ease',
-                                } 
-                            } 
-                        }}>
+                        sx = {AccordionSummaryStyle}>
                         <Typography variant='section'>{section.name}</Typography>
                     </AccordionSummary>}
                 <AccordionDetails disablePadding sx = {{ padding: section.name !== '' ? '0px 10px 10px 10px' : '10px' }}>
@@ -428,11 +432,24 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     // Function to render completed tasks
     const renderCompletedTasks = (tasks, taskAttrMap) => {
-        return tasks.map(task => (
-            <Box key={task.itemID}>
-                <Task task={task} taskAttrMap={taskAttrMap} />
-            </Box>
-        ));
+        return (
+            <Accordion sx = {AccordionSectionStyle} defaultExpanded disableGutters={true}>
+                <AccordionSummary expandIcon={<ArrowDropDownIcon size="small" stroke="bold" />} 
+                    aria-controls="panel1a-content" id="panel1a-header"
+                    alignItems='center'
+                    justifyContent='center'
+                    sx = {AccordionSummaryStyle}>
+                    <Typography variant='section'>Completed</Typography>
+                </AccordionSummary>
+                <AccordionDetails disablePadding sx = {{ padding: '0px 10px 10px 10px'}}>
+                    {tasks.map(task => (
+                        <Box key={task.itemID}>
+                            <Task task={task} taskAttrMap={taskAttrMap} />
+                        </Box>
+                    ))}
+                </AccordionDetails>
+            </Accordion>
+        );
     };
 
 
@@ -589,18 +606,6 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box>
                 )}
             </div>
-            {/* Completed Tasks Section */}
-            <div>
-                <Typography variant="h6">Completed Tasks</Typography>
-                {Object.values(tree).length > 0 ? (
-                    renderCompletedTasks(
-                        Object.values(tree).flatMap(root => root.children.filter(task => taskAttrMap[task.itemID]?.status === 'Completed')),
-                        taskAttrMap
-                    )
-                ) : (
-                    <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box>
-                )}
-            </div>
             {/* Add Section */}
             {isAddingSection ? (
                 <ClickAwayListener onClickAway={handleCancleAddSection}>
@@ -622,6 +627,17 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                     New Section
                 </Button>)
             }
+            {/* Completed Tasks Section */}
+            <div>
+                {Object.values(tree).length > 0 ? (
+                    renderCompletedTasks(
+                        Object.values(tree).flatMap(root => root.children.filter(task => taskAttrMap[task.itemID]?.status === 'Completed')),
+                        taskAttrMap
+                    )
+                ) : (
+                    <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box>
+                )}
+            </div>
         </Box>
     );
 }
