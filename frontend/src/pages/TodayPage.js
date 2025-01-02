@@ -3,10 +3,12 @@ import styles from './TodayPage.module.css';
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { CircularProgress, Box } from '@mui/material';
 
 function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, setSuggestTaskList }) {
+    const navigate = useNavigate();
     // State variables for adding new task
     const [newTaskName, setNewTaskName] = React.useState("");
     const [newTaskDescription, setNewTaskDescription] = React.useState("");
@@ -113,6 +115,19 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
         fetchTodoList();
         setUpdateTaskAttrs(Math.random());
     }
+    // Navigate to the original project of the task
+    const navigateToOriginalProject = async (taskID) => {
+        const authToken = localStorage.getItem('authToken');
+        const data = await callAPITemplate(
+            `${process.env.REACT_APP_API_URL}/todo_item/get_project`,
+            JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
+        );
+        const projectName = JSON.parse(data).name;
+        navigate({
+            pathname: '/',
+            search: `?project=${projectName}`,
+        });
+    }
 
 
     // Fetch todo list data on page load and when updating a Task Attribute
@@ -198,6 +213,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
                                 setViewTaskDetailID(task.itemID);
                                 setSuggestTaskList(false);
                             }}>Edit</button>
+                            <button onClick={() => navigateToOriginalProject(task.itemID)}>Show location</button>
                             <button onClick={() => callDeleteTodoItemAPI(task.itemID)}>Delete</button>
                         </li>
                     ))}
