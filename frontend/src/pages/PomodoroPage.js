@@ -13,7 +13,6 @@ import RemoveRoundedIcon from '@mui/icons-material/RemoveRounded';
 function PomodoroPage({ taskPomodoro, setTaskPomodoro }) {
     // State variable to edit the length of the pomodoro
     const [pomodoroLength, setPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 25*60);
-    const [inputPomodoroLength, setInputPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 25*60);
     // State variable to store the status of the pomodoro
     const [pomodoroStatus, setPomodoroStatus] = React.useState(taskPomodoro && taskPomodoro.status ? taskPomodoro.status : "Canceled");
     // Variables to store the timer ID (running state)
@@ -115,7 +114,7 @@ function PomodoroPage({ taskPomodoro, setTaskPomodoro }) {
         taskPomodoro.status = "Completed";
         clearInterval(timerID.current);
         timerID.current = null;
-        fetchStatistic();
+        // fetchStatistic();
         createNewPomodoroSession(taskPomodoro.taskID, taskPomodoro.name);
     }
     // Start Pomodoro function
@@ -126,7 +125,7 @@ function PomodoroPage({ taskPomodoro, setTaskPomodoro }) {
             JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
             (data) => {
                 setTaskPomodoro({ ...JSON.parse(data), name: taskName });
-                callSetPomodoroLengthAPI(JSON.parse(data).pomodoroID, inputPomodoroLength);
+                callSetPomodoroLengthAPI(JSON.parse(data).pomodoroID, pomodoroLength);
             }
         );
     }
