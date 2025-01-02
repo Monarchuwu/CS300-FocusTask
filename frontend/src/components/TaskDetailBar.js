@@ -15,7 +15,7 @@ import { Tooltip } from '@mui/material/';
 
 import DateTimePickerButtonDialog from './DateTimePickerButtonDialog';
 import PriorityPicker from './PriorityPicker';
-import SectionPicker from './SectionPicker';
+// import SectionPicker from './SectionPicker';
 import { TimeCircle, Send, Calendar } from 'react-iconly';
 
 
@@ -155,10 +155,10 @@ function TaskDetailBar({ taskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPom
     const navigate = useNavigate();
     // State variable for viewing task details
     const [taskDetails, setTaskDetails] = React.useState(null);
-    const [parentSectionID, setParentSectionID] = React.useState(null);
-    // State variable for debouncing status (checkbox) changes
-    const parentProjectID = React.useRef(null);
-    const sectionList = React.useRef(null);
+    // const [parentSectionID, setParentSectionID] = React.useState(null);
+    // // State variable for debouncing status (checkbox) changes
+    // const parentProjectID = React.useRef(null);
+    // const sectionList = React.useRef(null);
 
     // API call functions
     const callGetTaskAttributesAPI = async (taskID) => {
@@ -197,59 +197,59 @@ function TaskDetailBar({ taskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPom
         }
     }
 
-    const callGetProjectAPI = async (taskID) => {
-        const authToken = localStorage.getItem('authToken');
-        try {
-            const data = await callAPITemplate(
-                `${process.env.REACT_APP_API_URL}/todo_item/get_project`,
-                JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
-            );
-            return JSON.parse(data);
-        }
-        catch (e) {
-            console.error(e);
-        }
-    }
+    // const callGetProjectAPI = async (taskID) => {
+    //     const authToken = localStorage.getItem('authToken');
+    //     try {
+    //         const data = await callAPITemplate(
+    //             `${process.env.REACT_APP_API_URL}/todo_item/get_project`,
+    //             JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
+    //         );
+    //         return JSON.parse(data);
+    //     }
+    //     catch (e) {
+    //         console.error(e);
+    //     }
+    // }
 
-    const callGetSectionsAPI = async (projectID) => {
-        if (!projectID) return;
-        const authToken = localStorage.getItem('authToken');
-        try {
-            // Fetch todo items and task attributes
-            const dataItem = await callAPITemplate(
-                `${process.env.REACT_APP_API_URL}/todo_item/get_list`,
-                JSON.stringify({ "authenticationToken": authToken, "itemID": projectID }),
-            );
-            const items = dataItem
-                .map(item => JSON.parse(item))
-                .filter(item => item.itemID !== projectID);
+    // const callGetSectionsAPI = async (projectID) => {
+    //     if (!projectID) return;
+    //     const authToken = localStorage.getItem('authToken');
+    //     try {
+    //         // Fetch todo items and task attributes
+    //         const dataItem = await callAPITemplate(
+    //             `${process.env.REACT_APP_API_URL}/todo_item/get_list`,
+    //             JSON.stringify({ "authenticationToken": authToken, "itemID": projectID }),
+    //         );
+    //         const items = dataItem
+    //             .map(item => JSON.parse(item))
+    //             .filter(item => item.itemID !== projectID);
         
-            // Fetch section list
-            const sectionItems = items.filter(item => item.itemType === 'Section');
-            sectionList.current = Object.fromEntries(sectionItems.map(section => [section.itemID, section.name]));
-        }
-        catch (e) {
-            console.error(e);
-        }
-    }
+    //         // Fetch section list
+    //         const sectionItems = items.filter(item => item.itemType === 'Section');
+    //         sectionList.current = Object.fromEntries(sectionItems.map(section => [section.itemID, section.name]));
+    //     }
+    //     catch (e) {
+    //         console.error(e);
+    //     }
+    // }
 
-    // Fetch section list function
-    const fetchSectionList = async () => {
-        if (taskID) {
-            try {
-                const projectItem = await callGetProjectAPI(taskID);
-                parentProjectID.current = projectItem.itemID;
-                const sections = await callGetSectionsAPI(projectItem.projectID);
-                sectionList.current = sections;
+    // // Fetch section list function
+    // const fetchSectionList = async () => {
+    //     if (taskID) {
+    //         try {
+    //             const projectItem = await callGetProjectAPI(taskID);
+    //             parentProjectID.current = projectItem.itemID;
+    //             const sections = await callGetSectionsAPI(projectItem.projectID);
+    //             sectionList.current = sections;
 
-            } catch (e) {
-                console.error('Failed to fetch section list:', e);
-                sectionList.current = null;
-            }
-        } else {
-            sectionList.current = null;
-        }
-    }
+    //         } catch (e) {
+    //             console.error('Failed to fetch section list:', e);
+    //             sectionList.current = null;
+    //         }
+    //     } else {
+    //         sectionList.current = null;
+    //     }
+    // }
 
     // Fetch task details function
     const fetchTaskDetails = async () => {
@@ -285,7 +285,7 @@ function TaskDetailBar({ taskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPom
     // Fetch task details when taskID changes
     React.useEffect(() => {
         fetchTaskDetails();
-        fetchSectionList();
+        // fetchSectionList();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskID, updateTaskAttrs]);
 
@@ -335,7 +335,7 @@ function TaskDetailBar({ taskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPom
                         handleFieldChange={handleFieldChange} 
                     />
                     <TaskDetailSectionDuePriority 
-                        taskDetails={{ dueDate: taskDetails?.dueDate, priority: taskDetails?.priority, sectionID: parentSectionID }} 
+                        taskDetails={{ dueDate: taskDetails?.dueDate, priority: taskDetails?.priority }} 
                         handleFieldChange={handleFieldChange}
                     />
                     {/* Checkbox for Task */}

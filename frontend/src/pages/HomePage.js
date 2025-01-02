@@ -6,14 +6,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CircularProgress, Box, Typography, 
         Checkbox, Accordion, AccordionDetails, 
         AccordionSummary, 
-        IconButton, Menu, MenuItem} from '@mui/material';
+        IconButton } from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { Helmet } from 'react-helmet';
 import { Dialog, DialogActions, DialogContent, 
     DialogContentText, DialogTitle, Button, TextField } from '@mui/material';
-import { Plus, Folder } from 'react-iconly';
+import { Plus } from 'react-iconly';
 import { ClickAwayListener } from '@mui/base/ClickAwayListener';
 import dayjs from 'dayjs';
 
