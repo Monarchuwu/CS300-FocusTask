@@ -37,7 +37,7 @@ function SignInPage() {
             },
             (message) => {
                 if (message === 'Error: User not found' || message === 'Error: Incorrect password') {
-                    setMessage('Wrong username or password');
+                    setMessage('Wrong email or password');
                     return;
                 }
                 setMessage(message || 'An error occurred')
