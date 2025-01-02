@@ -6,7 +6,6 @@ from ..models.objects import *
 from ..models.managers import *
 from django.views.decorators.csrf import csrf_exempt
 
-
 @csrf_exempt
 def pomodoro_start(request):
     if request.method == 'POST':
@@ -16,12 +15,12 @@ def pomodoro_start(request):
             pomodoroID = data['pomodoroID']
             userID = UserManager().getUserID(token)
             if PomodoroManager().checkRunningPomodoro(userID):
-                return JsonResponse({'status': 'error', 'message': 'User is not allowed to start more than one session'}, status=409)
+                return JsonResponse({'status': 'error', 'message': 'User is not allowed to start more than one session'}, status = 409) 
             if PomodoroManager().checkUserAccessToPomodoro(userID, pomodoroID):
                 pomodoro = PomodoroManager().start(pomodoroID=pomodoroID)
                 return JsonResponse({'status': 'success', 'data': str(pomodoro)})
             else:
-                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status=401)
+                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status = 401)
 
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
@@ -29,7 +28,6 @@ def pomodoro_start(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
 
 @csrf_exempt
 def pomodoro_pause(request):
@@ -43,7 +41,7 @@ def pomodoro_pause(request):
                 pomodoro = PomodoroManager().pause(pomodoroID=pomodoroID)
                 return JsonResponse({'status': 'success', 'data': str(pomodoro)})
             else:
-                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status=401)
+                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status = 401)
 
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
@@ -51,7 +49,6 @@ def pomodoro_pause(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
 
 @csrf_exempt
 def pomodoro_continue(request):
@@ -65,7 +62,7 @@ def pomodoro_continue(request):
                 pomodoro = PomodoroManager().unpause(pomodoroID=pomodoroID)
                 return JsonResponse({'status': 'success', 'data': str(pomodoro)})
             else:
-                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status=401)
+                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status = 401)
 
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
@@ -73,7 +70,6 @@ def pomodoro_continue(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
 
 @csrf_exempt
 def pomodoro_end(request):
@@ -87,7 +83,7 @@ def pomodoro_end(request):
                 pomodoro = PomodoroManager().end(pomodoroID=pomodoroID)
                 return JsonResponse({'status': 'success', 'data': str(pomodoro)})
             else:
-                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status=401)
+                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status = 401)
 
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
@@ -95,7 +91,6 @@ def pomodoro_end(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
 
 @csrf_exempt
 def pomodoro_set_task(request):
@@ -104,13 +99,13 @@ def pomodoro_set_task(request):
             data = json.loads(request.body)
             token = data['authenticationToken']
             taskID = data['taskID']
-            todoItem = TaskManager().getTodoItem(itemID=taskID)
+            todoItem = TaskManager().getTodoItem(itemID = taskID)
             userID = UserManager().getUserID(token)
             if todoItem.userID == userID:
                 pomodoro = PomodoroManager().setTaskID(taskID=taskID)
                 return JsonResponse({'status': 'success', 'data': str(pomodoro)})
             else:
-                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status=401)
+                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status = 401)
 
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
@@ -118,7 +113,6 @@ def pomodoro_set_task(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
 
 @csrf_exempt
 def pomodoro_set_length(request):
@@ -128,13 +122,13 @@ def pomodoro_set_length(request):
             token = data['authenticationToken']
             pomodoroID = data['pomodoroID']
             seconds = data['length']
-            length = timedelta(seconds=seconds)
+            length=timedelta(seconds=seconds)
             userID = UserManager().getUserID(token)
             if PomodoroManager().checkUserAccessToPomodoro(userID, pomodoroID):
                 pomodoro = PomodoroManager().setTime(pomodoroID=pomodoroID, length=length)
                 return JsonResponse({'status': 'success', 'data': str(pomodoro)})
             else:
-                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status=401)
+                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status = 401)
 
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
@@ -142,7 +136,6 @@ def pomodoro_set_length(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
 
 @csrf_exempt
 def pomodoro_get_time(request):
@@ -156,7 +149,7 @@ def pomodoro_get_time(request):
                 currentTime = PomodoroManager().getTime(pomodoroID=pomodoroID)
                 return JsonResponse({'status': 'success', 'data': currentTime.total_seconds()})
             else:
-                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status=401)
+                return JsonResponse({'status': 'error', 'message': 'User is unauthorized to modify this session'}, status = 401)
 
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
@@ -165,7 +158,6 @@ def pomodoro_get_time(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
-
 @csrf_exempt
 def get_history_hour(request):
     if request.method == 'POST':
@@ -173,10 +165,9 @@ def get_history_hour(request):
             data = json.loads(request.body)
             token = data['authenticationToken']
             time = datetime.fromisoformat(data['hour'])
-            time = datetime(year=time.year, month=time.month,
-                            day=time.day, hour=time.hour).astimezone()
+            time = datetime(year=time.year, month=time.month, day=time.day, hour=time.hour).astimezone()
             userID = UserManager().getUserID(token)
-
+            
             run_time, pause_time = PomodoroManager().get_hour_list(userID, time)
             return JsonResponse({'status': 'success', 'data': [run_time, pause_time]})
         except json.JSONDecodeError:
@@ -186,20 +177,17 @@ def get_history_hour(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
-
 @csrf_exempt
 def get_history_hour_fullday(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             token = data['authenticationToken']
-            time = datetime.fromisoformat(data['date']).replace(
-                hour=0, minute=0, second=0, microsecond=0)
+            time = datetime.fromisoformat(data['date']).replace(hour=0, minute=0, second=0, microsecond=0)
             userID = UserManager().getUserID(token)
             result = []
             for hour in range(24):
-                run_time, pause_time = PomodoroManager().get_hour_list(
-                    userID, time + timedelta(hours=hour))
+                run_time, pause_time = PomodoroManager().get_hour_list(userID, time + timedelta(hours=hour))
                 result.append([run_time, pause_time])
 
             return JsonResponse({'status': 'success', 'data': result})
@@ -210,7 +198,6 @@ def get_history_hour_fullday(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
-
 @csrf_exempt
 def get_history_day(request):
     if request.method == 'POST':
@@ -219,7 +206,7 @@ def get_history_day(request):
             token = data['authenticationToken']
             time = datetime.fromisoformat(data['hour']).date()
             userID = UserManager().getUserID(token)
-
+            
             run_time, pause_time = PomodoroManager().get_day_list(userID, time)
             return JsonResponse({'status': 'success', 'data': [run_time, pause_time]})
         except json.JSONDecodeError:
@@ -228,7 +215,6 @@ def get_history_day(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
 
 @csrf_exempt
 def get_last_active_session(request):
@@ -240,8 +226,8 @@ def get_last_active_session(request):
             pomodoro = PomodoroManager().getLastActiveSession(userID)
 
             if pomodoro is None:
-                return JsonResponse({'status': 'success', 'data': json.dumps({'haveActiveSession': False})})
-
+                return JsonResponse({'status': 'success', 'data': json.dumps({ 'haveActiveSession': False })})
+            
             return JsonResponse({'status': 'success', 'data': json.dumps({
                 'haveActiveSession': True,
                 'pomodoro': json.loads(str(pomodoro))
