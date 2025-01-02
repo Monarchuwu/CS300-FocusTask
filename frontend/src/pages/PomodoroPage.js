@@ -3,8 +3,7 @@ import styles from './PomodoroPage.module.css';
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Typography, Box, Button } from '@mui/material';
+import { Typography, Box, Button, CircularProgress } from '@mui/material';
 import { displaySeconds } from '../utils';
 
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -116,6 +115,7 @@ function PomodoroPage({ taskPomodoro, setTaskPomodoro }) {
         timerID.current = null;
         // fetchStatistic();
         createNewPomodoroSession(taskPomodoro.taskID, taskPomodoro.name);
+        setRemainingTime(pomodoroLength);
     }
     // Start Pomodoro function
     const createNewPomodoroSession = (taskID, taskName) => {
@@ -220,22 +220,27 @@ function PomodoroPage({ taskPomodoro, setTaskPomodoro }) {
         };
 
         const PomodoroClock = () => {
+            const progress = ((pomodoroLength - remainingTime) / pomodoroLength) * 100;
+
             return (
                 <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", transition: "all 0.5s ease" }}>
-                    <Box sx={{ backgroundColor: "#E6E4F0", borderRadius: POMO_CIRCLE_SIZE/2, 
-                                width: POMO_CIRCLE_SIZE, height: POMO_CIRCLE_SIZE, 
-                                justifyContent: "center", display: "flex", 
-                                alignItems: "center" }}>
-                        <Box sx={{ backgroundColor: "#F9F8FF", borderRadius: POMO_CIRCLE_SIZE/2 - 20, 
-                                width: POMO_CIRCLE_SIZE - 40, height: POMO_CIRCLE_SIZE - 40, 
-                                justifyContent: "center", display: "flex", 
-                                flexDirection: "column",
-                                alignItems: "center" }}>
-                            {pomodoroStatus === "Canceled" && <Button onClick={increasePomodoroLength}><AddRoundedIcon/></Button>}
-                            <Typography variant="pomo">
-                                {pomodoroStatus === "Canceled" ? displaySeconds(pomodoroLength) : displaySeconds(remainingTime)}
-                            </Typography>
-                            {pomodoroStatus === "Canceled" && <Button onClick={decreasePomodoroLength}><RemoveRoundedIcon/></Button>}
+                    <Box sx={{ position: "relative", display: "inline-flex" }}>
+                        <Box sx={{ backgroundColor: "#E6E4F0", borderRadius: POMO_CIRCLE_SIZE/2, 
+                                    width: POMO_CIRCLE_SIZE, height: POMO_CIRCLE_SIZE, 
+                                    justifyContent: "center", display: "flex", 
+                                    alignItems: "center"}}>
+                            <CircularProgress variant="determinate" value={progress} size={POMO_CIRCLE_SIZE} />
+                            <Box sx={{ backgroundColor: "#F9F8FF", borderRadius: POMO_CIRCLE_SIZE/2 - 20, 
+                                        width: POMO_CIRCLE_SIZE - 40, height: POMO_CIRCLE_SIZE - 40, 
+                                        justifyContent: "center", display: "flex", 
+                                        flexDirection: "column",
+                                        alignItems: "center", position: "absolute"}}>
+                                {pomodoroStatus === "Canceled" && <Button onClick={increasePomodoroLength}><AddRoundedIcon/></Button>}
+                                <Typography variant="pomo">
+                                    {pomodoroStatus === "Canceled" ? displaySeconds(pomodoroLength) : displaySeconds(remainingTime)}
+                                </Typography>
+                                {pomodoroStatus === "Canceled" && <Button onClick={decreasePomodoroLength}><RemoveRoundedIcon/></Button>}
+                            </Box>
                         </Box>
                     </Box>
                 </Box>
