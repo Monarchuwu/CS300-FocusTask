@@ -78,6 +78,10 @@ To create a production build, use npm run build.
 webpack compiled successfully
 ``` 
 
+### 5. Install the Website Blocking extension
+
+To install the Chrome Extension, follow the instructions in [this repo](https://github.com/ldn694/WebsiteBlocking).
+
 ## Development
 
 If your run the app in the browser under the ip given after npm run start as "On Your Network", then if you make changes in `frontend/src/App.js` this should automaticly reload the page when saved.
