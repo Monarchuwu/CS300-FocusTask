@@ -233,7 +233,6 @@ function LayoutWithNavBar({
                     />
                     : viewTaskDetailID && <TaskDetailBar
                         taskID={viewTaskDetailID}
-                        setTaskID={setViewTaskDetailID}
                         updateTaskAttrs={updateTaskAttrs}
                         setUpdateTaskAttrs={setUpdateTaskAttrs}
                         setTaskPomodoro={setTaskPomodoro}

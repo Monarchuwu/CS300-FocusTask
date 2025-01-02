@@ -146,7 +146,7 @@ const useDebounce = (func, delay) => {
     return debouncedFunction;
 };
 
-function TaskDetailBar({ taskID, setTaskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPomodoro }) {
+function TaskDetailBar({ taskID, updateTaskAttrs, setUpdateTaskAttrs, setTaskPomodoro }) {
     const navigate = useNavigate();
     // State variable for viewing task details
     const [taskDetails, setTaskDetails] = React.useState(null);

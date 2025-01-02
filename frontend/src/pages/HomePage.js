@@ -469,6 +469,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
         callGetProjectByNameAPI(projectName)
             .then(data => setSelectedProject(JSON.parse(data).itemID))
             .catch(e => navigate('/'));
+        setViewTaskDetailID(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
@@ -487,7 +488,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 value={newTaskName}
                 placeholder='Task Name'
                 onChange={(e) => setNewTaskName(e.target.value)}
-                onKeyPress={handleKeyPressTaskName}
+                onKeyUp={handleKeyPressTaskName}
                 fullWidth
                 sx={{marginBottom: '10px', 
                     "& .MuiInputBase-root::before": { borderColor: 'border.main' },
