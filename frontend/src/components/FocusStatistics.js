@@ -62,7 +62,11 @@ const FocusStatistics = () => {
                     <div>No Statistic</div> :
                     <BarChart
                         dataset={statistic}
-                        xAxis={[{ dataKey: 'hour', scaleType: 'band', label: 'Hour' }]}
+                        xAxis={[{ 
+                            dataKey: 'hour', 
+                            scaleType: 'band', 
+                            label: 'Hour',
+                        }]}
                         series={[{ dataKey: 'minutes' }]}
                         {...chartSetting}
                     />

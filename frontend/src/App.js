@@ -229,7 +229,7 @@ function LayoutWithNavBar({
                 height: '100vh'
             }}> 
                 {children.type === PomodoroPage && 
-                    <Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <FocusStatistics />
                         <WebBlockList />
                     </Box>}

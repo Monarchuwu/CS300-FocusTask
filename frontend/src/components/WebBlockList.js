@@ -1,6 +1,12 @@
 import React from 'react';
 
 import { callAPITemplate } from '../utils';
+import { Divider, Typography, Box, TextField } from '@mui/material';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import { IconButton } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const WebBlockList = () => {
     const [blockList, setBlockList] = React.useState([]);
@@ -50,25 +56,46 @@ const WebBlockList = () => {
     }, []);
 
     return (
-        <div>
-            <h2>Website Block List</h2>
-            <ul>
-                {blockList.map((blockItem) => (
-                    <li key={blockItem.blockID}>
-                        {blockItem.URL}
-                        <button onClick={() => deleteWebsite(blockItem.blockID)}>Delete</button>
-                    </li>
-                ))}
-            </ul>
-            <input
+        <Box>
+            <Typography variant='h6'>Website Block List</Typography>
+            <Divider sx={{ mb: 1 }}/>
+            <TextField
                 type="text"
                 value={newWebsite}
                 onChange={(e) => setNewWebsite(e.target.value)}
-                placeholder="Add a website URL"
+                label="Website URL"
+                size='small'
+                onKeyUp = {(e) => {
+                    if (e.key === 'Enter') {
+                        addWebsite();
+                    }
+                }}
+                helperText="Ex: facebook.com; Press Enter to add"
             />
-            <button onClick={() => addWebsite()}>Add</button>
-            <p>Example: facebook.com</p>
-        </div>
+            <List sx={{
+                    height: '300px',
+                    overflow: 'auto',
+                }}>
+                {blockList.map((blockItem) => (
+                    <ListItem key={blockItem.blockID} secondaryAction={
+                        <IconButton edge="end" aria-label="delete"
+                            onClick={() => deleteWebsite(blockItem.blockID)}
+                            sx={{
+                                '&:hover': {
+                                    color: 'red',
+                                }
+                            }}>
+                            <DeleteIcon />
+                        </IconButton>
+                    }>
+                        <ListItemText>
+                            {blockItem.URL}
+                        </ListItemText>
+                        {/* <button onClick={() => deleteWebsite(blockItem.blockID)}>Delete</button> */}
+                    </ListItem>
+                ))}
+            </List>
+        </Box>
     );
 };
 
