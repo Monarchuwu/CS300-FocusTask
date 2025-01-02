@@ -18,40 +18,9 @@ import { ClickAwayListener } from '@mui/base/ClickAwayListener';
 import dayjs from 'dayjs';
 
 import DateTimePickerButtonDialog from "../components/DateTimePickerButtonDialog";
-import { getPriorityColor } from "../utils";
+import { getPriorityColor, AccordionSectionStyle, AccordionSummaryStyle } from "../utils";
 import PriorityPicker from "../components/PriorityPicker";
 import SectionPicker from "../components/SectionPicker";
-
-
-const AccordionSectionStyle = {
-    border: '1px solid',
-    borderColor: 'border.main',
-    borderRadius: '5px',
-    margin: '15px 0px',
-    boxShadow: 'none',
-    backgroundColor: 'white',
-    '&.MuiAccordion-root.Mui-expanded': {
-        margin: '15px 0px',
-    }
-};
-
-const AccordionSummaryStyle = {
-    margin: '0px',
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: '600',
-    color: 'text.primary',
-    '.MuiAccordionSummary-content': {
-        transition: 'margin 0.3s ease',
-    },
-    '&.Mui-expanded': {
-        minHeight: '30px',
-        
-        '.MuiAccordionSummary-content': {
-            marginBottom: '2px',
-            transition: 'margin 0.3s ease',
-        } 
-    } 
-};
 
 function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs }) {
     const navigate = useNavigate();
@@ -305,6 +274,20 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
 
     const Section = ({ section, taskAttrMap }) => {
+        const countUncompletedTasks = (section) => {
+            let count = 0;
+            if (section.children) {
+                section.children.forEach(child => {
+                    if (child.itemType === 'Task' && taskAttrMap[child.itemID]?.status === 'Pending') {
+                        count++;
+                    }
+                });
+            }
+            return count;
+        }
+
+        if (countUncompletedTasks(section) === 0) return <Box></Box>;
+
         return (
             <Accordion sx = {AccordionSectionStyle} defaultExpanded disableGutters={true}>
                 {section.name !== '' && 
@@ -432,6 +415,7 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
 
     // Function to render completed tasks
     const renderCompletedTasks = (tasks, taskAttrMap) => {
+        if (tasks.length === 0) return <Box></Box>;
         return (
             <Accordion sx = {AccordionSectionStyle} defaultExpanded disableGutters={true}>
                 <AccordionSummary expandIcon={<ArrowDropDownIcon size="small" stroke="bold" />} 

@@ -6,6 +6,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { CircularProgress, Box } from '@mui/material';
+import { getPriorityColor, AccordionSectionStyle, AccordionSummaryStyle } from "../utils";
 
 function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, setSuggestTaskList }) {
     const navigate = useNavigate();
@@ -169,8 +170,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
 
 
     return (
-        <div>
-            <h1>Today</h1>
+        <Box sx={{ padding: '15px' }}>
             {/* Add Task */}
             {projectDefaultID && sectionDefaultID && (
                 <div>
@@ -219,7 +219,7 @@ function TodayPage({ setViewTaskDetailID, updateTaskAttrs, setUpdateTaskAttrs, s
                     ))}
                 </ul>
             }
-        </div>
+        </Box>
     )
 }
 

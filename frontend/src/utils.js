@@ -77,3 +77,33 @@ export const displaySecondsHour = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     return `${hours}h${minutes}m`;
 };
+
+export const AccordionSectionStyle = {
+    border: '1px solid',
+    borderColor: 'border.main',
+    borderRadius: '5px',
+    margin: '15px 0px',
+    boxShadow: 'none',
+    backgroundColor: 'white',
+    '&.MuiAccordion-root.Mui-expanded': {
+        margin: '15px 0px',
+    }
+};
+
+export const AccordionSummaryStyle = {
+    margin: '0px',
+    fontFamily: 'Plus Jakarta Sans',
+    fontWeight: '600',
+    color: 'text.primary',
+    '.MuiAccordionSummary-content': {
+        transition: 'margin 0.3s ease',
+    },
+    '&.Mui-expanded': {
+        minHeight: '30px',
+        
+        '.MuiAccordionSummary-content': {
+            marginBottom: '2px',
+            transition: 'margin 0.3s ease',
+        } 
+    } 
+};
