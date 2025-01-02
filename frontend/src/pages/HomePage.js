@@ -419,11 +419,23 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
                 {node.itemType === 'Section' ? (
                     <Section section={node} taskAttrMap={taskAttrMap} />
                 ) : (
-                    <Task task={node} taskAttrMap={taskAttrMap} />
+                    taskAttrMap[node.itemID]?.status === 'Pending' && 
+                        <Task task={node} taskAttrMap={taskAttrMap} />
                 )}
             </Box>
         );
     };
+
+    // Function to render completed tasks
+    const renderCompletedTasks = (tasks, taskAttrMap) => {
+        return tasks.map(task => (
+            <Box key={task.itemID}>
+                <Task task={task} taskAttrMap={taskAttrMap} />
+            </Box>
+        ));
+    };
+
+
     // Apply the debounced status changes to the server
     const applyDebounceStatus = async (debounceStatus) => {
         const authToken = localStorage.getItem('authToken');
@@ -573,6 +585,18 @@ function HomePage({ viewTaskDetailID, setViewTaskDetailID, updateTaskAttrs, setU
             <div>
                 {Object.values(tree).length > 0 ? (
                     Object.values(tree).map(root => renderTree(root, taskAttrMap))
+                ) : (
+                    <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box>
+                )}
+            </div>
+            {/* Completed Tasks Section */}
+            <div>
+                <Typography variant="h6">Completed Tasks</Typography>
+                {Object.values(tree).length > 0 ? (
+                    renderCompletedTasks(
+                        Object.values(tree).flatMap(root => root.children.filter(task => taskAttrMap[task.itemID]?.status === 'Completed')),
+                        taskAttrMap
+                    )
                 ) : (
                     <Box justifyContent='center' alignItems='center' display='flex' height='100vh'> <CircularProgress /> </Box>
                 )}

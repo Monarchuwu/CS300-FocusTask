@@ -19,7 +19,7 @@ import PriorityPicker from './PriorityPicker';
 import { TimeCircle, Send, Calendar } from 'react-iconly';
 
 
-const DEBOUNCE_DELAY = 600;
+const DEBOUNCE_DELAY = 400;
 
 // Title of the task detail
 const TaskDetailTitle = ({ taskDetails, handleFieldChange }) => {
