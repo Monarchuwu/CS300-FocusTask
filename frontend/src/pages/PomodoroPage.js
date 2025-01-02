@@ -148,7 +148,7 @@ function PomodoroPage({ taskPomodoro }) {
             console.log("Fetching block list");
             console.log(authToken);
             const dataBlockItems = await callAPITemplate(
-                'http://localhost:8000/todolist/api/website_block/get_block_list',
+                `${process.env.REACT_APP_API_URL}/website_block/get_block_list`,
                 JSON.stringify({ authenticationToken: authToken }),
             );
             const blockItems = dataBlockItems.map(item => JSON.parse(item));
@@ -163,7 +163,7 @@ function PomodoroPage({ taskPomodoro }) {
     const addWebsite = async () => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/website_block/add_url',
+            `${process.env.REACT_APP_API_URL}/website_block/add_url`,
             JSON.stringify({ authenticationToken: authToken, URL: newWebsite }),
             () => fetchBlockList(),
             setNewWebsite('')
@@ -174,7 +174,7 @@ function PomodoroPage({ taskPomodoro }) {
     const deleteWebsite = async (blockID) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            'http://localhost:8000/todolist/api/website_block/delete_url',
+            `${process.env.REACT_APP_API_URL}/website_block/delete_url`,
             JSON.stringify({ authenticationToken: authToken, blockID: blockID }),
             () => fetchBlockList()
         );
