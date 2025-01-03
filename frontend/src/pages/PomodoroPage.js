@@ -1,66 +1,58 @@
 import styles from './PomodoroPage.module.css';
 
-import BarChart24 from '../components/BarChart24';
-
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Typography, Box, Button, CircularProgress } from '@mui/material';
+import { displaySeconds } from '../utils';
 
-function PomodoroPage({ taskPomodoro }) {
-    const navigate = useNavigate();
-    // statistic pomodoro
-    const [statistic, setStatistic] = React.useState(null);
-    const total = React.useMemo(() => {
-        if (!statistic) return 0;
-        return parseInt(statistic.reduce((acc, cur) => acc + cur[0], 0));
-    }, [statistic]);
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import RemoveRoundedIcon from '@mui/icons-material/RemoveRounded';
+
+function PomodoroPage({ taskPomodoro, setTaskPomodoro }) {
     // State variable to edit the length of the pomodoro
-    const [pomodoroLength, setPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 0);
-    const [inputPomodoroLength, setInputPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 0);
+    const [pomodoroLength, setPomodoroLength] = React.useState(taskPomodoro && taskPomodoro.duration ? taskPomodoro.duration : 25*60);
     // State variable to store the status of the pomodoro
     const [pomodoroStatus, setPomodoroStatus] = React.useState(taskPomodoro && taskPomodoro.status ? taskPomodoro.status : "Canceled");
     // Variables to store the timer ID (running state)
     const timerID = React.useRef(null);
-    const [remainingTime, setRemainingTime] = React.useState(0);
-    const [blockList, setBlockList] = React.useState([]);
-    const [newWebsite, setNewWebsite] = React.useState('');
+    const [remainingTime, setRemainingTime] = React.useState(25 * 60);
 
 
     // API call functions
-    const callStartPomodoroAPI = () => {
+    const callStartPomodoroAPI = async () => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
+        await callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/start`,
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
-    const callPausePomodoroAPI = () => {
+    const callPausePomodoroAPI = async () => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
+        await callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/pause`,
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
-    const callContinuePomodoroAPI = () => {
+    const callContinuePomodoroAPI = async () => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
+        await callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/continue`,
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
-    const callEndPomodoroAPI = () => {
+    const callEndPomodoroAPI = async () => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
+        await callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/end`,
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID })
         )
     }
-    const callSetPomodoroLengthAPI = (length) => {
+    const callSetPomodoroLengthAPI = async (pomodoroID, length) => {
         const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
+        await callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/set_length`,
-            JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID, "length": length }),
+            JSON.stringify({ "authenticationToken": authToken, "pomodoroID": pomodoroID, "length": length }),
             (data) => setPomodoroLength(length)
         )
     }
@@ -71,17 +63,6 @@ function PomodoroPage({ taskPomodoro }) {
             JSON.stringify({ "authenticationToken": authToken, "pomodoroID": taskPomodoro.pomodoroID }),
         )
         return parseInt(currentTime);
-    }
-    // Convert seconds to display format H:MM:SS
-    const displaySeconds = (seconds) => {
-        if (typeof (seconds) !== 'number' || seconds < 0) {
-            return "type error";
-        }
-        // display in format H:MM:SS
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        seconds %= 60;
-        return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
     // Update the remaining time
     const fetchRemainingTime = async () => {
@@ -97,7 +78,7 @@ function PomodoroPage({ taskPomodoro }) {
         return setInterval(async () => {
             setRemainingTime((prev) => {
                 const remainingTime = prev - 1;
-                if (remainingTime - 1 <= 0) {
+                if (remainingTime <= 0) {
                     endPomodoro();
                 }
                 return remainingTime;
@@ -105,98 +86,49 @@ function PomodoroPage({ taskPomodoro }) {
         }, 1000);
     }
     // handle pomodoro functions
-    const startPomodoro = () => {
-        callStartPomodoroAPI();
+    const startPomodoro = async () => {
+        await callStartPomodoroAPI();
         setPomodoroStatus("Running");
         taskPomodoro.status = "Running";
         setRemainingTime(pomodoroLength);
         timerID.current = createTimer();
     }
-    const pausePomodoro = () => {
-        callPausePomodoroAPI();
+    const pausePomodoro = async () => {
+        await callPausePomodoroAPI();
         setPomodoroStatus("Paused");
         taskPomodoro.status = "Paused";
         clearInterval(timerID.current);
         timerID.current = null;
+        fetchRemainingTime();
     }
-    const continuePomodoro = () => {
-        callContinuePomodoroAPI();
+    const continuePomodoro = async () => {
+        await callContinuePomodoroAPI();
         setPomodoroStatus("Running");
         taskPomodoro.status = "Running";
         timerID.current = createTimer();
     }
-    const endPomodoro = () => {
-        callEndPomodoroAPI();
+    const endPomodoro = async () => {
+        await callEndPomodoroAPI();
         setPomodoroStatus("Completed");
         taskPomodoro.status = "Completed";
         clearInterval(timerID.current);
         timerID.current = null;
-        console.log(taskPomodoro);
-        navigateToOriginalProject(taskPomodoro.taskID);
+        // fetchStatistic();
+        createNewPomodoroSession(taskPomodoro.taskID, taskPomodoro.name);
+        setRemainingTime(pomodoroLength);
     }
-    // Navigate to the original project of the task
-    const navigateToOriginalProject = async (taskID) => {
-        const authToken = localStorage.getItem('authToken');
-        const data = await callAPITemplate(
-            `${process.env.REACT_APP_API_URL}/todo_item/get_project`,
-            JSON.stringify({ "authenticationToken": authToken, "itemID": taskID }),
-        );
-        const projectName = JSON.parse(data).name;
-        navigate({
-            pathname: '/',
-            search: `?project=${projectName}`,
-        });
-    }
-
-    // Fetch statistic
-    const fetchStatistic = async () => {
+    // Start Pomodoro function
+    const createNewPomodoroSession = (taskID, taskName) => {
         const authToken = localStorage.getItem('authToken');
         callAPITemplate(
-            `${process.env.REACT_APP_API_URL}/pomodoro/get_history_hour_fullday`,
-            JSON.stringify({ "authenticationToken": authToken, "date": new Date().toISOString() }),
-            (data) => setStatistic(data)
-        )
+            `${process.env.REACT_APP_API_URL}/pomodoro/set_task`,
+            JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
+            (data) => {
+                setTaskPomodoro({ ...JSON.parse(data), name: taskName });
+                callSetPomodoroLengthAPI(JSON.parse(data).pomodoroID, pomodoroLength);
+            }
+        );
     }
-
-    // Fetch the block list
-    const fetchBlockList = async () => {
-        const authToken = localStorage.getItem('authToken');
-        try {
-            console.log("Fetching block list");
-            console.log(authToken);
-            const dataBlockItems = await callAPITemplate(
-                `${process.env.REACT_APP_API_URL}/website_block/get_block_list`,
-                JSON.stringify({ authenticationToken: authToken }),
-            );
-            const blockItems = dataBlockItems.map(item => JSON.parse(item));
-            setBlockList(blockItems);
-        }
-        catch (e) {
-            console.error(e);
-        }
-    };
-
-    // Add a website to the block list
-    const addWebsite = async () => {
-        const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
-            `${process.env.REACT_APP_API_URL}/website_block/add_url`,
-            JSON.stringify({ authenticationToken: authToken, URL: newWebsite }),
-            () => fetchBlockList(),
-            setNewWebsite('')
-        );
-    };
-
-    // Delete a website from the block list
-    const deleteWebsite = async (blockID) => {
-        const authToken = localStorage.getItem('authToken');
-        callAPITemplate(
-            `${process.env.REACT_APP_API_URL}/website_block/delete_url`,
-            JSON.stringify({ authenticationToken: authToken, blockID: blockID }),
-            () => fetchBlockList()
-        );
-    };
-
 
     // Update the timer based on the state of the pomodoro on page load
     React.useEffect(() => {
@@ -216,10 +148,7 @@ function PomodoroPage({ taskPomodoro }) {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    // Fetch statistic on page load
-    React.useEffect(() => {
-        fetchStatistic();
-    }, []);
+
     // Update the pomodoro status when the taskPomodoro changes
     React.useEffect(() => {
         if (taskPomodoro === null) {
@@ -230,96 +159,123 @@ function PomodoroPage({ taskPomodoro }) {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskPomodoro?.status]);
-    React.useEffect(() => {
-        fetchBlockList();
-    }, []);
+
+    const increasePomodoroLength = () => {
+        if (pomodoroLength < 90 * 60) {
+            setPomodoroLength(pomodoroLength + 5 * 60);
+            setRemainingTime(pomodoroLength + 5 * 60);
+        }
+    };
+
+    const decreasePomodoroLength = () => {
+        if (pomodoroLength > 5 * 60) {
+            setPomodoroLength(pomodoroLength - 5 * 60);
+            setRemainingTime(pomodoroLength - 5 * 60);
+        }
+    };
+
+    const PomodoroMenu = ({pomodoroStatus}) => {
+        const POMO_CIRCLE_SIZE = 350;
+
+        const pomoButtonProps = {
+            variant: 'contained',
+            size: 'large',
+            sx: { width: "230px", borderRadius: "8px", height: "55px" }
+        };
+
+        const StartButton = () => {
+            return (
+                <Button onClick={() => { startPomodoro() }}
+                    color='primary' {...pomoButtonProps}>
+                    Start
+                </Button>
+            );
+        };
+
+        const PauseButton = () => {
+            return (
+                <Button onClick={() => { pausePomodoro() }} color="pausebutton"
+                    {...pomoButtonProps}>
+                    Pause
+                </Button>
+            );
+        };
+
+        const EndButton = () => {
+            return (
+                <Button onClick={() => { endPomodoro() }} color="endbutton" 
+                    {...pomoButtonProps}>
+                    End
+                </Button>
+            );
+        };
+
+        const ContinueButton = () => {
+            return (
+                <Button onClick={() => { continuePomodoro() }}
+                    {...pomoButtonProps}>
+                    Continue
+                </Button>
+            );
+        };
+
+        const PomodoroClock = () => {
+            const progress = ((pomodoroLength - remainingTime) / pomodoroLength) * 100;
+
+            return (
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", transition: "all 0.5s ease" }}>
+                    <Box sx={{ position: "relative", display: "inline-flex" }}>
+                        <Box sx={{ backgroundColor: "#E6E4F0", borderRadius: POMO_CIRCLE_SIZE/2, 
+                                    width: POMO_CIRCLE_SIZE, height: POMO_CIRCLE_SIZE, 
+                                    justifyContent: "center", display: "flex", 
+                                    alignItems: "center"}}>
+                            <CircularProgress variant="determinate" value={progress} size={POMO_CIRCLE_SIZE} />
+                            <Box sx={{ backgroundColor: "#F9F8FF", borderRadius: POMO_CIRCLE_SIZE/2 - 20, 
+                                        width: POMO_CIRCLE_SIZE - 40, height: POMO_CIRCLE_SIZE - 40, 
+                                        justifyContent: "center", display: "flex", 
+                                        flexDirection: "column",
+                                        alignItems: "center", position: "absolute"}}>
+                                {pomodoroStatus === "Canceled" && <Button onClick={increasePomodoroLength}><AddRoundedIcon/></Button>}
+                                <Typography variant="pomo">
+                                    {pomodoroStatus === "Canceled" ? displaySeconds(pomodoroLength) : displaySeconds(remainingTime)}
+                                </Typography>
+                                {pomodoroStatus === "Canceled" && <Button onClick={decreasePomodoroLength}><RemoveRoundedIcon/></Button>}
+                            </Box>
+                        </Box>
+                    </Box>
+                </Box>
+            );
+        }
+
+        return (
+            <Box sx={{ 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    gap: "20px", 
+                    height: "100vh" }}>
+                <Typography variant="h5">{taskPomodoro?.name || "Choose a Task in Project Lists"}</Typography>
+                <PomodoroClock />
+                {taskPomodoro && (
+                    pomodoroStatus === "Canceled" ? 
+                    <StartButton />
+                    : pomodoroStatus === "Running" ? 
+                    <Box display="flex" justifyContent="center" sx={{ gap: "10px" }}>
+                        <PauseButton />
+                        <EndButton />
+                    </Box>
+                    : (
+                        pomodoroStatus === "Paused" && <ContinueButton />
+                    )
+                )}
+            </Box>
+        );
+    };
 
 
     return (
-        <div>
-            <h1>Pomodoro Page</h1>
-            <div className={styles.container}>
-                {!taskPomodoro
-                    ? <div>No Pomodoro</div>
-                    : <div className={styles.pomodoro}>
-                        {/* Name of task */}
-                        <h2 className={styles.pomodoroTitle}>{taskPomodoro.name}</h2>
-                        {/* Set a new length for the pomodoro session */}
-                        {pomodoroStatus === "Canceled" &&
-                            <>
-                                <p>Set Length (seconds): </p>
-                                <input type="number"
-                                    value={inputPomodoroLength.toString()}
-                                    onChange={(e) => {
-                                        const value = Math.max(0, Math.min(10800, Number(e.target.value)));
-                                        setInputPomodoroLength(value);
-                                    }}
-                                    max={10800} min={0} maxLength={5} />
-                                <button onClick={() => { callSetPomodoroLengthAPI(inputPomodoroLength) }}>Set</button>
-                            </>
-                        }
-                        {/* Display the pomodoro session */}
-                        <div>
-                            { /* Status: Before running */
-                                pomodoroStatus === "Canceled" &&
-                                <>
-                                    <p>{displaySeconds(pomodoroLength)}</p>
-                                    <button onClick={() => { startPomodoro() }}>Start</button>
-                                </>
-                            }
-                            {
-                                pomodoroStatus === "Running" &&
-                                <>
-                                    <p>Time Remaining: {displaySeconds(remainingTime)}</p>
-                                    <button onClick={() => { pausePomodoro() }}>Pause</button>
-                                    <button onClick={() => { endPomodoro() }}>End</button>
-                                </>
-                            }
-                            {
-                                pomodoroStatus === "Paused" &&
-                                <>
-                                    <p>Time Remaining: {displaySeconds(remainingTime)}</p>
-                                    <button onClick={() => { continuePomodoro() }}>Continue</button>
-                                </>
-                            }
-                            {
-                                pomodoroStatus === "Completed" &&
-                                <p>Completed</p>
-                            }
-                        </div>
-                    </div>
-                }
-                <div className={styles.statistic}>
-                    <button onClick={() => fetchStatistic()}>Load Statistic</button>
-                    {!statistic
-                        ? <div>No Statistic</div>
-                        : <div>
-                            <BarChart24 data={statistic} />
-                        </div>
-                    }
-                    <p>Today's focus: {displaySeconds(total)}</p>
-                </div>
-                <div className={styles.blockList}>
-                    <h2>Website Block List</h2>
-                    <ul>
-                        {blockList.map((blockItem) => (
-                            <li key={blockItem.blockID}>
-                                {blockItem.URL}
-                                <button onClick={() => deleteWebsite(blockItem.blockID)}>Delete</button>
-                            </li>
-                        ))}
-                    </ul>
-                    <input
-                        type="text"
-                        value={newWebsite}
-                        onChange={(e) => setNewWebsite(e.target.value)}
-                        placeholder="Add a website URL"
-                    />
-                    <button onClick={() => addWebsite()}>Add</button>
-                    <p>Example: facebook.com</p>
-                </div>
-            </div>
-        </div>
+        <PomodoroMenu pomodoroStatus={pomodoroStatus} />
     );
 }
 

@@ -10,6 +10,11 @@ const typography = {
         fontWeight: 500, // or 'bold'
         fontSize: 14,
     },
+    pomo: {
+        fontWeight: 900,
+        fontSize: 72,
+        letterSpacing: "-0.24px",
+    },    
     h1: {
         fontWeight: 900,
         fontSize: 64,
@@ -72,6 +77,10 @@ const typography = {
     taskAttr: {
         fontWeight: 600,
         fontSize: 12,
+    },
+    num_data: {
+        fontWeight: 700,
+        fontSize: 24,
     },
 };
 

@@ -3,6 +3,9 @@ import styles from './SuggestTaskBar.module.css';
 import { callAPITemplate } from '../utils';
 
 import React from 'react';
+import { Checkbox, Divider, Typography } from '@mui/material';
+import { List, ListItem, ListItemText, IconButton } from '@mui/material';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 
 function SuggestTaskBar({ setUpdateTaskAttrs, setSuggestTaskList }) {
     // State variable for rendering the tree
@@ -92,15 +95,25 @@ function SuggestTaskBar({ setUpdateTaskAttrs, setSuggestTaskList }) {
 
     return (
         <div>
-            <h1>Suggestions</h1>
-            <button onClick={() => setSuggestTaskList(false)}>Close</button>
+            <Typography variant='h6'>Suggestions</Typography>
+            <Divider />
+            {/* <button onClick={() => setSuggestTaskList(false)}>Close</button> */}
             {/* Render Task List */}
-            <ul className={styles.taskList}>
+            <List>
                 {taskList.map(task => (
-                    <li key={task.itemID} className={styles.taskItem}>
+                    <ListItem key={task.itemID} className={styles.taskItem}
+                        secondaryAction={
+                            <IconButton edge="end" aria-label="delete" onClick={() => addTaskIntoToday(task.itemID)}>
+                                <AddRoundedIcon />
+                            </IconButton>
+                        }
+                        sx={{
+                            "&:hover": {
+                                backgroundColor: 'gray.light',
+                            }
+                        }}>
                         {/* Checkbox for Task */}
-                        <input
-                            type="checkbox"
+                        <Checkbox
                             checked={false}
                             onChange={(e) => {
                                 if (e.target.checked) {
@@ -109,11 +122,10 @@ function SuggestTaskBar({ setUpdateTaskAttrs, setSuggestTaskList }) {
                             }}
                         />
                         {/* Name, Edit button, and Delete button */}
-                        <strong>{task.name}</strong>
-                        <button onClick={() => addTaskIntoToday(task.itemID)}>+</button>
-                    </li>
+                        <ListItemText>{task.name}</ListItemText>
+                    </ListItem>
                 ))}
-            </ul>
+            </List>
         </div>
     )
 }

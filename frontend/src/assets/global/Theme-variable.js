@@ -39,6 +39,15 @@ const baseTheme = createTheme({
       main: "#000B58",
       light: "#e6f4ff",
     },
+    pausebutton: {
+        main: "#D4D2DC",
+        contrastText: "#76747A",
+    },
+    endbutton: {
+        // 30$ alpha for the background color
+        main: "#EA34344D",
+        contrastText: "#EA3434",
+    },
     secondary: {
       main: "#006A67",
     },

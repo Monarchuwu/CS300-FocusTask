@@ -15,6 +15,8 @@ import { callAPITemplate } from './utils';
 import React from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { CircularProgress, Box, Grid2 as Grid } from '@mui/material';
+import FocusStatistics from './components/FocusStatistics';
+import WebBlockList from './components/WebBlockList';
 
 console.log(process.env.REACT_APP_API_URL);
 
@@ -173,13 +175,14 @@ function LayoutWithNavBar({
                 });
             case TodayPage:
                 return React.cloneElement(children, {
+                    viewTaskDetailID,
                     setViewTaskDetailID,
                     updateTaskAttrs, setUpdateTaskAttrs,
                     setSuggestTaskList
                 });
             case PomodoroPage:
                 return React.cloneElement(children, {
-                    taskPomodoro,
+                    taskPomodoro, setTaskPomodoro
                 });
             default:
                 return children;
@@ -225,7 +228,12 @@ function LayoutWithNavBar({
                 backgroundColor: 'white',
                 overflowY: 'auto',
                 height: '100vh'
-            }}>
+            }}> 
+                {children.type === PomodoroPage && 
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <FocusStatistics />
+                        <WebBlockList />
+                    </Box>}
                 {suggestTaskList ?
                     <SuggestTaskBar
                         setUpdateTaskAttrs={setUpdateTaskAttrs}
