@@ -87,6 +87,7 @@ function PomodoroPage({ taskPomodoro, setTaskPomodoro }) {
     }
     // handle pomodoro functions
     const startPomodoro = async () => {
+        await callSetPomodoroLengthAPI(taskPomodoro.pomodoroID, pomodoroLength);
         await callStartPomodoroAPI();
         setPomodoroStatus("Running");
         taskPomodoro.status = "Running";
@@ -123,10 +124,7 @@ function PomodoroPage({ taskPomodoro, setTaskPomodoro }) {
         callAPITemplate(
             `${process.env.REACT_APP_API_URL}/pomodoro/set_task`,
             JSON.stringify({ "authenticationToken": authToken, "taskID": taskID }),
-            (data) => {
-                setTaskPomodoro({ ...JSON.parse(data), name: taskName });
-                callSetPomodoroLengthAPI(JSON.parse(data).pomodoroID, pomodoroLength);
-            }
+            (data) => setTaskPomodoro({ ...JSON.parse(data), name: taskName })
         );
     }
 
